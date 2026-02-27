@@ -1,60 +1,115 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>BH — Invoices & Reports</title>
 
+<style>
+  :root{
+    /* ===== Pastel theme ===== */
+    --bg:#faf7f3;
+    --card:#ffffff;
+    --ink:#111827;
+    --muted:#6b7280;
+    --line:rgba(17,24,39,.10);
+    --shadow:0 10px 30px rgba(17,24,39,.08);
+
+    --p1:#ffd7e8;   /* pink */
+    --p2:#d7f3ff;   /* baby blue */
+    --p3:#e7ddff;   /* lavender */
+    --p4:#dbffe8;   /* mint */
+    --p5:#fff1cc;   /* butter */
+    --p6:#eef0f6;   /* softer gray */
+
+    --accent:#111827;
+    --ok:#16a34a;
+    --warn:#f59e0b;
+    --bad:#ef4444;
+
+    --radius:18px;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:linear-gradient(180deg,#fff, var(--bg));
+    color:var(--ink);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+  .wrap{max-width:1200px;margin:0 auto;padding:18px}
+  .top{
+    display:flex;gap:12px;align-items:center;justify-content:space-between;
+    padding:12px 14px;border:1px solid var(--line);border-radius:22px;
+    background:rgba(255,255,255,.72);backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+    position:sticky;top:10px;z-index:5;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:42px;height:42px;border-radius:14px;border:1px solid var(--line);
+    background:linear-gradient(135deg,var(--p2), #fff);
+    display:grid;place-items:center;font-weight:900;letter-spacing:.5px;
+  }
+  .brand h1{font-size:15px;margin:0}
+  .brand p{margin:2px 0 0 0;color:var(--muted);font-size:12px}
 
   /* ===== Bilingual text helpers ===== */
-  .bi{display:inline-flex;flex-direction:column;line-height:1.15}
-  .bi .en{font-weight:800;font-size:13px}
-  .bi .ar{font-weight:700;font-size:11px;opacity:.92;direction:rtl}
+  .bi{display:inline-flex;flex-direction:column;line-height:1.12}
+  .bi .en{font-weight:900;font-size:12.5px}
+  .bi .ar{font-weight:600;font-size:10.5px;opacity:.88;direction:rtl}
 
   .tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
   .tab{
-    padding:10px 12px;border-radius:14px;border:1px solid transparent;
-    cursor:pointer;font-weight:900;font-size:13px;
-    background:var(--p6);
+    padding:8px 10px;border-radius:999px;border:1px solid transparent;
+    cursor:pointer;font-weight:950;font-size:12px;
+    background:rgba(238,240,246,.85);
   }
-  .tab[data-col="1"]{background:var(--p2)}
-  .tab[data-col="2"]{background:var(--p3)}
-  .tab[data-col="3"]{background:var(--p4)}
-  .tab[data-col="4"]{background:var(--p1)}
-  .tab[data-col="5"]{background:var(--p5)}
-  .tab.active{outline:2px solid rgba(17,24,39,.18)}
+  .tab[data-col="1"]{background:rgba(215,243,255,.75)}
+  .tab[data-col="2"]{background:rgba(231,221,255,.70)}
+  .tab[data-col="3"]{background:rgba(219,255,232,.72)}
+  .tab[data-col="4"]{background:rgba(255,215,232,.72)}
+  .tab[data-col="5"]{background:rgba(255,241,204,.78)}
+  .tab.active{outline:2px solid rgba(17,24,39,.12)}
 
   .grid{display:grid;gap:14px;margin-top:14px}
   @media(min-width:980px){ .grid.two{grid-template-columns:1.15fr .85fr} }
 
   .card{
-    background:rgba(255,255,255,.92);
+    background:rgba(255,255,255,.88);
     border:1px solid var(--line);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
     padding:14px;
   }
-  .card h2{margin:0 0 10px 0;font-size:14px}
+  .card h2{margin:0 0 10px 0;font-size:13px}
 
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .field{flex:1;min-width:170px}
   label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px 0}
   input, select, textarea{
-    width:100%;padding:11px 12px;border-radius:14px;border:1px solid var(--line);
-    background:#fff;color:var(--ink);outline:none;
+    width:100%;padding:10px 11px;border-radius:14px;border:1px solid var(--line);
+    background:rgba(255,255,255,.96);color:var(--ink);outline:none;
   }
   textarea{min-height:90px;resize:vertical}
 
   .btn{
-    padding:11px 12px;border-radius:14px;border:1px solid transparent;
+    padding:9px 10px;border-radius:999px;border:1px solid transparent;
     cursor:pointer;font-weight:950;
-    background:var(--p6);
+    background:rgba(238,240,246,.85);
   }
-  .btn.pink{background:var(--p1)}
-  .btn.blue{background:var(--p2)}
-  .btn.purple{background:var(--p3)}
-  .btn.mint{background:var(--p4)}
-  .btn.butter{background:var(--p5)}
+  .btn.pink{background:rgba(255,215,232,.72)}
+  .btn.blue{background:rgba(215,243,255,.75)}
+  .btn.purple{background:rgba(231,221,255,.70)}
+  .btn.mint{background:rgba(219,255,232,.72)}
+  .btn.butter{background:rgba(255,241,204,.78)}
   .btn.dark{background:#111827;color:#fff}
+  .btn:active{transform:translateY(1px)}
 
   .pill{
     display:inline-flex;align-items:center;gap:8px;
-    padding:8px 10px;border:1px solid var(--line);
-    border-radius:999px;background:rgba(255,255,255,.85);font-size:12px;color:var(--muted)
+    padding:7px 9px;border:1px solid var(--line);
+    border-radius:999px;background:rgba(255,255,255,.82);font-size:12px;color:var(--muted)
   }
   .tiny{font-size:12px;color:var(--muted)}
   .hr{height:1px;background:var(--line);margin:12px 0}
@@ -62,7 +117,7 @@
   table{width:100%;border-collapse:separate;border-spacing:0 8px}
   th{font-size:12px;color:var(--muted);text-align:left;padding:0 10px}
   td{
-    background:rgba(255,255,255,.92);
+    background:rgba(255,255,255,.90);
     border:1px solid var(--line);
     padding:10px;border-left:none;border-right:none;
   }
@@ -80,7 +135,7 @@
   .toast.show{opacity:1}
   .tag{
     display:inline-flex;gap:6px;align-items:center;
-    font-size:12px;border-radius:999px;padding:7px 10px;border:1px solid var(--line);
+    font-size:12px;border-radius:999px;padding:6px 9px;border:1px solid var(--line);
     background:rgba(17,24,39,.04)
   }
   .tag.ok{border-color:rgba(22,163,74,.30);background:rgba(22,163,74,.10)}
@@ -91,7 +146,7 @@
   .items{display:grid;gap:10px}
   .item{
     border:1px solid var(--line);
-    border-radius:16px;padding:10px;background:rgba(255,255,255,.88)
+    border-radius:16px;padding:10px;background:rgba(255,255,255,.86)
   }
   .itemhead{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
   .itemname{font-weight:950}
@@ -99,11 +154,17 @@
   .kpi{display:grid;gap:10px}
   @media(min-width:980px){ .kpi{grid-template-columns:repeat(3,1fr)} }
   .kpi .box{
-    border:1px solid var(--line);border-radius:18px;padding:12px;background:rgba(255,255,255,.88)
+    border:1px solid var(--line);border-radius:18px;padding:12px;background:rgba(255,255,255,.86)
   }
   .box .v{font-size:20px;font-weight:950}
   .box .t{font-size:12px;color:var(--muted)}
-  .smallbtn{padding:9px 10px;border-radius:12px}
+  .smallbtn{padding:8px 9px;border-radius:999px}
+
+  @media print{
+    .top,.tabs,.btn{display:none!important}
+    body{background:#fff}
+    .card{box-shadow:none}
+  }
 </style>
 </head>
 
@@ -114,7 +175,7 @@
       <div class="logo">BH</div>
       <div>
         <h1>BH — Invoices & Reports</h1>
-        <p>Arabic + English • Pastel UI • LocalStorage • WhatsApp • Fixed Commission 3%</p>
+        <p>Arabic + English • Pastel UI • LocalStorage • WhatsApp</p>
       </div>
     </div>
     <div class="tabs" id="tabs"></div>
@@ -128,7 +189,6 @@
           <h2><span class="bi"><span class="en">Create Invoice</span><span class="ar">إنشاء فاتورة</span></span></h2>
           <div class="row">
             <span class="pill"><span class="bi"><span class="en">Today</span><span class="ar">اليوم</span></span>: <span class="mono" id="todayStr"></span></span>
-            <span class="pill"><span class="bi"><span class="en">Auto Kuwait phone</span><span class="ar">تنسيق رقم الكويت تلقائيًا</span></span></span>
           </div>
         </div>
 
@@ -145,19 +205,25 @@
             <div class="tiny"><span class="bi"><span class="en">Select multiple if shared.</span><span class="ar">اختاري أكثر من موظفة عند مشاركة الخدمة.</span></span></div>
           </div>
 
-          <div class="field" style="min-width:220px">
+          <div class="field" style="min-width:240px">
             <label><span class="bi"><span class="en">Quick Actions</span><span class="ar">إجراءات سريعة</span></span></label>
             <div class="row">
               <button class="btn mint" id="pkgMaskBtn" title="Sell package if not active / otherwise use a session">
                 <span class="bi"><span class="en">Package Mask (5×)</span><span class="ar">بكج ماسك (٥ مرات)</span></span>
               </button>
+
               <button class="btn blue" id="addItemBtn">
                 <span class="bi"><span class="en">Add Selected Service</span><span class="ar">إضافة الخدمة المختارة</span></span>
               </button>
+
+              <!-- ✅ NEW: Manual one-time service -->
+              <button class="btn purple" id="manualOneBtn">
+                <span class="bi"><span class="en">Manual One-Time</span><span class="ar">إضافة مؤقتة</span></span>
+              </button>
             </div>
             <div class="tiny"><span class="bi">
-              <span class="en">Package: sell 15 KD once, sessions 0 KD with staff.</span>
-              <span class="ar">البكج: بيع ١٥ دك مرة، والجلسات ٠ دك مع تسجيل الموظفة.</span>
+              <span class="en">Manual One-Time: write service + price + staff (one invoice only).</span>
+              <span class="ar">إضافة مؤقتة: تكتبين الخدمة والسعر والموظفة (لهذه الفاتورة فقط).</span>
             </span></div>
           </div>
         </div>
@@ -219,7 +285,7 @@
             <div class="tiny"><span class="bi"><span class="en">Used for Daily + Monthly reports.</span><span class="ar">يستخدم لتقرير يومي + عمولات الشهر.</span></span></div>
           </div>
           <div class="field" style="max-width:220px">
-            <label><span class="bi"><span class="en">Daily Target (only for display)</span><span class="ar">الهدف اليومي (للعرض فقط)</span></span></label>
+            <label><span class="bi"><span class="en">Daily Target (display)</span><span class="ar">الهدف اليومي (عرض)</span></span></label>
             <input id="target10" type="number" min="1" value="10"/>
           </div>
         </div>
@@ -240,10 +306,12 @@
         </div>
 
         <div class="hr"></div>
+
+        <!-- ✅ show as fixed (no percent shown) -->
         <div class="tag ok">
           <span class="bi">
-            <span class="en">Commission: Fixed 3% (Hidden)</span>
-            <span class="ar">العمولة: ثابتة ٣٪ (مخفية)</span>
+            <span class="en">Commission System: Fixed.</span>
+            <span class="ar">نظام العمولة: ثابت.</span>
           </span>
         </div>
       </div>
@@ -291,8 +359,8 @@
           <div class="hr"></div>
           <div class="tag ok">
             <span class="bi">
-              <span class="en">Commission is calculated in reports (Fixed 3%).</span>
-              <span class="ar">العمولة تُحسب داخل التقارير (ثابتة ٣٪).</span>
+              <span class="en">Commission System: Fixed.</span>
+              <span class="ar">نظام العمولة: ثابت.</span>
             </span>
           </div>
         </div>
@@ -312,8 +380,8 @@
       </div>
       <div class="tiny">
         <span class="bi">
-          <span class="en">Includes invoices + staff sales + commission (Fixed 3%).</span>
-          <span class="ar">يشمل الفواتير + مبيعات الموظفات + العمولة (ثابتة ٣٪).</span>
+          <span class="en">Includes invoices + staff sales + commission (Fixed).</span>
+          <span class="ar">يشمل الفواتير + مبيعات الموظفات + العمولة (ثابت).</span>
         </span>
       </div>
       <div class="hr"></div>
@@ -337,8 +405,8 @@
       </div>
       <div class="tiny">
         <span class="bi">
-          <span class="en">Commission System: Fixed 3% on total staff sales.</span>
-          <span class="ar">نظام العمولة: ثابت ٣٪ على إجمالي مبيعات الموظفة.</span>
+          <span class="en">Commission System: Fixed.</span>
+          <span class="ar">نظام العمولة: ثابت.</span>
         </span>
       </div>
       <div class="hr"></div>
@@ -364,6 +432,35 @@
         </div>
         <div class="hr"></div>
         <div id="manageStaff"></div>
+
+        <!-- ✅ NEW: Commission control inside Manage -->
+        <div class="hr"></div>
+        <h2 style="margin:0 0 10px 0;font-size:13px">
+          <span class="bi"><span class="en">Commission (Admin)</span><span class="ar">العمولة (للإدارة)</span></span>
+        </h2>
+        <div class="tiny">
+          <span class="bi">
+            <span class="en">Reports show “Fixed.” (percent hidden). Only admin can change here.</span>
+            <span class="ar">التقارير تعرض “ثابت.” (بدون رقم). فقط الإدارة تغيرها من هنا.</span>
+          </span>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="field" style="max-width:220px">
+            <label><span class="bi"><span class="en">Commission %</span><span class="ar">نسبة العمولة ٪</span></span></label>
+            <input id="commPctInput" type="number" min="0" max="50" step="0.5" placeholder="مثال 5"/>
+          </div>
+          <div class="field" style="max-width:220px">
+            <label><span class="bi"><span class="en">Admin PIN</span><span class="ar">رمز الإدارة</span></span></label>
+            <input id="adminPinInput" inputmode="numeric" placeholder="0000"/>
+          </div>
+          <div class="field" style="max-width:220px">
+            <label>&nbsp;</label>
+            <button class="btn dark" id="saveCommBtn">
+              <span class="bi"><span class="en">Save</span><span class="ar">حفظ</span></span>
+            </button>
+          </div>
+        </div>
+        <div class="tiny" id="commNote" style="margin-top:8px"></div>
       </div>
     </div>
   </div>
@@ -373,20 +470,15 @@
 
 <script>
 /* =========================
-   FIXED COMMISSION
-   ========================= */
-const FIXED_COMMISSION_PCT = 3; // 🔒 ثابتة 3%
-
-/* =========================
    Storage keys
    ========================= */
 const K = {
-  services: "bh_services_v3_fixed",
-  staff: "bh_staff_v3_fixed",
-  invoices: "bh_invoices_v3_fixed",
-  subs: "bh_subs_v3_fixed",
-  settings: "bh_settings_v3_fixed",
-  backup: "bh_autobackup_v3_fixed"
+  services: "bh_services_v4_manage_comm",
+  staff: "bh_staff_v4_manage_comm",
+  invoices: "bh_invoices_v4_manage_comm",
+  subs: "bh_subs_v4_manage_comm",
+  settings: "bh_settings_v4_manage_comm",
+  backup: "bh_autobackup_v4_manage_comm"
 };
 
 const $ = (id)=>document.getElementById(id);
@@ -496,7 +588,6 @@ function defaultServices(){
 }
 
 function defaultStaff(){
-  /* ✅ staff list as requested */
   return [
     {id:uid(), name:"kla"},
     {id:uid(), name:"bna"},
@@ -509,8 +600,12 @@ function defaultStaff(){
 }
 
 function defaultSettings(){
-  /* commission is fixed & hidden, only store manager phone + optional target display */
-  return { managerPhone:"96569977533", targetDaily:10 };
+  return {
+    managerPhone:"96569977533",
+    targetDaily:10,
+    adminPin:"0000",
+    commissionPct:3
+  };
 }
 
 /* ===== State ===== */
@@ -530,7 +625,7 @@ function persistAll(){
 }
 
 /* =========================
-   Tabs / Pages (bilingual)
+   Tabs / Pages
    ========================= */
 const PAGES = [
   {id:"invoice", en:"Invoice", ar:"فاتورة"},
@@ -556,7 +651,10 @@ function setPage(id){
     }
     $("monthlyPreview").innerHTML = `<div class="tiny">Choose month ثم Build</div>`;
   }
-  if(id==="manage"){ renderManageServices(); renderManageStaff(); }
+  if(id==="manage"){
+    renderManageServices(); renderManageStaff();
+    renderManageCommissionBox();
+  }
 }
 
 function initTabs(){
@@ -623,6 +721,37 @@ function addItemFromSelect(){
   toast("تمت الإضافة / Added");
 }
 
+/* ✅ NEW: manual one-time add (service + price + staff) */
+function addManualOneTime(){
+  const name = prompt("Service name / اسم الخدمة:");
+  if(!name) return;
+
+  const priceStr = prompt("Price KD / السعر (د.ك):", "0");
+  if(priceStr===null) return;
+
+  const price = Number(priceStr)||0;
+
+  // staff from picker (required 1)
+  const staffIds = getSelectedStaffIds();
+  if(staffIds.length<1){
+    toast("اختاري موظفة / Select staff");
+    return;
+  }
+
+  inv.items.push({
+    id: uid(),
+    refServiceId: null,
+    name: name.trim(),
+    price,
+    qty: 1,
+    staffIds: staffIds.slice(),
+    meta: {type:"manual_one_time"}
+  });
+
+  renderItems();
+  toast("تمت الإضافة / Added");
+}
+
 function removeItem(itemId){
   inv.items = inv.items.filter(x=>x.id!==itemId);
   renderItems();
@@ -662,6 +791,7 @@ function renderItems(){
     const flags=[];
     if(it.meta?.type==="sub_sale") flags.push(`<span class="tag warn">Package Sale</span>`);
     if(it.meta?.type==="sub_use") flags.push(`<span class="tag ok">Package Use • ${it.meta.used}/${it.meta.max} • Rem ${it.meta.remaining}</span>`);
+    if(it.meta?.type==="manual_one_time") flags.push(`<span class="tag">Manual One-Time</span>`);
     if(it.meta?.requiresStaffMin) flags.push(`<span class="tag">Min Staff: ${it.meta.requiresStaffMin}</span>`);
     return `
       <div class="item">
@@ -798,9 +928,8 @@ Total: ${fmtKD(record.total)} KD
 
 /* ===== Reports / Stats ===== */
 function invoicesByDate(d){ return S.invoices.filter(x=>x.date===d); }
-function isPackageItem(it){ return it?.meta?.type==="sub_sale" || it?.meta?.type==="sub_use"; }
 
-/* Daily stats with staff sales (commission is fixed in reports) */
+/* Daily stats with staff sales (commission rate hidden in UI text, but used in math) */
 function dayStats(dateStr){
   const invs = invoicesByDate(dateStr);
   let income=0, invCount=invs.length;
@@ -826,15 +955,16 @@ function dayStats(dateStr){
   }
 
   const totalServicesQty=Object.values(svcCounts).reduce((a,b)=>a+b,0);
-  const commPct = FIXED_COMMISSION_PCT;
+
+  const pct = Number(S.settings.commissionPct)||0;
 
   const commissions = S.staff.map(st=>({
     sid: st.id,
     sales: staffSales[st.id]||0,
-    comm: (staffSales[st.id]||0) * (commPct/100)
+    comm: (staffSales[st.id]||0) * (pct/100)
   }));
 
-  return {invs,income,invCount,totalServicesQty,svcCounts,staffCounts,staffSales,commPct,commissions};
+  return {invs,income,invCount,totalServicesQty,svcCounts,staffCounts,staffSales,commissions};
 }
 
 function renderStats(){
@@ -857,7 +987,7 @@ function renderStats(){
   const staffRows = S.staff.map(stf=>{
     const c=st.staffCounts[stf.id]||0;
     const sales=st.staffSales[stf.id]||0;
-    const comm = sales*(FIXED_COMMISSION_PCT/100);
+    const comm = sales*( (Number(S.settings.commissionPct)||0)/100 );
     return `
       <tr>
         <td><b>${escapeHtml(stf.name)}</b></td>
@@ -872,7 +1002,7 @@ function renderStats(){
         <th>Staff • الموظفة</th>
         <th class="right">Count • العدد</th>
         <th class="right">Sales KD • المبيعات</th>
-        <th class="right">Comm (3%) • العمولة</th>
+        <th class="right">Commission • العمولة</th>
       </tr></thead>
       <tbody>${staffRows || `<tr><td colspan="4" class="tiny">No staff</td></tr>`}</tbody>
     </table>
@@ -922,7 +1052,7 @@ Total: ${fmtKD(inv.total)} KD
 }
 window.openWA=openWA;
 
-/* ===== Daily / Monthly report (Fixed 3%) ===== */
+/* ===== Daily / Monthly report (Commission shown, percent hidden in text) ===== */
 let lastDaily={text:"",html:""}, lastMonthly={text:"",html:""};
 
 function openPrintWindow(title, html){
@@ -948,10 +1078,12 @@ function buildDaily(){
   const d=todayKey();
   const st=dayStats(d);
 
+  const pct = Number(S.settings.commissionPct)||0;
+
   const staffSummary = S.staff.map(s=>{
     const sales=st.staffSales[s.id]||0;
     const count=st.staffCounts[s.id]||0;
-    const comm=sales*(FIXED_COMMISSION_PCT/100);
+    const comm=sales*(pct/100);
     return {name:s.name,count,sales,comm};
   });
 
@@ -984,8 +1116,8 @@ function buildDaily(){
       <h2>BH Daily Report • تقرير يومي — ${d}</h2>
       <div>Income: <b>${fmtKD(st.income)}</b> KD • Invoices: <b>${st.invCount}</b></div>
       <div style="margin-top:6px">
-        <b>Commission System:</b> Fixed ${FIXED_COMMISSION_PCT}% on staff sales
-        <span style="color:#6b7280">— نظام العمولة: ثابت ${FIXED_COMMISSION_PCT}٪ على مبيعات الموظفة</span>
+        <b>Commission System:</b> Fixed.
+        <span style="color:#6b7280">— نظام العمولة: ثابت.</span>
       </div>
       <hr/>
       <h3>Invoices • الفواتير</h3>
@@ -998,7 +1130,7 @@ function buildDaily(){
             <th style="padding:10px;text-align:left">Staff</th>
             <th style="padding:10px;text-align:right">Count</th>
             <th style="padding:10px;text-align:right">Sales</th>
-            <th style="padding:10px;text-align:right">Commission (${FIXED_COMMISSION_PCT}%)</th>
+            <th style="padding:10px;text-align:right">Commission</th>
           </tr>
         </thead>
         <tbody>${staffRows}</tbody>
@@ -1014,8 +1146,8 @@ function buildDaily(){
 Income: ${fmtKD(st.income)} KD
 Invoices: ${st.invCount}
 
-Commission System: Fixed ${FIXED_COMMISSION_PCT}% on staff sales
-نظام العمولة: ثابت ${FIXED_COMMISSION_PCT}% على مبيعات الموظفة
+Commission System: Fixed.
+نظام العمولة: ثابت.
 
 ${textLines}
 
@@ -1030,7 +1162,7 @@ function buildMonthly(){
   const mk = $("monthSel").value;
   if(!mk){ toast("اختاري شهر / Pick month"); return; }
 
-  const pct = FIXED_COMMISSION_PCT;
+  const pct = Number(S.settings.commissionPct)||0;
 
   const invs = S.invoices.filter(inv => inv.date.slice(0,7) === mk);
 
@@ -1058,7 +1190,6 @@ function buildMonthly(){
       <tr>
         <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10)"><b>${escapeHtml(stf.name)}</b></td>
         <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${fmtKD(sales)}</td>
-        <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${fmtKD(pct)}</td>
         <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right"><b>${fmtKD(comm)}</b></td>
       </tr>
     `;
@@ -1073,8 +1204,8 @@ function buildMonthly(){
     <div class="card">
       <h2>BH Monthly Commission • عمولات — ${mk}</h2>
       <div>
-        <b>Commission System:</b> Fixed ${pct}% on Total Staff Sales
-        <span style="color:#6b7280">— نظام العمولة: ثابت ${pct}٪ على إجمالي مبيعات الموظفة</span>
+        <b>Commission System:</b> Fixed.
+        <span style="color:#6b7280">— نظام العمولة: ثابت.</span>
       </div>
       <div style="margin-top:6px">Total Commission: <b>${fmtKD(totalComm)}</b> KD</div>
       <hr/>
@@ -1083,7 +1214,6 @@ function buildMonthly(){
           <tr>
             <th style="padding:10px;text-align:left">Staff • الموظفة</th>
             <th style="padding:10px;text-align:right">Sales • المبيعات</th>
-            <th style="padding:10px;text-align:right">%</th>
             <th style="padding:10px;text-align:right">Commission • العمولة</th>
           </tr>
         </thead>
@@ -1100,8 +1230,8 @@ function buildMonthly(){
 
   const text =
 `BH Monthly Commission — ${mk}
-Commission System: Fixed ${pct}% on Total Staff Sales
-نظام العمولة: ثابت ${pct}% على إجمالي مبيعات الموظفة
+Commission System: Fixed.
+نظام العمولة: ثابت.
 Total Commission: ${fmtKD(totalComm)} KD
 
 ${textLines}
@@ -1158,6 +1288,28 @@ function renderManageStaff(){
     </div>`).join("") || `<div class="tiny">No staff</div>`;
 }
 
+/* ✅ Commission box in Manage (admin pin required) */
+function renderManageCommissionBox(){
+  const pct = Number(S.settings.commissionPct)||0;
+  $("commPctInput").value = String(pct);
+  $("commNote").textContent = "Saved. (Hidden in reports text) — محفوظ. (مخفي كنص بالتقارير)";
+}
+
+function saveCommissionFromManage(){
+  const pin = String($("adminPinInput").value||"").trim();
+  if(!pin){ toast("اكتبي PIN"); return; }
+  if(pin !== String(S.settings.adminPin||"0000")){
+    toast("PIN خطأ");
+    return;
+  }
+  const pct = Math.max(0, Math.min(50, Number($("commPctInput").value)||0));
+  S.settings.commissionPct = pct;
+  persistAll();
+  $("adminPinInput").value="";
+  renderManageCommissionBox();
+  toast("تم حفظ العمولة");
+}
+
 window.editService=(id)=>{
   const s=S.services.find(x=>x.id===id); if(!s) return;
   const name=prompt("Service name / اسم الخدمة:", s.name); if(name===null) return;
@@ -1210,10 +1362,161 @@ function addStaffFlow(){
 function renderStaffPicker(){
   $("staffPick").innerHTML = S.staff.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("");
 }
-functin renderCatServicePickers(){
+function renderCatServicePickers(){
   const cats=Array.from(new Set(S.services.map(s=>s.cat))).sort();
   $("catSel").innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
   function renderSvcs(){
     const cat=$("catSel").value;
     const svcs=S.services.filter(s=>s.cat===cat).sort((a,b)=>a.name.localeCompare(b.name));
-    $("svcSel").
+    $("svcSel").innerHTML = svcs.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} — ${fmtKD(s.price)} KD</option>`).join("");
+  }
+  $("catSel").onchange=renderSvcs;
+  renderSvcs();
+}
+function renderAllPickers(){ renderStaffPicker(); renderCatServicePickers(); }
+
+/* ===== Backup/Restore/Wipe ===== */
+function exportBackup(){
+  const payload={
+    version:4,
+    ts:Date.now(),
+    services:S.services,
+    staff:S.staff,
+    invoices:S.invoices,
+    subs:S.subs,
+    settings:S.settings
+  };
+  const text=JSON.stringify(payload,null,2);
+  const blob=new Blob([text],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="BH_Backup.json"; a.click();
+  URL.revokeObjectURL(a.href);
+  toast("Backup جاهز");
+}
+function importBackup(){
+  const inp=document.createElement("input");
+  inp.type="file"; inp.accept="application/json";
+  inp.onchange=()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const data=JSON.parse(r.result);
+        if(!data||!data.version) throw new Error("Invalid");
+        S.services=data.services||S.services;
+        S.staff=data.staff||S.staff;
+        S.invoices=data.invoices||S.invoices;
+        S.subs=data.subs||S.subs;
+        S.settings=Object.assign(defaultSettings(), data.settings||{});
+        persistAll(); initUI(); toast("تم الاسترجاع");
+      }catch(e){ alert("Restore failed"); }
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
+function wipeAll(){
+  if(!confirm("Wipe all data?")) return;
+  for(const k of Object.values(K)) localStorage.removeItem(k);
+  S={services:defaultServices(),staff:defaultStaff(),invoices:[],subs:{},settings:defaultSettings()};
+  persistAll(); initUI(); toast("تم المسح");
+}
+
+/* ===== Init ===== */
+function initUI(){
+  $("todayStr").textContent=todayKey();
+
+  initTabs();
+  renderAllPickers();
+
+  $("mgrPhone").value = S.settings.managerPhone || "";
+  $("target10").value = S.settings.targetDaily ?? 10;
+
+  $("custPhone").addEventListener("input", ()=>{
+    const c=cleanKuwaitPhone($("custPhone").value);
+    if(c.ok){
+      $("phoneHint").textContent="Normalized: "+c.phone;
+      $("phoneHint").style.color="var(--ok)";
+    }else{
+      $("phoneHint").textContent=c.msg||"";
+      $("phoneHint").style.color="var(--bad)";
+    }
+    refreshSubTag();
+  });
+
+  $("addItemBtn").onclick=addItemFromSelect;
+  $("manualOneBtn").onclick=addManualOneTime;
+  $("pkgMaskBtn").onclick=pkgMaskAction;
+  $("saveInvBtn").onclick=saveInvoiceAndWA;
+  $("clearInvBtn").onclick=resetInv;
+
+  $("refreshTodayBtn").onclick=renderToday;
+  $("printTodayBtn").onclick=()=>{
+    const invs=invoicesByDate(todayKey()).sort((a,b)=>b.ts-a.ts);
+    const html=`<div class="card"><h2>Today Invoices — ${todayKey()}</h2>` + invs.map(inv=>{
+      const items=inv.items.map(it=>`<div style="font-size:12px;color:#374151">• ${escapeHtml(it.name)} ×${it.qty} — ${fmtKD((it.price||0)*(it.qty||1))}KD</div>`).join("");
+      return `<div style="border:1px solid rgba(17,24,39,.12);border-radius:14px;padding:10px;margin:10px 0">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div><b>Phone:</b> ${escapeHtml(inv.phone)}</div>
+          <div><b>Total:</b> ${fmtKD(inv.total)} KD</div>
+        </div><div style="margin-top:6px">${items}</div></div>`;
+    }).join("") + `</div>`;
+    openPrintWindow("BH Today Invoices", html);
+  };
+
+  $("refreshStatsBtn").onclick=renderStats;
+
+  $("buildDailyBtn").onclick=buildDaily;
+  $("sendDailyBtn").onclick=()=>{
+    if(!lastDaily.text) buildDaily();
+    const c=cleanKuwaitPhone($("mgrPhone").value);
+    if(!c.ok){ toast("رقم المديرة غير صحيح"); return; }
+    S.settings.managerPhone=c.phone; persistAll();
+    openWA(c.phone, lastDaily.text);
+  };
+  $("pdfDailyBtn").onclick=()=>{
+    if(!lastDaily.html) buildDaily();
+    openPrintWindow("BH Daily Report", lastDaily.html);
+  };
+
+  $("buildMonthlyBtn").onclick=buildMonthly;
+  $("sendMonthlyBtn").onclick=()=>{
+    if(!lastMonthly.text) buildMonthly();
+    const c=cleanKuwaitPhone($("mgrPhone").value);
+    if(!c.ok){ toast("رقم المديرة غير صحيح"); return; }
+    S.settings.managerPhone=c.phone; persistAll();
+    openWA(c.phone, lastMonthly.text);
+  };
+  $("pdfMonthlyBtn").onclick=()=>{
+    if(!lastMonthly.html) buildMonthly();
+    openPrintWindow("BH Monthly Commission", lastMonthly.html);
+  };
+
+  $("addSvcOpenBtn").onclick=addServiceFlow;
+  $("addStaffOpenBtn").onclick=addStaffFlow;
+
+  $("backupBtn").onclick=exportBackup;
+  $("restoreBtn").onclick=importBackup;
+  $("wipeAllBtn").onclick=wipeAll;
+
+  // settings save
+  const saveSettings=()=>{
+    const m=cleanKuwaitPhone($("mgrPhone").value);
+    if(m.ok) $("mgrPhone").value=m.phone;
+    S.settings.managerPhone=m.ok?m.phone:(S.settings.managerPhone||"");
+    S.settings.targetDaily=Number($("target10").value)||10;
+    persistAll();
+  };
+  $("mgrPhone").addEventListener("change", saveSettings);
+  $("target10").addEventListener("change", saveSettings);
+
+  // manage commission save
+  $("saveCommBtn").onclick = saveCommissionFromManage;
+
+  setPage("invoice");
+  renderItems(); refreshSubTag();
+}
+initUI();
+</script>
+</body>
+</html>
