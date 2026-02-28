@@ -1,1147 +1,1128 @@
 <!doctype html>
-<html lang="en" dir="ltr">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>BH — Invoices & Reports</title>
+<!doctype html>
 
-<style>
-  :root{
-    /* ===== Pastel theme ===== */
-    --bg:#faf7f3;
-    --card:#ffffff;
-    --ink:#111827;
-    --muted:#6b7280;
-    --line:rgba(17,24,39,.10);
-    --shadow:0 10px 30px rgba(17,24,39,.08);
+<html lang="en" dir="ltr">  
+<head>  
+<meta charset="utf-8"/>  
+<meta name="viewport" content="width=device-width, initial-scale=1"/>  
+<title>BH — Invoices & Reports</title>  <style>  
+  :root{  
+    /* ===== Soft pastel + off-white ===== */  
+    --bg:#fbf8f3;          /* off-white */  
+    --card:rgba(255,255,255,.82);  
+    --ink:#111827;  
+    --muted:#6b7280;  
+    --line:rgba(17,24,39,.10);  
+    --shadow:0 10px 30px rgba(17,24,39,.07);  
+  
+    /* Pastels (more transparent look) */  
+    --p1:rgba(255,215,232,.85);   /* pink */  
+    --p2:rgba(215,243,255,.85);   /* baby blue */  
+    --p3:rgba(231,221,255,.85);   /* lavender */  
+    --p4:rgba(219,255,232,.85);   /* mint */  
+    --p5:rgba(255,241,204,.85);   /* butter */  
+    --p6:rgba(232,232,239,.88);   /* soft gray */  
+  
+    --accent:#111827;  
+    --ok:#16a34a;  
+    --warn:#f59e0b;  
+    --bad:#ef4444;  
+  
+    --radius:18px;  
+  }  
+  
+  *{box-sizing:border-box}  
+  body{  
+    margin:0;  
+    background:linear-gradient(180deg,#fff, var(--bg));  
+    color:var(--ink);  
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;  
+  }  
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}  
+  .top{  
+    display:flex;gap:10px;align-items:center;justify-content:space-between;  
+    padding:12px 14px;border:1px solid var(--line);border-radius:22px;  
+    background:rgba(255,255,255,.72);  
+    backdrop-filter: blur(10px);  
+    box-shadow: var(--shadow);  
+    position:sticky;top:10px;z-index:5;  
+  }  
+  .brand{display:flex;align-items:center;gap:10px}  
+  .logo{  
+    width:42px;height:42px;border-radius:14px;border:1px solid var(--line);  
+    background:linear-gradient(135deg,var(--p2), #fff);  
+    display:grid;place-items:center;font-weight:900;letter-spacing:.5px;  
+  }  
+  .brand h1{font-size:15px;margin:0}  
+  .brand p{margin:2px 0 0 0;color:var(--muted);font-size:11px}  
+  
+  /* ===== Bilingual text helpers (Arabic smaller & lighter) ===== */  
+  .bi{display:inline-flex;flex-direction:column;line-height:1.12}  
+  .bi .en{font-weight:900;font-size:12.5px}  
+  .bi .ar{font-weight:650;font-size:10px;opacity:.88;direction:rtl}  
+  
+  .tabs{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end}  
+  .tab{  
+    padding:8px 10px;border-radius:14px;border:1px solid transparent;  
+    cursor:pointer;font-weight:950;font-size:12px;  
+    background:var(--p6);  
+    box-shadow:0 6px 14px rgba(17,24,39,.05);  
+  }  
+  .tab[data-col="1"]{background:var(--p2)}  
+  .tab[data-col="2"]{background:var(--p3)}  
+  .tab[data-col="3"]{background:var(--p4)}  
+  .tab[data-col="4"]{background:var(--p1)}  
+  .tab[data-col="5"]{background:var(--p5)}  
+  .tab.active{outline:2px solid rgba(17,24,39,.14)}  
+  
+  .grid{display:grid;gap:12px;margin-top:12px}  
+  @media(min-width:980px){ .grid.two{grid-template-columns:1.15fr .85fr} }  
+  
+  .card{  
+    background:var(--card);  
+    border:1px solid var(--line);  
+    border-radius: var(--radius);  
+    box-shadow: var(--shadow);  
+    padding:12px;  
+  }  
+  .card h2{margin:0 0 10px 0;font-size:13.5px}  
+  
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}  
+  .field{flex:1;min-width:170px}  
+  label{display:block;font-size:11.5px;color:var(--muted);margin:0 0 6px 0}  
+  input, select, textarea{  
+    width:100%;padding:10px 11px;border-radius:14px;border:1px solid var(--line);  
+    background:#fff;color:var(--ink);outline:none;  
+  }  
+  textarea{min-height:90px;resize:vertical}  
+  
+  .btn{  
+    padding:9px 10px;border-radius:14px;border:1px solid transparent;  
+    cursor:pointer;font-weight:950;font-size:12px;  
+    background:var(--p6);  
+    box-shadow:0 6px 14px rgba(17,24,39,.05);  
+  }  
+  .btn.pink{background:var(--p1)}  
+  .btn.blue{background:var(--p2)}  
+  .btn.purple{background:var(--p3)}  
+  .btn.mint{background:var(--p4)}  
+  .btn.butter{background:var(--p5)}  
+  .btn.dark{background:#111827;color:#fff}  
+  .btn:active{transform:translateY(1px)}  
+  
+  .pill{  
+    display:inline-flex;align-items:center;gap:8px;  
+    padding:7px 9px;border:1px solid var(--line);  
+    border-radius:999px;background:rgba(255,255,255,.78);  
+    font-size:11.5px;color:var(--muted)  
+  }  
+  .tiny{font-size:11.5px;color:var(--muted)}  
+  .hr{height:1px;background:var(--line);margin:10px 0}  
+  
+  table{width:100%;border-collapse:separate;border-spacing:0 8px}  
+  th{font-size:11.5px;color:var(--muted);text-align:left;padding:0 10px}  
+  td{  
+    background:rgba(255,255,255,.88);  
+    border:1px solid var(--line);  
+    padding:9px;border-left:none;border-right:none;  
+  }  
+  tr td:first-child{border-left:1px solid var(--line);border-radius:14px 0 0 14px}  
+  tr td:last-child{border-right:1px solid var(--line);border-radius:0 14px 14px 0}  
+  .right{text-align:right}  
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}  
+  
+  .toast{  
+    position:fixed;left:50%;transform:translateX(-50%);  
+    bottom:18px;background:#111827;color:#fff;  
+    padding:10px 12px;border-radius:14px;opacity:0;pointer-events:none;  
+    transition:.25s;z-index:99;font-size:13px  
+  }  
+  .toast.show{opacity:1}  
+  .tag{  
+    display:inline-flex;gap:6px;align-items:center;  
+    font-size:11.5px;border-radius:999px;padding:7px 9px;border:1px solid var(--line);  
+    background:rgba(17,24,39,.04)  
+  }  
+  .tag.ok{border-color:rgba(22,163,74,.30);background:rgba(22,163,74,.10)}  
+  .tag.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10)}  
+  .tag.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)}  
+  
+  .flex{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}  
+  .items{display:grid;gap:10px}  
+  .item{  
+    border:1px solid var(--line);  
+    border-radius:16px;padding:10px;background:rgba(255,255,255,.84)  
+  }  
+  .itemhead{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}  
+  .itemname{font-weight:950}  
+  .muted{color:var(--muted)}  
+  .kpi{display:grid;gap:10px}  
+  @media(min-width:980px){ .kpi{grid-template-columns:repeat(3,1fr)} }  
+  .kpi .box{  
+    border:1px solid var(--line);border-radius:18px;padding:12px;background:rgba(255,255,255,.86)  
+  }  
+  .box .v{font-size:20px;font-weight:950}  
+  .box .t{font-size:12px;color:var(--muted)}  
+  .smallbtn{padding:8px 9px;border-radius:12px;font-size:12px}  
+  
+  .softcard{  
+    border:1px dashed rgba(17,24,39,.16);  
+    border-radius:16px;  
+    padding:10px;  
+    background:rgba(255,255,255,.66);  
+  }  
+  
+  .inlineNote{  
+    font-size:11.5px;color:var(--muted);  
+    padding:8px 10px;border:1px solid rgba(17,24,39,.10);border-radius:14px;  
+    background:rgba(255,255,255,.70);  
+  }  
+</style>  </head>  <body>  
+<div class="wrap">  
+  <div class="top">  
+    <div class="brand">  
+      <div class="logo">BH</div>  
+      <div>  
+        <h1>BH — Invoices & Reports</h1>  
+        <p>Arabic + English • Pastel UI • LocalStorage • WhatsApp • Commission System: Fixed.</p>  
+      </div>  
+    </div>  
+    <div class="tabs" id="tabs"></div>  
+  </div>    <!-- PAGES -->    <div id="page-invoice" class="page">  
+    <div class="grid two">  
+      <div class="card">  
+        <div class="flex">  
+          <h2><span class="bi"><span class="en">Create Invoice</span><span class="ar">إنشاء فاتورة</span></span></h2>  
+          <div class="row">  
+            <span class="pill"><span class="bi"><span class="en">Today</span><span class="ar">اليوم</span></span>: <span class="mono" id="todayStr"></span></span>  
+            <span class="pill"><span class="bi"><span class="en">Auto Kuwait phone</span><span class="ar">تنسيق رقم الكويت تلقائيًا</span></span></span>  
+          </div>  
+        </div>  <div class="row" style="margin-top:10px">  
+      <div class="field">  
+        <label><span class="bi"><span class="en">Customer Phone (Kuwait only)</span><span class="ar">رقم الهاتف (كويتي فقط)</span></span></label>  
+        <input id="custPhone" inputmode="numeric" placeholder="51234567 أو +96551234567"/>  
+        <div class="tiny" id="phoneHint"></div>  
+      </div>  
 
-    --p1:#ffd7e8;   /* pink */
-    --p2:#d7f3ff;   /* baby blue */
-    --p3:#e7ddff;   /* lavender */
-    --p4:#dbffe8;   /* mint */
-    --p5:#fff1cc;   /* butter */
-    --p6:#eef0f6;   /* softer gray */
+      <div class="field" style="min-width:260px">  
+        <label><span class="bi"><span class="en">Staff Picker (multi)</span><span class="ar">اختيار الموظفات (متعدد)</span></span></label>  
+        <select id="staffPick" multiple size="6"></select>  
+        <div class="tiny"><span class="bi"><span class="en">Select multiple if shared.</span><span class="ar">اختاري أكثر من موظفة عند مشاركة الخدمة.</span></span></div>  
+      </div>  
 
-    --accent:#111827;
-    --ok:#16a34a;
-    --warn:#f59e0b;
-    --bad:#ef4444;
+      <div class="field" style="min-width:220px">  
+        <label><span class="bi"><span class="en">Quick Actions</span><span class="ar">إجراءات سريعة</span></span></label>  
+        <div class="row">  
+          <button class="btn mint" id="pkgMaskBtn" title="Sell package if not active / otherwise use a session">  
+            <span class="bi"><span class="en">Package Mask (5×)</span><span class="ar">بكج ماسك (٥ مرات)</span></span>  
+          </button>  
+          <button class="btn blue" id="addItemBtn">  
+            <span class="bi"><span class="en">Add Selected Service</span><span class="ar">إضافة الخدمة المختارة</span></span>  
+          </button>  
+        </div>  
+        <div class="tiny"><span class="bi">  
+          <span class="en">Package: sell 15 KD once, sessions 0 KD with staff.</span>  
+          <span class="ar">البكج: بيع ١٥ دك مرة، والجلسات ٠ دك مع تسجيل الموظفة.</span>  
+        </span></div>  
+      </div>  
+    </div>  
 
-    --radius:18px;
-  }
+    <div class="hr"></div>  
 
-  *{box-sizing:border-box}
-  body{
-    margin:0;
-    background:linear-gradient(180deg,#fff, var(--bg));
-    color:var(--ink);
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  }
-  .wrap{max-width:1200px;margin:0 auto;padding:18px}
-  .top{
-    display:flex;gap:12px;align-items:center;justify-content:space-between;
-    padding:12px 14px;border:1px solid var(--line);border-radius:22px;
-    background:rgba(255,255,255,.72);backdrop-filter: blur(10px);
-    box-shadow: var(--shadow);
-    position:sticky;top:10px;z-index:5;
-  }
-  .brand{display:flex;align-items:center;gap:12px}
-  .logo{
-    width:42px;height:42px;border-radius:14px;border:1px solid var(--line);
-    background:linear-gradient(135deg,var(--p2), #fff);
-    display:grid;place-items:center;font-weight:900;letter-spacing:.5px;
-  }
-  .brand h1{font-size:15px;margin:0}
-  .brand p{margin:2px 0 0 0;color:var(--muted);font-size:12px}
+    <div class="row">  
+      <div class="field" style="min-width:260px">  
+        <label><span class="bi"><span class="en">Category</span><span class="ar">القسم</span></span></label>  
+        <select id="catSel"></select>  
+      </div>  
+      <div class="field" style="min-width:360px">  
+        <label><span class="bi"><span class="en">Service</span><span class="ar">الخدمة</span></span></label>  
+        <select id="svcSel"></select>  
+      </div>  
+      <div class="field" style="max-width:120px">  
+        <label><span class="bi"><span class="en">Qty</span><span class="ar">العدد</span></span></label>  
+        <input id="qtySel" type="number" min="1" value="1"/>  
+      </div>  
+    </div>  
 
-  /* ===== Bilingual text helpers ===== */
-  .bi{display:inline-flex;flex-direction:column;line-height:1.12}
-  .bi .en{font-weight:900;font-size:12.5px}
-  .bi .ar{font-weight:600;font-size:10.5px;opacity:.88;direction:rtl}
+    <!-- ✅ Manual / Temporary Service (one-time) -->  
+    <div class="hr"></div>  
+    <div class="softcard">  
+      <div class="flex">  
+        <div>  
+          <div class="itemname"><span class="bi"><span class="en">Temporary Service (Manual)</span><span class="ar">خدمة مؤقتة (يدوي)</span></span></div>  
+          <div class="tiny"><span class="bi"><span class="en">Adds to invoice only (not saved in services).</span><span class="ar">تُضاف للفاتورة فقط (لا تُحفظ ضمن الخدمات).</span></span></div>  
+        </div>  
+        <button class="btn butter" id="addManualBtn">  
+          <span class="bi"><span class="en">Add Manual</span><span class="ar">إضافة يدوي</span></span>  
+        </button>  
+      </div>  
 
-  .tabs{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
-  .tab{
-    padding:8px 10px;border-radius:999px;border:1px solid transparent;
-    cursor:pointer;font-weight:950;font-size:12px;
-    background:rgba(238,240,246,.85);
-  }
-  .tab[data-col="1"]{background:rgba(215,243,255,.75)}
-  .tab[data-col="2"]{background:rgba(231,221,255,.70)}
-  .tab[data-col="3"]{background:rgba(219,255,232,.72)}
-  .tab[data-col="4"]{background:rgba(255,215,232,.72)}
-  .tab[data-col="5"]{background:rgba(255,241,204,.78)}
-  .tab.active{outline:2px solid rgba(17,24,39,.12)}
+      <div class="row" style="margin-top:10px">  
+        <div class="field" style="min-width:260px">  
+          <label><span class="bi"><span class="en">Service Name</span><span class="ar">اسم الخدمة</span></span></label>  
+          <input id="manualName" placeholder="مثال: Hair Trial / خدمة مؤقتة"/>  
+        </div>  
+        <div class="field" style="max-width:160px">  
+          <label><span class="bi"><span class="en">Price (KD)</span><span class="ar">السعر (دك)</span></span></label>  
+          <input id="manualPrice" type="number" step="0.001" min="0" placeholder="0"/>  
+        </div>  
+        <div class="field" style="max-width:120px">  
+          <label><span class="bi"><span class="en">Qty</span><span class="ar">العدد</span></span></label>  
+          <input id="manualQty" type="number" min="1" value="1"/>  
+        </div>  
+      </div>  
+      <div class="inlineNote" style="margin-top:10px">  
+        <span class="bi">  
+          <span class="en">Choose staff from the Staff Picker above before adding manual service.</span>  
+          <span class="ar">اختاري الموظفات من قائمة الموظفات بالأعلى قبل إضافة الخدمة اليدوية.</span>  
+        </span>  
+      </div>  
+    </div>  
 
-  .grid{display:grid;gap:14px;margin-top:14px}
-  @media(min-width:980px){ .grid.two{grid-template-columns:1.15fr .85fr} }
+    <div class="hr"></div>  
 
-  .card{
-    background:rgba(255,255,255,.88);
-    border:1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding:14px;
-  }
-  .card h2{margin:0 0 10px 0;font-size:13px}
+    <h2><span class="bi"><span class="en">Invoice Items</span><span class="ar">بنود الفاتورة</span></span></h2>  
+    <div class="items" id="items"></div>  
 
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .field{flex:1;min-width:170px}
-  label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px 0}
-  input, select, textarea{
-    width:100%;padding:10px 11px;border-radius:14px;border:1px solid var(--line);
-    background:rgba(255,255,255,.96);color:var(--ink);outline:none;
-  }
-  textarea{min-height:90px;resize:vertical}
+    <div class="hr"></div>  
 
-  .btn{
-    padding:9px 10px;border-radius:999px;border:1px solid transparent;
-    cursor:pointer;font-weight:950;
-    background:rgba(238,240,246,.85);
-  }
-  .btn.pink{background:rgba(255,215,232,.72)}
-  .btn.blue{background:rgba(215,243,255,.75)}
-  .btn.purple{background:rgba(231,221,255,.70)}
-  .btn.mint{background:rgba(219,255,232,.72)}
-  .btn.butter{background:rgba(255,241,204,.78)}
-  .btn.dark{background:#111827;color:#fff}
-  .btn:active{transform:translateY(1px)}
+    <div class="flex">  
+      <div class="row">  
+        <span class="tag" id="subTag">Package: —</span>  
+        <span class="tag" id="cashboxTag">Cashbox: OK</span>  
+      </div>  
+      <div class="row">  
+        <div class="pill"><span class="bi"><span class="en">Total</span><span class="ar">الإجمالي</span></span>: <b id="invTotal">0.000</b> KD</div>  
+        <button class="btn pink" id="clearInvBtn"><span class="bi"><span class="en">Clear</span><span class="ar">مسح</span></span></button>  
+        <button class="btn dark" id="saveInvBtn"><span class="bi"><span class="en">Save + WhatsApp</span><span class="ar">حفظ + واتساب</span></span></button>  
+      </div>  
+    </div>  
 
-  .pill{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:7px 9px;border:1px solid var(--line);
-    border-radius:999px;background:rgba(255,255,255,.82);font-size:12px;color:var(--muted)
-  }
-  .tiny{font-size:12px;color:var(--muted)}
-  .hr{height:1px;background:var(--line);margin:12px 0}
+    <div class="tiny">  
+      <span class="bi">  
+        <span class="en">WhatsApp message is short: services + total + “شكرا لزيارة صالون bh”.</span>  
+        <span class="ar">رسالة الواتساب قصيرة: الخدمات + الإجمالي + “شكرا لزيارة صالون bh”.</span>  
+      </span>  
+    </div>  
+  </div>  
 
-  table{width:100%;border-collapse:separate;border-spacing:0 8px}
-  th{font-size:12px;color:var(--muted);text-align:left;padding:0 10px}
-  td{
-    background:rgba(255,255,255,.90);
-    border:1px solid var(--line);
-    padding:10px;border-left:none;border-right:none;
-  }
-  tr td:first-child{border-left:1px solid var(--line);border-radius:14px 0 0 14px}
-  tr td:last-child{border-right:1px solid var(--line);border-radius:0 14px 14px 0}
-  .right{text-align:right}
-  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+  <div class="card">  
+    <div class="flex">  
+      <h2><span class="bi"><span class="en">Settings</span><span class="ar">الإعدادات</span></span></h2>  
+      <span class="pill"><span class="bi"><span class="en">Saved locally</span><span class="ar">حفظ محلي</span></span></span>  
+    </div>  
 
-  .toast{
-    position:fixed;left:50%;transform:translateX(-50%);
-    bottom:18px;background:#111827;color:#fff;
-    padding:10px 12px;border-radius:14px;opacity:0;pointer-events:none;
-    transition:.25s;z-index:99;font-size:13px
-  }
-  .toast.show{opacity:1}
-  .tag{
-    display:inline-flex;gap:6px;align-items:center;
-    font-size:12px;border-radius:999px;padding:6px 9px;border:1px solid var(--line);
-    background:rgba(17,24,39,.04)
-  }
-  .tag.ok{border-color:rgba(22,163,74,.30);background:rgba(22,163,74,.10)}
-  .tag.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10)}
-  .tag.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)}
+    <div class="row" style="margin-top:10px">  
+      <div class="field">  
+        <label><span class="bi"><span class="en">Manager WhatsApp (Kuwait)</span><span class="ar">واتساب المديرة (كويتي)</span></span></label>  
+        <input id="mgrPhone" inputmode="numeric" placeholder="69977533"/>  
+        <div class="tiny"><span class="bi"><span class="en">Used for Daily + Monthly reports.</span><span class="ar">يستخدم لتقرير يومي + عمولات الشهر.</span></span></div>  
+      </div>  
+      <div class="field" style="max-width:220px">  
+        <label><span class="bi"><span class="en">Daily Target (only for display)</span><span class="ar">الهدف اليومي (للعرض فقط)</span></span></label>  
+        <input id="target10" type="number" min="1" value="10"/>  
+      </div>  
+    </div>  
 
-  .flex{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-  .items{display:grid;gap:10px}
-  .item{
-    border:1px solid var(--line);
-    border-radius:16px;padding:10px;background:rgba(255,255,255,.86)
-  }
-  .itemhead{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
-  .itemname{font-weight:950}
-  .muted{color:var(--muted)}
-  .kpi{display:grid;gap:10px}
-  @media(min-width:980px){ .kpi{grid-template-columns:repeat(3,1fr)} }
-  .kpi .box{
-    border:1px solid var(--line);border-radius:18px;padding:12px;background:rgba(255,255,255,.86)
-  }
-  .box .v{font-size:20px;font-weight:950}
-  .box .t{font-size:12px;color:var(--muted)}
-  .smallbtn{padding:8px 9px;border-radius:999px}
+    <div class="hr"></div>  
 
-  @media print{
-    .top,.tabs,.btn{display:none!important}
-    body{background:#fff}
-    .card{box-shadow:none}
-  }
-</style>
-</head>
+    <div class="row">  
+      <button class="btn butter" id="backupBtn"><span class="bi"><span class="en">Backup</span><span class="ar">نسخة احتياطية</span></span></button>  
+      <button class="btn purple" id="restoreBtn"><span class="bi"><span class="en">Restore</span><span class="ar">استرجاع</span></span></button>  
+      <button class="btn pink" id="wipeAllBtn"><span class="bi"><span class="en">Wipe ALL</span><span class="ar">مسح الكل</span></span></button>  
+    </div>  
 
-<body>
-<div class="wrap">
-  <div class="top">
-    <div class="brand">
-      <div class="logo">BH</div>
-      <div>
-        <h1>BH — Invoices & Reports</h1>
-        <p>Arabic + English • Pastel UI • LocalStorage • WhatsApp</p>
-      </div>
-    </div>
-    <div class="tabs" id="tabs"></div>
-  </div>
+    <div class="tiny" style="margin-top:8px">  
+      <span class="bi">  
+        <span class="en">Backup recommended. Restore overwrites current data.</span>  
+        <span class="ar">مفضل تسوين نسخة احتياطية. الاسترجاع يستبدل البيانات الحالية.</span>  
+      </span>  
+    </div>  
 
-  <!-- PAGES -->
-  <div id="page-invoice" class="page">
-    <div class="grid two">
-      <div class="card">
-        <div class="flex">
-          <h2><span class="bi"><span class="en">Create Invoice</span><span class="ar">إنشاء فاتورة</span></span></h2>
-          <div class="row">
-            <span class="pill"><span class="bi"><span class="en">Today</span><span class="ar">اليوم</span></span>: <span class="mono" id="todayStr"></span></span>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div class="field">
-            <label><span class="bi"><span class="en">Customer Phone (Kuwait only)</span><span class="ar">رقم الهاتف (كويتي فقط)</span></span></label>
-            <input id="custPhone" inputmode="numeric" placeholder="51234567 أو +96551234567"/>
-            <div class="tiny" id="phoneHint"></div>
-          </div>
-
-          <div class="field" style="min-width:260px">
-            <label><span class="bi"><span class="en">Staff Picker (multi)</span><span class="ar">اختيار الموظفات (متعدد)</span></span></label>
-            <select id="staffPick" multiple size="6"></select>
-            <div class="tiny"><span class="bi"><span class="en">Select multiple if shared.</span><span class="ar">اختاري أكثر من موظفة عند مشاركة الخدمة.</span></span></div>
-          </div>
-
-          <div class="field" style="min-width:240px">
-            <label><span class="bi"><span class="en">Quick Actions</span><span class="ar">إجراءات سريعة</span></span></label>
-            <div class="row">
-              <button class="btn mint" id="pkgMaskBtn" title="Sell package if not active / otherwise use a session">
-                <span class="bi"><span class="en">Package Mask (5×)</span><span class="ar">بكج ماسك (٥ مرات)</span></span>
-              </button>
-
-              <button class="btn blue" id="addItemBtn">
-                <span class="bi"><span class="en">Add Selected Service</span><span class="ar">إضافة الخدمة المختارة</span></span>
-              </button>
-
-              <!-- ✅ NEW: Manual one-time service -->
-              <button class="btn purple" id="manualOneBtn">
-                <span class="bi"><span class="en">Manual One-Time</span><span class="ar">إضافة مؤقتة</span></span>
-              </button>
-            </div>
-            <div class="tiny"><span class="bi">
-              <span class="en">Manual One-Time: write service + price + staff (one invoice only).</span>
-              <span class="ar">إضافة مؤقتة: تكتبين الخدمة والسعر والموظفة (لهذه الفاتورة فقط).</span>
-            </span></div>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="row">
-          <div class="field" style="min-width:260px">
-            <label><span class="bi"><span class="en">Category</span><span class="ar">القسم</span></span></label>
-            <select id="catSel"></select>
-          </div>
-          <div class="field" style="min-width:360px">
-            <label><span class="bi"><span class="en">Service</span><span class="ar">الخدمة</span></span></label>
-            <select id="svcSel"></select>
-          </div>
-          <div class="field" style="max-width:120px">
-            <label><span class="bi"><span class="en">Qty</span><span class="ar">العدد</span></span></label>
-            <input id="qtySel" type="number" min="1" value="1"/>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <h2><span class="bi"><span class="en">Invoice Items</span><span class="ar">بنود الفاتورة</span></span></h2>
-        <div class="items" id="items"></div>
-
-        <div class="hr"></div>
-
-        <div class="flex">
-          <div class="row">
-            <span class="tag" id="subTag">Package: —</span>
-            <span class="tag" id="cashboxTag">Cashbox: OK</span>
-          </div>
-          <div class="row">
-            <div class="pill"><span class="bi"><span class="en">Total</span><span class="ar">الإجمالي</span></span>: <b id="invTotal">0.000</b> KD</div>
-            <button class="btn pink" id="clearInvBtn"><span class="bi"><span class="en">Clear</span><span class="ar">مسح</span></span></button>
-            <button class="btn dark" id="saveInvBtn"><span class="bi"><span class="en">Save + WhatsApp</span><span class="ar">حفظ + واتساب</span></span></button>
-          </div>
-        </div>
-
-        <div class="tiny">
-          <span class="bi">
-            <span class="en">WhatsApp message is short: services + total + “شكرا لزيارة صالون bh”.</span>
-            <span class="ar">رسالة الواتساب قصيرة: الخدمات + الإجمالي + “شكرا لزيارة صالون bh”.</span>
-          </span>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="flex">
-          <h2><span class="bi"><span class="en">Settings</span><span class="ar">الإعدادات</span></span></h2>
-          <span class="pill"><span class="bi"><span class="en">Saved locally</span><span class="ar">حفظ محلي</span></span></span>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div class="field">
-            <label><span class="bi"><span class="en">Manager WhatsApp (Kuwait)</span><span class="ar">واتساب المديرة (كويتي)</span></span></label>
-            <input id="mgrPhone" inputmode="numeric" placeholder="69977533"/>
-            <div class="tiny"><span class="bi"><span class="en">Used for Daily + Monthly reports.</span><span class="ar">يستخدم لتقرير يومي + عمولات الشهر.</span></span></div>
-          </div>
-          <div class="field" style="max-width:220px">
-            <label><span class="bi"><span class="en">Daily Target (display)</span><span class="ar">الهدف اليومي (عرض)</span></span></label>
-            <input id="target10" type="number" min="1" value="10"/>
-          </div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="row">
-          <button class="btn butter" id="backupBtn"><span class="bi"><span class="en">Backup</span><span class="ar">نسخة احتياطية</span></span></button>
-          <button class="btn purple" id="restoreBtn"><span class="bi"><span class="en">Restore</span><span class="ar">استرجاع</span></span></button>
-          <button class="btn pink" id="wipeAllBtn"><span class="bi"><span class="en">Wipe ALL</span><span class="ar">مسح الكل</span></span></button>
-        </div>
-
-        <div class="tiny" style="margin-top:8px">
-          <span class="bi">
-            <span class="en">Backup recommended. Restore overwrites current data.</span>
-            <span class="ar">مفضل تسوين نسخة احتياطية. الاسترجاع يستبدل البيانات الحالية.</span>
-          </span>
-        </div>
-
-        <div class="hr"></div>
-
-        <!-- ✅ show as fixed (no percent shown) -->
-        <div class="tag ok">
-          <span class="bi">
-            <span class="en">Commission System: Fixed.</span>
-            <span class="ar">نظام العمولة: ثابت.</span>
-          </span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="page-today" class="page" style="display:none">
-    <div class="card">
-      <div class="flex">
-        <h2><span class="bi"><span class="en">Today Invoices</span><span class="ar">فواتير اليوم</span></span></h2>
-        <div class="row">
-          <button class="btn blue" id="refreshTodayBtn"><span class="bi"><span class="en">Refresh</span><span class="ar">تحديث</span></span></button>
-          <button class="btn butter" id="printTodayBtn"><span class="bi"><span class="en">PDF (Print)</span><span class="ar">PDF (طباعة)</span></span></button>
-        </div>
-      </div>
-      <div class="tiny"><span class="bi"><span class="en">Each invoice has WhatsApp resend.</span><span class="ar">كل فاتورة فيها زر إعادة إرسال واتساب.</span></span></div>
-      <div class="hr"></div>
-      <div id="todayList"></div>
-    </div>
-  </div>
-
-  <div id="page-stats" class="page" style="display:none">
-    <div class="card">
-      <div class="flex">
-        <h2><span class="bi"><span class="en">Statistics (Daily)</span><span class="ar">الإحصائية اليومية</span></span></h2>
-        <button class="btn mint" id="refreshStatsBtn"><span class="bi"><span class="en">Refresh Statistics</span><span class="ar">تحديث الإحصائية</span></span></button>
-      </div>
-
-      <div class="kpi" style="margin-top:12px">
-        <div class="box"><div class="v" id="kpiIncome">0.000</div><div class="t">Income • الدخل</div></div>
-        <div class="box"><div class="v" id="kpiInv">0</div><div class="t">Invoices • الفواتير</div></div>
-        <div class="box"><div class="v" id="kpiServices">0</div><div class="t">Services Qty • عدد الخدمات</div></div>
-      </div>
-
-      <div class="hr"></div>
-
-      <div class="grid two">
-        <div class="card" style="box-shadow:none;background:transparent;border:none;padding:0">
-          <h2><span class="bi"><span class="en">Services Count</span><span class="ar">عدد كل خدمة</span></span></h2>
-          <div id="svcCounts"></div>
-        </div>
-        <div class="card" style="box-shadow:none;background:transparent;border:none;padding:0">
-          <h2><span class="bi"><span class="en">Staff Count</span><span class="ar">عدد لكل موظفة</span></span></h2>
-          <div id="staffCounts"></div>
-          <div class="hr"></div>
-          <div class="tag ok">
-            <span class="bi">
-              <span class="en">Commission System: Fixed.</span>
-              <span class="ar">نظام العمولة: ثابت.</span>
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="page-daily" class="page" style="display:none">
-    <div class="card">
-      <div class="flex">
-        <h2><span class="bi"><span class="en">Daily Report (Manager)</span><span class="ar">تقرير يومي (للمديرة)</span></span></h2>
-        <div class="row">
-          <button class="btn purple" id="buildDailyBtn"><span class="bi"><span class="en">Build</span><span class="ar">إنشاء</span></span></button>
-          <button class="btn mint" id="sendDailyBtn"><span class="bi"><span class="en">Send WhatsApp</span><span class="ar">إرسال واتساب</span></span></button>
-          <button class="btn butter" id="pdfDailyBtn"><span class="bi"><span class="en">PDF (Print)</span><span class="ar">PDF (طباعة)</span></span></button>
-        </div>
-      </div>
-      <div class="tiny">
-        <span class="bi">
-          <span class="en">Includes invoices + staff sales + commission (Fixed).</span>
-          <span class="ar">يشمل الفواتير + مبيعات الموظفات + العمولة (ثابت).</span>
-        </span>
-      </div>
-      <div class="hr"></div>
-      <div id="dailyPreview"></div>
-    </div>
-  </div>
-
-  <div id="page-monthly" class="page" style="display:none">
-    <div class="card">
-      <div class="flex">
-        <h2><span class="bi"><span class="en">Monthly Commission</span><span class="ar">عمولات نهاية الشهر</span></span></h2>
-        <div class="row">
-          <div class="field" style="min-width:220px">
-            <label><span class="bi"><span class="en">Month</span><span class="ar">الشهر</span></span></label>
-            <input id="monthSel" type="month"/>
-          </div>
-          <button class="btn purple" id="buildMonthlyBtn"><span class="bi"><span class="en">Build</span><span class="ar">إنشاء</span></span></button>
-          <button class="btn mint" id="sendMonthlyBtn"><span class="bi"><span class="en">Send WhatsApp</span><span class="ar">إرسال واتساب</span></span></button>
-          <button class="btn butter" id="pdfMonthlyBtn"><span class="bi"><span class="en">PDF (Print)</span><span class="ar">PDF (طباعة)</span></span></button>
-        </div>
-      </div>
-      <div class="tiny">
-        <span class="bi">
-          <span class="en">Commission System: Fixed.</span>
-          <span class="ar">نظام العمولة: ثابت.</span>
-        </span>
-      </div>
-      <div class="hr"></div>
-      <div id="monthlyPreview"></div>
-    </div>
-  </div>
-
-  <div id="page-manage" class="page" style="display:none">
-    <div class="grid two">
-      <div class="card">
-        <div class="flex">
-          <h2><span class="bi"><span class="en">Manage Services</span><span class="ar">إدارة الخدمات</span></span></h2>
-          <button class="btn blue" id="addSvcOpenBtn"><span class="bi"><span class="en">Add Service</span><span class="ar">إضافة خدمة</span></span></button>
-        </div>
-        <div class="hr"></div>
-        <div id="manageServices"></div>
-      </div>
-
-      <div class="card">
-        <div class="flex">
-          <h2><span class="bi"><span class="en">Manage Staff</span><span class="ar">إدارة الموظفات</span></span></h2>
-          <button class="btn blue" id="addStaffOpenBtn"><span class="bi"><span class="en">Add Staff</span><span class="ar">إضافة موظفة</span></span></button>
-        </div>
-        <div class="hr"></div>
-        <div id="manageStaff"></div>
-
-        <!-- ✅ NEW: Commission control inside Manage -->
-        <div class="hr"></div>
-        <h2 style="margin:0 0 10px 0;font-size:13px">
-          <span class="bi"><span class="en">Commission (Admin)</span><span class="ar">العمولة (للإدارة)</span></span>
-        </h2>
-        <div class="tiny">
-          <span class="bi">
-            <span class="en">Reports show “Fixed.” (percent hidden). Only admin can change here.</span>
-            <span class="ar">التقارير تعرض “ثابت.” (بدون رقم). فقط الإدارة تغيرها من هنا.</span>
-          </span>
-        </div>
-        <div class="row" style="margin-top:10px">
-          <div class="field" style="max-width:220px">
-            <label><span class="bi"><span class="en">Commission %</span><span class="ar">نسبة العمولة ٪</span></span></label>
-            <input id="commPctInput" type="number" min="0" max="50" step="0.5" placeholder="مثال 5"/>
-          </div>
-          <div class="field" style="max-width:220px">
-            <label><span class="bi"><span class="en">Admin PIN</span><span class="ar">رمز الإدارة</span></span></label>
-            <input id="adminPinInput" inputmode="numeric" placeholder="0000"/>
-          </div>
-          <div class="field" style="max-width:220px">
-            <label>&nbsp;</label>
-            <button class="btn dark" id="saveCommBtn">
-              <span class="bi"><span class="en">Save</span><span class="ar">حفظ</span></span>
-            </button>
-          </div>
-        </div>
-        <div class="tiny" id="commNote" style="margin-top:8px"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
+    <div class="hr"></div>  
+    <div class="tag ok">  
+      <span class="bi">  
+        <span class="en">Commission System: Fixed.</span>  
+        <span class="ar">نظام العمولة: ثابت.</span>  
+      </span>  
+    </div>  
+  </div>  
 </div>
 
-<script>
-/* =========================
-   Storage keys
-   ========================= */
-const K = {
-  services: "bh_services_v4_manage_comm",
-  staff: "bh_staff_v4_manage_comm",
-  invoices: "bh_invoices_v4_manage_comm",
-  subs: "bh_subs_v4_manage_comm",
-  settings: "bh_settings_v4_manage_comm",
-  backup: "bh_autobackup_v4_manage_comm"
-};
-
-const $ = (id)=>document.getElementById(id);
-const todayKey = ()=> new Date().toISOString().slice(0,10);
-
-function toast(msg){
-  const t=$("toast");
-  t.textContent=msg;
-  t.classList.add("show");
-  clearTimeout(toast._tm);
-  toast._tm=setTimeout(()=>t.classList.remove("show"),1600);
-}
-function fmtKD(n){
-  const x = Math.round((Number(n)||0)*1000)/1000;
-  return x.toFixed(3);
-}
-function escapeHtml(s){
-  return (s??"").toString()
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#39;");
-}
-
-/* ===== Kuwait Phone Cleaner ===== */
-function cleanKuwaitPhone(raw){
-  let s = (raw||"").toString().trim();
-  if(!s) return {ok:false, msg:"اكتبي رقم الهاتف / Enter phone"};
-  s = s.replace(/\s+/g,"");
-  if(s.startsWith("+")) s = s.slice(1);
-  if(s.startsWith("00")) s = s.slice(2);
-  if(/^965\d{8}$/.test(s)) return {ok:true, phone:s};
-  if(/^\d{8}$/.test(s)) return {ok:true, phone:"965"+s};
-  return {ok:false, msg:"رقم غير كويتي / Not Kuwait number"};
-}
-function openWA(phone965, text){
-  const url = "https://wa.me/" + encodeURIComponent(phone965) + "?text=" + encodeURIComponent(text);
-  window.open(url, "_blank");
-}
-
-/* ===== Data load/save ===== */
-function loadJSON(key, fallback){
-  try{
-    const v = localStorage.getItem(key);
-    return v ? JSON.parse(v) : fallback;
-  }catch(e){ return fallback; }
-}
-function saveJSON(key, obj){
-  localStorage.setItem(key, JSON.stringify(obj));
-  localStorage.setItem(K.backup, JSON.stringify({ts:Date.now()}));
-}
-
-/* ===== Defaults ===== */
-function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }
-
-function defaultServices(){
-  return [
-    {id:uid(), cat:"Spa", name:"Head Spa", price:10},
-    {id:uid(), cat:"Spa", name:"Head Spa + Face", price:15},
-    {id:uid(), cat:"Spa", name:"Massage", price:10},
-    {id:uid(), cat:"Spa", name:"Massage 1/2", price:5},
-    {id:uid(), cat:"Spa", name:"Hair Treatment + Head Spa", price:15},
-    {id:uid(), cat:"Spa", name:"Hair Treatment + Head Spa + Face", price:20},
-
-    {id:uid(), cat:"Steam Bath", name:"Bath", price:10},
-
-    {id:uid(), cat:"Hair", name:"Blow Dry (3 KD)", price:3},
-    {id:uid(), cat:"Hair", name:"Blow Dry (5 KD)", price:5},
-    {id:uid(), cat:"Hair", name:"Wavy (5 KD)", price:5},
-    {id:uid(), cat:"Hair", name:"Wavy (7 KD)", price:7},
-    {id:uid(), cat:"Hair", name:"Hairstyle", price:10},
-    {id:uid(), cat:"Hair", name:"Hair Wash", price:1},
-    {id:uid(), cat:"Hair", name:"Treatment Hair Wash", price:3},
-    {id:uid(), cat:"Hair", name:"Hair Mask", price:5},
-    {id:uid(), cat:"Hair", name:"Hair Color Short", price:10},
-    {id:uid(), cat:"Hair", name:"Hair Color Long", price:20},
-    {id:uid(), cat:"Hair", name:"Hair Treatment", price:10},
-    {id:uid(), cat:"Hair", name:"Hair Scrub", price:5},
-    {id:uid(), cat:"Hair", name:"Retro", price:8},
-
-    {id:uid(), cat:"Nails", name:"Pedicure", price:2.5},
-    {id:uid(), cat:"Nails", name:"Manicure", price:2.5},
-    {id:uid(), cat:"Nails", name:"Pedi / Mani", price:5},
-    {id:uid(), cat:"Nails", name:"Spa Pedicure", price:5},
-    {id:uid(), cat:"Nails", name:"Spa Manicure", price:5},
-    {id:uid(), cat:"Nails", name:"Spa Pedi / Mani", price:10},
-    {id:uid(), cat:"Nails", name:"Extensions 1", price:5},
-    {id:uid(), cat:"Nails", name:"Extensions 2", price:10},
-    {id:uid(), cat:"Nails", name:"Nail Polish (1 KD)", price:1},
-    {id:uid(), cat:"Nails", name:"Nail Polish (2 KD)", price:2},
-    {id:uid(), cat:"Nails", name:"French Polish", price:3},
-    {id:uid(), cat:"Nails", name:"Cat Eye Polish", price:4},
-    {id:uid(), cat:"Nails", name:"Chrome", price:4},
-    {id:uid(), cat:"Nails", name:"Nail Art", price:5},
-    {id:uid(), cat:"Nails", name:"Removal", price:6},
-
-    {id:uid(), cat:"Hair Removal", name:"Upper Lip", price:1},
-    {id:uid(), cat:"Hair Removal", name:"Eyebrow", price:1},
-    {id:uid(), cat:"Hair Removal", name:"Face", price:3},
-    {id:uid(), cat:"Hair Removal", name:"Body (5 KD)", price:5},
-    {id:uid(), cat:"Hair Removal", name:"Body (10 KD)", price:10},
-
-    {id:uid(), cat:"Other Services", name:"Makeup Simple", price:10},
-    {id:uid(), cat:"Other Services", name:"Makeup", price:15},
-
-    /* ✅ 3service requires 3+ staff */
-    {id:uid(), cat:"Packages", name:"3service 15KD ashtrak", price:15, meta:{requiresStaffMin:3}},
-  ];
-}
-
-function defaultStaff(){
-  return [
-    {id:uid(), name:"kla"},
-    {id:uid(), name:"bna"},
-    {id:uid(), name:"meme"},
-    {id:uid(), name:"sntsh"},
-    {id:uid(), name:"nrml"},
-    {id:uid(), name:"mlk"},
-    {id:uid(), name:"indr"}
-  ];
-}
-
-function defaultSettings(){
-  return {
-    managerPhone:"96569977533",
-    targetDaily:10,
-    adminPin:"0000",
-    commissionPct:3
-  };
-}
-
-/* ===== State ===== */
-let S = {
-  services: loadJSON(K.services, null) || defaultServices(),
-  staff: loadJSON(K.staff, null) || defaultStaff(),
-  invoices: loadJSON(K.invoices, null) || [],
-  subs: loadJSON(K.subs, null) || {},
-  settings: Object.assign(defaultSettings(), loadJSON(K.settings, null)||{})
-};
-function persistAll(){
-  saveJSON(K.services, S.services);
-  saveJSON(K.staff, S.staff);
-  saveJSON(K.invoices, S.invoices);
-  saveJSON(K.subs, S.subs);
-  saveJSON(K.settings, S.settings);
-}
-
-/* =========================
-   Tabs / Pages
-   ========================= */
-const PAGES = [
-  {id:"invoice", en:"Invoice", ar:"فاتورة"},
-  {id:"today", en:"Today Invoices", ar:"فواتير اليوم"},
-  {id:"stats", en:"Statistics", ar:"إحصائية"},
-  {id:"daily", en:"Daily Report", ar:"تقرير يومي"},
-  {id:"monthly", en:"Monthly Commission", ar:"عمولات الشهر"},
-  {id:"manage", en:"Manage", ar:"إدارة"}
-];
-
-function setPage(id){
-  for(const p of PAGES){
-    $("page-"+p.id).style.display = (p.id===id) ? "" : "none";
-    const b = document.querySelector(`[data-tab="${p.id}"]`);
-    if(b) b.classList.toggle("active", p.id===id);
-  }
-  if(id==="today") renderToday();
-  if(id==="stats") renderStats();
-  if(id==="daily") $("dailyPreview").innerHTML = `<div class="tiny">Build / إنشاء</div>`;
-  if(id==="monthly") {
-    if(!$("monthSel").value){
-      const d=new Date(); $("monthSel").value = d.toISOString().slice(0,7);
-    }
-    $("monthlyPreview").innerHTML = `<div class="tiny">Choose month ثم Build</div>`;
-  }
-  if(id==="manage"){
-    renderManageServices(); renderManageStaff();
-    renderManageCommissionBox();
-  }
-}
-
-function initTabs(){
-  const cols = ["1","2","3","4","5","1"];
-  $("tabs").innerHTML = PAGES.map((p,i)=>`
-    <button class="tab" data-col="${cols[i%cols.length]}" data-tab="${p.id}">
-      <span class="bi"><span class="en">${p.en}</span><span class="ar">${p.ar}</span></span>
-    </button>
-  `).join("");
-  for(const p of PAGES){
-    document.querySelector(`[data-tab="${p.id}"]`).onclick = ()=>setPage(p.id);
-  }
-}
-
-/* =========================
-   Invoice
-   ========================= */
-let inv = { phone:"", items:[] };
-
-function resetInv(){
-  inv = {phone:"", items:[]};
-  $("custPhone").value="";
-  $("qtySel").value=1;
-  $("staffPick").selectedIndex=-1;
-  renderItems();
-  refreshSubTag();
-  toast("تم / Done");
-}
-
-function getSelectedStaffIds(){
-  const sel = $("staffPick");
-  const ids = [];
-  for(const opt of sel.options){ if(opt.selected) ids.push(opt.value); }
-  return ids;
-}
-function staffName(id){ return (S.staff.find(x=>x.id===id)||{}).name || "—"; }
-function serviceById(id){ return S.services.find(x=>x.id===id); }
-
-function addItemFromSelect(){
-  const svcId = $("svcSel").value;
-  const svc = serviceById(svcId);
-  if(!svc){ toast("اختاري خدمة / Pick service"); return; }
-
-  const qty = Math.max(1, Number($("qtySel").value)||1);
-  const staffIds = getSelectedStaffIds();
-
-  const minStaff = svc?.meta?.requiresStaffMin || 0;
-  if(minStaff && staffIds.length < minStaff){
-    toast(`لازم ${minStaff}+ موظفات / Need ${minStaff}+ staff`);
-    return;
-  }
-
-  inv.items.push({
-    id: uid(),
-    refServiceId: svc.id,
-    name: svc.name,
-    price: Number(svc.price)||0,
-    qty,
-    staffIds: staffIds.slice(),
-    meta: Object.assign({}, svc.meta||{}, {type:"normal"})
-  });
-
-  renderItems();
-  toast("تمت الإضافة / Added");
-}
-
-/* ✅ NEW: manual one-time add (service + price + staff) */
-function addManualOneTime(){
-  const name = prompt("Service name / اسم الخدمة:");
-  if(!name) return;
-
-  const priceStr = prompt("Price KD / السعر (د.ك):", "0");
-  if(priceStr===null) return;
-
-  const price = Number(priceStr)||0;
-
-  // staff from picker (required 1)
-  const staffIds = getSelectedStaffIds();
-  if(staffIds.length<1){
-    toast("اختاري موظفة / Select staff");
-    return;
-  }
-
-  inv.items.push({
-    id: uid(),
-    refServiceId: null,
-    name: name.trim(),
-    price,
-    qty: 1,
-    staffIds: staffIds.slice(),
-    meta: {type:"manual_one_time"}
-  });
-
-  renderItems();
-  toast("تمت الإضافة / Added");
-}
-
-function removeItem(itemId){
-  inv.items = inv.items.filter(x=>x.id!==itemId);
-  renderItems();
-}
-function invTotal(){
-  return inv.items.reduce((a,it)=>a + (Number(it.price)||0) * (Number(it.qty)||1), 0);
-}
-
-function refreshSubTag(){
-  const c = cleanKuwaitPhone($("custPhone").value);
-  let tag = $("subTag");
-  if(!c.ok){
-    tag.className="tag";
-    tag.textContent="Package: —";
-    return;
-  }
-  const sub = S.subs[c.phone];
-  if(sub && sub.active){
-    const rem = Math.max(0, sub.max - sub.used);
-    tag.className="tag ok";
-    tag.textContent=`Package Mask: Used ${sub.used}/${sub.max} • Remaining ${rem}`;
-  }else{
-    tag.className="tag";
-    tag.textContent="Package Mask: Not Active";
-  }
-}
-
-function renderItems(){
-  $("invTotal").textContent = fmtKD(invTotal());
-  const box = $("items");
-  if(inv.items.length===0){
-    box.innerHTML = `<div class="tiny">لا توجد بنود بعد / No items yet</div>`;
-    return;
-  }
-  box.innerHTML = inv.items.map(it=>{
-    const staff = (it.staffIds||[]).map(staffName).join(", ") || "—";
-    const flags=[];
-    if(it.meta?.type==="sub_sale") flags.push(`<span class="tag warn">Package Sale</span>`);
-    if(it.meta?.type==="sub_use") flags.push(`<span class="tag ok">Package Use • ${it.meta.used}/${it.meta.max} • Rem ${it.meta.remaining}</span>`);
-    if(it.meta?.type==="manual_one_time") flags.push(`<span class="tag">Manual One-Time</span>`);
-    if(it.meta?.requiresStaffMin) flags.push(`<span class="tag">Min Staff: ${it.meta.requiresStaffMin}</span>`);
-    return `
-      <div class="item">
-        <div class="itemhead">
-          <div>
-            <div class="itemname">${escapeHtml(it.name)}</div>
-            <div class="tiny">Staff: <b>${escapeHtml(staff)}</b></div>
-            ${flags.length? `<div class="row" style="margin-top:6px">${flags.join("")}</div>`:""}
-          </div>
-          <div class="right">
-            <div><b>${fmtKD(it.price)}</b> KD × <b>${it.qty}</b></div>
-            <div class="tiny muted">Line: ${fmtKD((it.price||0)*(it.qty||1))} KD</div>
-            <div class="row" style="justify-content:flex-end;margin-top:6px">
-              <button class="btn pink smallbtn" onclick="removeItem('${it.id}')">
-                <span class="bi"><span class="en">Remove</span><span class="ar">حذف</span></span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-window.removeItem = removeItem;
-
-function ensurePhoneOrWarn(){
-  const c = cleanKuwaitPhone($("custPhone").value);
-  if(!c.ok){ toast("رقم غير صحيح / Invalid phone"); return null; }
-  $("custPhone").value = c.phone;
-  return c.phone;
-}
-
-/* ===== Package Mask Logic ===== */
-function pkgMaskAction(){
-  const phone = ensurePhoneOrWarn();
-  if(!phone) return;
-
-  let sub = S.subs[phone];
-  if(!sub || !sub.active){
-    sub = {active:true, max:5, used:0};
-    S.subs[phone]=sub;
-
-    inv.items.push({
-      id:uid(),
-      name:"Package Mask (5 sessions)",
-      price:15,
-      qty:1,
-      staffIds:getSelectedStaffIds().slice(),
-      meta:{type:"sub_sale", max:5}
-    });
-
-    persistAll();
-    renderItems(); refreshSubTag();
-    toast("تم بيع البكج / Package sold");
-    return;
-  }
-
-  const staffIds = getSelectedStaffIds();
-  if(staffIds.length<1){ toast("اختاري موظفة للجلسة / Select staff"); return; }
-
-  sub.used = Math.min(sub.max, sub.used+1);
-  const remaining = Math.max(0, sub.max - sub.used);
-
-  inv.items.push({
-    id:uid(),
-    name:"Mask Session (Package Mask)",
-    price:0,
-    qty:1,
-    staffIds:[staffIds[0]],
-    meta:{type:"sub_use", used:sub.used, remaining, max:sub.max}
-  });
-
-  if(sub.used>=sub.max){
-    sub.active=false; sub.used=0;
-    toast("آخر جلسة — تصفير / Reset");
-  }else{
-    toast(`جلسة ${sub.used}/${sub.max}`);
-  }
-
-  S.subs[phone]=sub;
-  persistAll();
-  renderItems(); refreshSubTag();
-}
-
-/* ===== Save Invoice + WhatsApp ===== */
-function saveInvoiceAndWA(){
-  const phone = ensurePhoneOrWarn();
-  if(!phone) return;
-  if(inv.items.length===0){ toast("أضيفي خدمة / Add item"); return; }
-
-  for(const it of inv.items){
-    const minStaff = it.meta?.requiresStaffMin || 0;
-    if(minStaff && (it.staffIds||[]).length < minStaff){
-      toast(`"${it.name}" لازم ${minStaff}+ موظفات`);
-      return;
-    }
-  }
-
-  const record = {
-    id: uid(),
-    date: todayKey(),
-    ts: Date.now(),
-    phone,
-    items: inv.items.map(x=>({
-      name:x.name,
-      price:Number(x.price)||0,
-      qty:Number(x.qty)||1,
-      staffIds:(x.staffIds||[]).slice(),
-      meta:x.meta||{}
-    })),
-    total: invTotal()
-  };
-
-  S.invoices.push(record);
-  persistAll();
-
-  const lines = record.items.map(it=>{
-    const q = it.qty||1;
-    const p = it.price||0;
-    if(p===0) return `• ${it.name} ×${q}`;
-    return `• ${it.name} ×${q} = ${fmtKD(p*q)}KD`;
-  });
-
-  const msg =
-`BH Invoice
-Phone: ${phone}
-${lines.join("\n")}
-Total: ${fmtKD(record.total)} KD
-شكرا لزيارة صالون bh`;
-
-  openWA(phone, msg);
-  resetInv();
-}
-
-/* ===== Reports / Stats ===== */
-function invoicesByDate(d){ return S.invoices.filter(x=>x.date===d); }
-
-/* Daily stats with staff sales (commission rate hidden in UI text, but used in math) */
-function dayStats(dateStr){
-  const invs = invoicesByDate(dateStr);
-  let income=0, invCount=invs.length;
-
-  const svcCounts={}, staffCounts={}, staffSales={};
-  for(const st of S.staff){ staffCounts[st.id]=0; staffSales[st.id]=0; }
-
-  for(const inv of invs){
-    income += Number(inv.total)||0;
-    for(const it of inv.items){
-      const qty = Number(it.qty)||1;
-      svcCounts[it.name]=(svcCounts[it.name]||0)+qty;
-
-      const staffIds=(it.staffIds||[]).filter(Boolean);
-      if(staffIds.length){
-        for(const sid of staffIds) staffCounts[sid]=(staffCounts[sid]||0)+qty;
-
-        const line=(Number(it.price)||0)*qty;
-        const share=staffIds.length ? (line/staffIds.length) : 0;
-        for(const sid of staffIds) staffSales[sid]=(staffSales[sid]||0)+share;
-      }
-    }
-  }
-
-  const totalServicesQty=Object.values(svcCounts).reduce((a,b)=>a+b,0);
-
-  const pct = Number(S.settings.commissionPct)||0;
-
-  const commissions = S.staff.map(st=>({
-    sid: st.id,
-    sales: staffSales[st.id]||0,
-    comm: (staffSales[st.id]||0) * (pct/100)
-  }));
-
-  return {invs,income,invCount,totalServicesQty,svcCounts,staffCounts,staffSales,commissions};
-}
-
-function renderStats(){
-  const d=todayKey();
-  const st=dayStats(d);
-  $("kpiIncome").textContent=fmtKD(st.income);
-  $("kpiInv").textContent=st.invCount;
-  $("kpiServices").textContent=st.totalServicesQty;
-
-  const svcRows = Object.entries(st.svcCounts).sort((a,b)=>b[1]-a[1]).map(([name,count])=>
-    `<tr><td>${escapeHtml(name)}</td><td class="right"><b>${count}</b></td></tr>`
-  ).join("");
-  $("svcCounts").innerHTML = `
-    <table>
-      <thead><tr><th>Service • الخدمة</th><th class="right">Count • العدد</th></tr></thead>
-      <tbody>${svcRows || `<tr><td colspan="2" class="tiny">No data</td></tr>`}</tbody>
-    </table>
-  `;
-
-  const staffRows = S.staff.map(stf=>{
-    const c=st.staffCounts[stf.id]||0;
-    const sales=st.staffSales[stf.id]||0;
-    const comm = sales*( (Number(S.settings.commissionPct)||0)/100 );
-    return `
-      <tr>
-        <td><b>${escapeHtml(stf.name)}</b></td>
-        <td class="right">${c}</td>
-        <td class="right">${fmtKD(sales)}</td>
-        <td class="right"><b>${fmtKD(comm)}</b></td>
-      </tr>`;
-  }).join("");
-  $("staffCounts").innerHTML = `
-    <table>
-      <thead><tr>
-        <th>Staff • الموظفة</th>
-        <th class="right">Count • العدد</th>
-        <th class="right">Sales KD • المبيعات</th>
-        <th class="right">Commission • العمولة</th>
-      </tr></thead>
-      <tbody>${staffRows || `<tr><td colspan="4" class="tiny">No staff</td></tr>`}</tbody>
-    </table>
-  `;
-}
-
-function renderToday(){
-  const invs=invoicesByDate(todayKey()).sort((a,b)=>b.ts-a.ts);
-  if(invs.length===0){ $("todayList").innerHTML=`<div class="tiny">No invoices today</div>`; return; }
-
-  $("todayList").innerHTML = invs.map(inv=>{
-    const msgLines = inv.items.map(it=>{
-      if((it.price||0)===0) return `• ${it.name} ×${it.qty}`;
-      return `• ${it.name} ×${it.qty} = ${fmtKD((it.price||0)*(it.qty||1))}KD`;
-    });
-    const msg =
-`BH Invoice
-Phone: ${inv.phone}
-${msgLines.join("\n")}
-Total: ${fmtKD(inv.total)} KD
-شكرا لزيارة صالون bh`;
-
-    const items = inv.items.map(it=>{
-      const p=(it.price||0)*(it.qty||1);
-      const staff=(it.staffIds||[]).map(staffName).join(", ")||"—";
-      return `<div class="tiny">• <b>${escapeHtml(it.name)}</b> ×${it.qty} — ${fmtKD(p)}KD <span class="muted">(${escapeHtml(staff)})</span></div>`;
-    }).join("");
-
-    return `
-      <div class="item">
-        <div class="flex">
-          <div>
-            <div class="itemname">Phone: <span class="mono">${inv.phone}</span></div>
-            <div class="tiny muted">${new Date(inv.ts).toLocaleTimeString()}</div>
-          </div>
-          <div class="row">
-            <span class="pill">Total: <b>${fmtKD(inv.total)}</b> KD</span>
-            <button class="btn mint smallbtn" onclick='openWA("${inv.phone}", ${JSON.stringify(msg)})'>
-              <span class="bi"><span class="en">WhatsApp</span><span class="ar">واتساب</span></span>
-            </button>
-          </div>
-        </div>
-        <div class="hr"></div>
-        ${items}
-      </div>`;
-  }).join("");
-}
-window.openWA=openWA;
-
-/* ===== Daily / Monthly report (Commission shown, percent hidden in text) ===== */
-let lastDaily={text:"",html:""}, lastMonthly={text:"",html:""};
-
-function openPrintWindow(title, html){
-  const w = window.open("", "_blank");
-  if(!w){ toast("Popup blocked"); return; }
-  w.document.open();
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>${escapeHtml(title)}</title>
-  <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:18px;color:#111827;background:#fff}
-    .card{border:1px solid rgba(17,24,39,.12);border-radius:16px;padding:14px}
-    @media print { button{display:none!important} }
-  </style></head><body>
-  <button onclick="window.print()" style="padding:10px 12px;border-radius:12px;border:1px solid rgba(17,24,39,.12);background:#111827;color:#fff;font-weight:900;cursor:pointer">
-    Print / Save PDF
-  </button>
-  <div style="height:12px"></div>${html}</body></html>`);
-  w.document.close();
-}
-
-function buildDaily(){
-  const d=todayKey();
-  const st=dayStats(d);
-
-  const pct = Number(S.settings.commissionPct)||0;
-
-  const staffSummary = S.staff.map(s=>{
-    const sales=st.staffSales[s.id]||0;
-    const count=st.staffCounts[s.id]||0;
-    const comm=sales*(pct/100);
-    return {name:s.name,count,sales,comm};
-  });
-
-  const totalComm=staffSummary.reduce((a,x)=>a+(x.comm||0),0);
-
-  const invHtml = st.invs.map(inv=>{
-    const itemHtml = inv.items.map(it=>{
-      const staff=(it.staffIds||[]).map(staffName).join(", ")||"—";
-      return `<div style="font-size:12px;color:#374151;margin:3px 0">• <b>${escapeHtml(it.name)}</b> ×${it.qty} — ${fmtKD((it.price||0)*(it.qty||1))}KD <span style="color:#6b7280">(${escapeHtml(staff)})</span></div>`;
-    }).join("");
-    return `<div style="border:1px solid rgba(17,24,39,.12);border-radius:14px;padding:10px;margin:10px 0;background:#fff">
-      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div><b>Phone:</b> ${escapeHtml(inv.phone)} <span style="color:#6b7280;font-size:12px">(${new Date(inv.ts).toLocaleTimeString()})</span></div>
-        <div><b>Total:</b> ${fmtKD(inv.total)} KD</div>
-      </div>
-      <div style="margin-top:6px">${itemHtml}</div>
-    </div>`;
-  }).join("");
-
-  const staffRows=staffSummary.map(x=>`
-    <tr>
-      <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10)"><b>${escapeHtml(x.name)}</b></td>
-      <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${x.count}</td>
-      <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${fmtKD(x.sales)}</td>
-      <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right"><b>${fmtKD(x.comm)}</b></td>
-    </tr>`).join("");
-
-  const html = `
-    <div class="card">
-      <h2>BH Daily Report • تقرير يومي — ${d}</h2>
-      <div>Income: <b>${fmtKD(st.income)}</b> KD • Invoices: <b>${st.invCount}</b></div>
-      <div style="margin-top:6px">
-        <b>Commission System:</b> Fixed.
-        <span style="color:#6b7280">— نظام العمولة: ثابت.</span>
-      </div>
-      <hr/>
-      <h3>Invoices • الفواتير</h3>
-      ${invHtml || `<div>No invoices</div>`}
-      <hr/>
-      <h3>Staff Summary • ملخص الموظفات</h3>
-      <table style="width:100%;border-collapse:collapse;border:1px solid rgba(17,24,39,.12)">
-        <thead style="background:rgba(17,24,39,.04)">
-          <tr>
-            <th style="padding:10px;text-align:left">Staff</th>
-            <th style="padding:10px;text-align:right">Count</th>
-            <th style="padding:10px;text-align:right">Sales</th>
-            <th style="padding:10px;text-align:right">Commission</th>
-          </tr>
-        </thead>
-        <tbody>${staffRows}</tbody>
-      </table>
-      <div style="margin-top:10px">Total Commission: <b>${fmtKD(totalComm)}</b> KD</div>
-    </div>
-  `;
-
-  const textLines = staffSummary.map(x=>`${x.name}: Sales ${fmtKD(x.sales)}KD • Comm ${fmtKD(x.comm)}KD`).join("\n");
-
-  const text =
+  </div>    <div id="page-today" class="page" style="display:none">  
+    <div class="card">  
+      <div class="flex">  
+        <h2><span class="bi"><span class="en">Today Invoices</span><span class="ar">فواتير اليوم</span></span></h2>  
+        <div class="row">  
+          <button class="btn blue" id="refreshTodayBtn"><span class="bi"><span class="en">Refresh</span><span class="ar">تحديث</span></span></button>  
+          <button class="btn butter" id="printTodayBtn"><span class="bi"><span class="en">PDF (Print)</span><span class="ar">PDF (طباعة)</span></span></button>  
+        </div>  
+      </div>  
+      <div class="tiny"><span class="bi"><span class="en">Each invoice has WhatsApp resend.</span><span class="ar">كل فاتورة فيها زر إعادة إرسال واتساب.</span></span></div>  
+      <div class="hr"></div>  
+      <div id="todayList"></div>  
+    </div>  
+  </div>    <div id="page-stats" class="page" style="display:none">  
+    <div class="card">  
+      <div class="flex">  
+        <h2><span class="bi"><span class="en">Statistics (Daily)</span><span class="ar">الإحصائية اليومية</span></span></h2>  
+        <button class="btn mint" id="refreshStatsBtn"><span class="bi"><span class="en">Refresh Statistics</span><span class="ar">تحديث الإحصائية</span></span></button>  
+      </div>  <div class="kpi" style="margin-top:12px">  
+    <div class="box"><div class="v" id="kpiIncome">0.000</div><div class="t">Income • الدخل</div></div>  
+    <div class="box"><div class="v" id="kpiInv">0</div><div class="t">Invoices • الفواتير</div></div>  
+    <div class="box"><div class="v" id="kpiServices">0</div><div class="t">Services Qty • عدد الخدمات</div></div>  
+  </div>  
+
+  <div class="hr"></div>  
+
+  <div class="grid two">  
+    <div class="card" style="box-shadow:none;background:transparent;border:none;padding:0">  
+      <h2><span class="bi"><span class="en">Services Count</span><span class="ar">عدد كل خدمة</span></span></h2>  
+      <div id="svcCounts"></div>  
+    </div>  
+    <div class="card" style="box-shadow:none;background:transparent;border:none;padding:0">  
+      <h2><span class="bi"><span class="en">Staff Count</span><span class="ar">عدد لكل موظفة</span></span></h2>  
+      <div id="staffCounts"></div>  
+      <div class="hr"></div>  
+      <div class="tag ok">  
+        <span class="bi">  
+          <span class="en">Commission System: Fixed.</span>  
+          <span class="ar">نظام العمولة: ثابت.</span>  
+        </span>  
+      </div>  
+    </div>  
+  </div>  
+</div>
+
+  </div>    <div id="page-daily" class="page" style="display:none">  
+    <div class="card">  
+      <div class="flex">  
+        <h2><span class="bi"><span class="en">Daily Report (Manager)</span><span class="ar">تقرير يومي (للمديرة)</span></span></h2>  
+        <div class="row">  
+          <button class="btn purple" id="buildDailyBtn"><span class="bi"><span class="en">Build</span><span class="ar">إنشاء</span></span></button>  
+          <button class="btn mint" id="sendDailyBtn"><span class="bi"><span class="en">Send WhatsApp</span><span class="ar">إرسال واتساب</span></span></button>  
+          <button class="btn butter" id="pdfDailyBtn"><span class="bi"><span class="en">PDF (Print)</span><span class="ar">PDF (طباعة)</span></span></button>  
+        </div>  
+      </div>  
+      <div class="tiny">  
+        <span class="bi">  
+          <span class="en">Includes invoices + staff sales + commission (hidden percent).</span>  
+          <span class="ar">يشمل الفواتير + مبيعات الموظفات + العمولة (النسبة مخفية).</span>  
+        </span>  
+      </div>  
+      <div class="hr"></div>  
+      <div id="dailyPreview"></div>  
+    </div>  
+  </div>    <div id="page-monthly" class="page" style="display:none">  
+    <div class="card">  
+      <div class="flex">  
+        <h2><span class="bi"><span class="en">Monthly Commission</span><span class="ar">عمولات نهاية الشهر</span></span></h2>  
+        <div class="row">  
+          <div class="field" style="min-width:220px">  
+            <label><span class="bi"><span class="en">Month</span><span class="ar">الشهر</span></span></label>  
+            <input id="monthSel" type="month"/>  
+          </div>  
+          <button class="btn purple" id="buildMonthlyBtn"><span class="bi"><span class="en">Build</span><span class="ar">إنشاء</span></span></button>  
+          <button class="btn mint" id="sendMonthlyBtn"><span class="bi"><span class="en">Send WhatsApp</span><span class="ar">إرسال واتساب</span></span></button>  
+          <button class="btn butter" id="pdfMonthlyBtn"><span class="bi"><span class="en">PDF (Print)</span><span class="ar">PDF (طباعة)</span></span></button>  
+        </div>  
+      </div>  
+      <div class="tiny">  
+        <span class="bi">  
+          <span class="en">Commission System: Fixed.</span>  
+          <span class="ar">نظام العمولة: ثابت.</span>  
+        </span>  
+      </div>  
+      <div class="hr"></div>  
+      <div id="monthlyPreview"></div>  
+    </div>  
+  </div>    <div id="page-manage" class="page" style="display:none">  
+    <div class="grid two">  
+      <div class="card">  
+        <div class="flex">  
+          <h2><span class="bi"><span class="en">Manage Services</span><span class="ar">إدارة الخدمات</span></span></h2>  
+          <button class="btn blue" id="addSvcOpenBtn"><span class="bi"><span class="en">Add Service</span><span class="ar">إضافة خدمة</span></span></button>  
+        </div>  
+        <div class="hr"></div>  
+        <div id="manageServices"></div>  
+      </div>  <div class="card">  
+    <div class="flex">  
+      <h2><span class="bi"><span class="en">Manage Staff</span><span class="ar">إدارة الموظفات</span></span></h2>  
+      <button class="btn blue" id="addStaffOpenBtn"><span class="bi"><span class="en">Add Staff</span><span class="ar">إضافة موظفة</span></span></button>  
+    </div>  
+    <div class="hr"></div>  
+    <div id="manageStaff"></div>  
+
+    <!-- ✅ Commission edit inside Manage -->  
+    <div class="hr"></div>  
+    <div class="softcard">  
+      <div class="itemname"><span class="bi"><span class="en">Commission (Admin)</span><span class="ar">العمولة (للمديرة)</span></span></div>  
+      <div class="tiny" style="margin-top:6px">  
+        <span class="bi">  
+          <span class="en">Percent is not shown in reports/screens (shows “Fixed” only).</span>  
+          <span class="ar">النسبة لا تظهر في التقارير/الشاشات (يظهر “ثابت” فقط).</span>  
+        </span>  
+      </div>  
+
+      <div class="row" style="margin-top:10px">  
+        <div class="field" style="max-width:210px">  
+          <label><span class="bi"><span class="en">Commission %</span><span class="ar">نسبة العمولة ٪</span></span></label>  
+          <input id="commissionPct" type="number" min="0" max="50" step="0.5" />  
+        </div>  
+        <button class="btn dark" id="saveCommissionBtn">  
+          <span class="bi"><span class="en">Save</span><span class="ar">حفظ</span></span>  
+        </button>  
+      </div>  
+
+      <div class="tiny" id="commissionSavedHint" style="margin-top:8px"></div>  
+    </div>  
+  </div>  
+</div>
+
+  </div>    <div class="toast" id="toast"></div>  
+</div>  <script>  
+/* =========================  
+   Commission System (Fixed — editable only in Manage)  
+   - We DO NOT show percent in reports/screens (show "Fixed." only)  
+   ========================= */  
+function getCommissionPct(){  
+  const v = Number((S?.settings?.commissionPct ?? 3));  
+  if(!isFinite(v) || v < 0) return 3;  
+  return v;  
+}  
+  
+/* =========================  
+   Storage keys  
+   ========================= */  
+const K = {  
+  services: "bh_services_v4",  
+  staff: "bh_staff_v4",  
+  invoices: "bh_invoices_v4",  
+  subs: "bh_subs_v4",  
+  settings: "bh_settings_v4",  
+  backup: "bh_autobackup_v4"  
+};  
+  
+const $ = (id)=>document.getElementById(id);  
+const todayKey = ()=> new Date().toISOString().slice(0,10);  
+  
+function toast(msg){  
+  const t=$("toast");  
+  t.textContent=msg;  
+  t.classList.add("show");  
+  clearTimeout(toast._tm);  
+  toast._tm=setTimeout(()=>t.classList.remove("show"),1600);  
+}  
+function fmtKD(n){  
+  const x = Math.round((Number(n)||0)*1000)/1000;  
+  return x.toFixed(3);  
+}  
+function escapeHtml(s){  
+  return (s??"").toString()  
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")  
+    .replaceAll('"',"&quot;").replaceAll("'","&#39;");  
+}  
+  
+/* ===== Kuwait Phone Cleaner ===== */  
+function cleanKuwaitPhone(raw){  
+  let s = (raw||"").toString().trim();  
+  if(!s) return {ok:false, msg:"اكتبي رقم الهاتف / Enter phone"};  
+  s = s.replace(/\s+/g,"");  
+  if(s.startsWith("+")) s = s.slice(1);  
+  if(s.startsWith("00")) s = s.slice(2);  
+  if(/^965\d{8}$/.test(s)) return {ok:true, phone:s};  
+  if(/^\d{8}$/.test(s)) return {ok:true, phone:"965"+s};  
+  return {ok:false, msg:"رقم غير كويتي / Not Kuwait number"};  
+}  
+function openWA(phone965, text){  
+  const url = "https://wa.me/" + encodeURIComponent(phone965) + "?text=" + encodeURIComponent(text);  
+  window.open(url, "_blank");  
+}  
+  
+/* ===== Data load/save ===== */  
+function loadJSON(key, fallback){  
+  try{  
+    const v = localStorage.getItem(key);  
+    return v ? JSON.parse(v) : fallback;  
+  }catch(e){ return fallback; }  
+}  
+function saveJSON(key, obj){  
+  localStorage.setItem(key, JSON.stringify(obj));  
+  localStorage.setItem(K.backup, JSON.stringify({ts:Date.now()}));  
+}  
+  
+/* ===== Defaults ===== */  
+function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }  
+  
+function defaultServices(){  
+  return [  
+    {id:uid(), cat:"Spa", name:"Head Spa", price:10},  
+    {id:uid(), cat:"Spa", name:"Head Spa + Face", price:15},  
+    {id:uid(), cat:"Spa", name:"Massage", price:10},  
+    {id:uid(), cat:"Spa", name:"Massage 1/2", price:5},  
+    {id:uid(), cat:"Spa", name:"Hair Treatment + Head Spa", price:15},  
+    {id:uid(), cat:"Spa", name:"Hair Treatment + Head Spa + Face", price:20},  
+  
+    {id:uid(), cat:"Steam Bath", name:"Bath", price:10},  
+  
+    {id:uid(), cat:"Hair", name:"Blow Dry (3 KD)", price:3},  
+    {id:uid(), cat:"Hair", name:"Blow Dry (5 KD)", price:5},  
+    {id:uid(), cat:"Hair", name:"Wavy (5 KD)", price:5},  
+    {id:uid(), cat:"Hair", name:"Wavy (7 KD)", price:7},  
+    {id:uid(), cat:"Hair", name:"Hairstyle", price:10},  
+    {id:uid(), cat:"Hair", name:"Hair Wash", price:1},  
+    {id:uid(), cat:"Hair", name:"Treatment Hair Wash", price:3},  
+    {id:uid(), cat:"Hair", name:"Hair Mask", price:5},  
+    {id:uid(), cat:"Hair", name:"Hair Color Short", price:10},  
+    {id:uid(), cat:"Hair", name:"Hair Color Long", price:20},  
+    {id:uid(), cat:"Hair", name:"Hair Treatment", price:10},  
+    {id:uid(), cat:"Hair", name:"Hair Scrub", price:5},  
+    {id:uid(), cat:"Hair", name:"Retro", price:8},  
+  
+    {id:uid(), cat:"Nails", name:"Pedicure", price:2.5},  
+    {id:uid(), cat:"Nails", name:"Manicure", price:2.5},  
+    {id:uid(), cat:"Nails", name:"Pedi / Mani", price:5},  
+    {id:uid(), cat:"Nails", name:"Spa Pedicure", price:5},  
+    {id:uid(), cat:"Nails", name:"Spa Manicure", price:5},  
+    {id:uid(), cat:"Nails", name:"Spa Pedi / Mani", price:10},  
+    {id:uid(), cat:"Nails", name:"Extensions 1", price:5},  
+    {id:uid(), cat:"Nails", name:"Extensions 2", price:10},  
+    {id:uid(), cat:"Nails", name:"Nail Polish (1 KD)", price:1},  
+    {id:uid(), cat:"Nails", name:"Nail Polish (2 KD)", price:2},  
+    {id:uid(), cat:"Nails", name:"French Polish", price:3},  
+    {id:uid(), cat:"Nails", name:"Cat Eye Polish", price:4},  
+    {id:uid(), cat:"Nails", name:"Chrome", price:4},  
+    {id:uid(), cat:"Nails", name:"Nail Art", price:5},  
+    {id:uid(), cat:"Nails", name:"Removal", price:6},  
+  
+    {id:uid(), cat:"Hair Removal", name:"Upper Lip", price:1},  
+    {id:uid(), cat:"Hair Removal", name:"Eyebrow", price:1},  
+    {id:uid(), cat:"Hair Removal", name:"Face", price:3},  
+    {id:uid(), cat:"Hair Removal", name:"Body (5 KD)", price:5},  
+    {id:uid(), cat:"Hair Removal", name:"Body (10 KD)", price:10},  
+  
+    {id:uid(), cat:"Other Services", name:"Makeup Simple", price:10},  
+    {id:uid(), cat:"Other Services", name:"Makeup", price:15},  
+  
+    /* ✅ 3service requires 3+ staff */  
+    {id:uid(), cat:"Packages", name:"3service 15KD ashtrak", price:15, meta:{requiresStaffMin:3}},  
+  ];  
+}  
+  
+function defaultStaff(){  
+  return [  
+    {id:uid(), name:"kla"},  
+    {id:uid(), name:"bna"},  
+    {id:uid(), name:"meme"},  
+    {id:uid(), name:"sntsh"},  
+    {id:uid(), name:"nrml"},  
+    {id:uid(), name:"mlk"},  
+    {id:uid(), name:"indr"}  
+  ];  
+}  
+  
+function defaultSettings(){  
+  return {  
+    managerPhone:"96569977533",  
+    targetDaily:10,  
+    commissionPct:3  
+  };  
+}  
+  
+/* ===== State ===== */  
+let S = {  
+  services: loadJSON(K.services, null) || defaultServices(),  
+  staff: loadJSON(K.staff, null) || defaultStaff(),  
+  invoices: loadJSON(K.invoices, null) || [],  
+  subs: loadJSON(K.subs, null) || {},  
+  settings: Object.assign(defaultSettings(), loadJSON(K.settings, null)||{})  
+};  
+  
+function persistAll(){  
+  saveJSON(K.services, S.services);  
+  saveJSON(K.staff, S.staff);  
+  saveJSON(K.invoices, S.invoices);  
+  saveJSON(K.subs, S.subs);  
+  saveJSON(K.settings, S.settings);  
+}  
+  
+/* =========================  
+   Tabs / Pages (bilingual)  
+   ========================= */  
+const PAGES = [  
+  {id:"invoice", en:"Invoice", ar:"فاتورة"},  
+  {id:"today", en:"Today Invoices", ar:"فواتير اليوم"},  
+  {id:"stats", en:"Statistics", ar:"إحصائية"},  
+  {id:"daily", en:"Daily Report", ar:"تقرير يومي"},  
+  {id:"monthly", en:"Monthly Commission", ar:"عمولات الشهر"},  
+  {id:"manage", en:"Manage", ar:"إدارة"}  
+];  
+  
+function setPage(id){  
+  for(const p of PAGES){  
+    $("page-"+p.id).style.display = (p.id===id) ? "" : "none";  
+    const b = document.querySelector(`[data-tab="${p.id}"]`);  
+    if(b) b.classList.toggle("active", p.id===id);  
+  }  
+  if(id==="today") renderToday();  
+  if(id==="stats") renderStats();  
+  if(id==="daily") $("dailyPreview").innerHTML = `<div class="tiny">Build / إنشاء</div>`;  
+  if(id==="monthly") {  
+    if(!$("monthSel").value){  
+      const d=new Date(); $("monthSel").value = d.toISOString().slice(0,7);  
+    }  
+    $("monthlyPreview").innerHTML = `<div class="tiny">Choose month ثم Build</div>`;  
+  }  
+  if(id==="manage"){  
+    renderManageServices(); renderManageStaff();  
+    $("commissionPct").value = String(getCommissionPct());  
+    $("commissionSavedHint").textContent = "";  
+  }  
+}  
+  
+function initTabs(){  
+  const cols = ["1","2","3","4","5","1"];  
+  $("tabs").innerHTML = PAGES.map((p,i)=>`  
+    <button class="tab" data-col="${cols[i%cols.length]}" data-tab="${p.id}">  
+      <span class="bi"><span class="en">${p.en}</span><span class="ar">${p.ar}</span></span>  
+    </button>  
+  `).join("");  
+  for(const p of PAGES){  
+    document.querySelector(`[data-tab="${p.id}"]`).onclick = ()=>setPage(p.id);  
+  }  
+}  
+  
+/* =========================  
+   Invoice  
+   ========================= */  
+let inv = { phone:"", items:[] };  
+  
+function resetInv(){  
+  inv = {phone:"", items:[]};  
+  $("custPhone").value="";  
+  $("qtySel").value=1;  
+  $("staffPick").selectedIndex=-1;  
+  
+  $("manualName").value="";  
+  $("manualPrice").value="";  
+  $("manualQty").value=1;  
+  
+  renderItems();  
+  refreshSubTag();  
+  toast("تم / Done");  
+}  
+  
+function getSelectedStaffIds(){  
+  const sel = $("staffPick");  
+  const ids = [];  
+  for(const opt of sel.options){ if(opt.selected) ids.push(opt.value); }  
+  return ids;  
+}  
+function staffName(id){ return (S.staff.find(x=>x.id===id)||{}).name || "—"; }  
+function serviceById(id){ return S.services.find(x=>x.id===id); }  
+  
+function addItemFromSelect(){  
+  const svcId = $("svcSel").value;  
+  const svc = serviceById(svcId);  
+  if(!svc){ toast("اختاري خدمة / Pick service"); return; }  
+  
+  const qty = Math.max(1, Number($("qtySel").value)||1);  
+  const staffIds = getSelectedStaffIds();  
+  
+  const minStaff = svc?.meta?.requiresStaffMin || 0;  
+  if(minStaff && staffIds.length < minStaff){  
+    toast(`لازم ${minStaff}+ موظفات / Need ${minStaff}+ staff`);  
+    return;  
+  }  
+  
+  inv.items.push({  
+    id: uid(),  
+    refServiceId: svc.id,  
+    name: svc.name,  
+    price: Number(svc.price)||0,  
+    qty,  
+    staffIds: staffIds.slice(),  
+    meta: Object.assign({}, svc.meta||{}, {type:"normal"})  
+  });  
+  
+  renderItems();  
+  toast("تمت الإضافة / Added");  
+}  
+  
+/* ✅ Manual / Temporary service add */  
+function addManualItem(){  
+  const name = ($("manualName").value || "").trim();  
+  const price = Number($("manualPrice").value);  
+  const qty = Math.max(1, Number($("manualQty").value)||1);  
+  const staffIds = getSelectedStaffIds();  
+  
+  if(!name){ toast("اكتبي اسم الخدمة"); return; }  
+  if(!isFinite(price) || price < 0){ toast("اكتبي سعر صحيح"); return; }  
+  if(staffIds.length < 1){ toast("اختاري موظفة/موظفات"); return; }  
+  
+  inv.items.push({  
+    id: uid(),  
+    name: name,  
+    price: Number(price)||0,  
+    qty,  
+    staffIds: staffIds.slice(),  
+    meta: { type:"manual" } // not saved in services  
+  });  
+  
+  $("manualName").value="";  
+  $("manualPrice").value="";  
+  $("manualQty").value=1;  
+  
+  renderItems();  
+  toast("تمت الإضافة / Added");  
+}  
+  
+function removeItem(itemId){  
+  inv.items = inv.items.filter(x=>x.id!==itemId);  
+  renderItems();  
+}  
+function invTotal(){  
+  return inv.items.reduce((a,it)=>a + (Number(it.price)||0) * (Number(it.qty)||1), 0);  
+}  
+  
+function refreshSubTag(){  
+  const c = cleanKuwaitPhone($("custPhone").value);  
+  let tag = $("subTag");  
+  if(!c.ok){  
+    tag.className="tag";  
+    tag.textContent="Package: —";  
+    return;  
+  }  
+  const sub = S.subs[c.phone];  
+  if(sub && sub.active){  
+    const rem = Math.max(0, sub.max - sub.used);  
+    tag.className="tag ok";  
+    tag.textContent=`Package Mask: Used ${sub.used}/${sub.max} • Remaining ${rem}`;  
+  }else{  
+    tag.className="tag";  
+    tag.textContent="Package Mask: Not Active";  
+  }  
+}  
+  
+function renderItems(){  
+  $("invTotal").textContent = fmtKD(invTotal());  
+  const box = $("items");  
+  if(inv.items.length===0){  
+    box.innerHTML = `<div class="tiny">لا توجد بنود بعد / No items yet</div>`;  
+    return;  
+  }  
+  box.innerHTML = inv.items.map(it=>{  
+    const staff = (it.staffIds||[]).map(staffName).join(", ") || "—";  
+    const flags=[];  
+    if(it.meta?.type==="sub_sale") flags.push(`<span class="tag warn">Package Sale</span>`);  
+    if(it.meta?.type==="sub_use") flags.push(`<span class="tag ok">Package Use • ${it.meta.used}/${it.meta.max} • Rem ${it.meta.remaining}</span>`);  
+    if(it.meta?.requiresStaffMin) flags.push(`<span class="tag">Min Staff: ${it.meta.requiresStaffMin}</span>`);  
+    if(it.meta?.type==="manual") flags.push(`<span class="tag">Manual</span>`);  
+    return `  
+      <div class="item">  
+        <div class="itemhead">  
+          <div>  
+            <div class="itemname">${escapeHtml(it.name)}</div>  
+            <div class="tiny">Staff: <b>${escapeHtml(staff)}</b></div>  
+            ${flags.length? `<div class="row" style="margin-top:6px">${flags.join("")}</div>`:""}  
+          </div>  
+          <div class="right">  
+            <div><b>${fmtKD(it.price)}</b> KD × <b>${it.qty}</b></div>  
+            <div class="tiny muted">Line: ${fmtKD((it.price||0)*(it.qty||1))} KD</div>  
+            <div class="row" style="justify-content:flex-end;margin-top:6px">  
+              <button class="btn pink smallbtn" onclick="removeItem('${it.id}')">  
+                <span class="bi"><span class="en">Remove</span><span class="ar">حذف</span></span>  
+              </button>  
+            </div>  
+          </div>  
+        </div>  
+      </div>  
+    `;  
+  }).join("");  
+}  
+window.removeItem = removeItem;  
+  
+function ensurePhoneOrWarn(){  
+  const c = cleanKuwaitPhone($("custPhone").value);  
+  if(!c.ok){ toast("رقم غير صحيح / Invalid phone"); return null; }  
+  $("custPhone").value = c.phone;  
+  return c.phone;  
+}  
+  
+/* ===== Package Mask Logic ===== */  
+function pkgMaskAction(){  
+  const phone = ensurePhoneOrWarn();  
+  if(!phone) return;  
+  
+  let sub = S.subs[phone];  
+  if(!sub || !sub.active){  
+    sub = {active:true, max:5, used:0};  
+    S.subs[phone]=sub;  
+  
+    inv.items.push({  
+      id:uid(),  
+      name:"Package Mask (5 sessions)",  
+      price:15,  
+      qty:1,  
+      staffIds:getSelectedStaffIds().slice(),  
+      meta:{type:"sub_sale", max:5}  
+    });  
+  
+    persistAll();  
+    renderItems(); refreshSubTag();  
+    toast("تم بيع البكج / Package sold");  
+    return;  
+  }  
+  
+  const staffIds = getSelectedStaffIds();  
+  if(staffIds.length<1){ toast("اختاري موظفة للجلسة / Select staff"); return; }  
+  
+  sub.used = Math.min(sub.max, sub.used+1);  
+  const remaining = Math.max(0, sub.max - sub.used);  
+  
+  inv.items.push({  
+    id:uid(),  
+    name:"Mask Session (Package Mask)",  
+    price:0,  
+    qty:1,  
+    staffIds:[staffIds[0]],  
+    meta:{type:"sub_use", used:sub.used, remaining, max:sub.max}  
+  });  
+  
+  if(sub.used>=sub.max){  
+    sub.active=false; sub.used=0;  
+    toast("آخر جلسة — تصفير / Reset");  
+  }else{  
+    toast(`جلسة ${sub.used}/${sub.max}`);  
+  }  
+  
+  S.subs[phone]=sub;  
+  persistAll();  
+  renderItems(); refreshSubTag();  
+}  
+  
+/* ===== Save Invoice + WhatsApp ===== */  
+function saveInvoiceAndWA(){  
+  const phone = ensurePhoneOrWarn();  
+  if(!phone) return;  
+  if(inv.items.length===0){ toast("أضيفي خدمة / Add item"); return; }  
+  
+  for(const it of inv.items){  
+    const minStaff = it.meta?.requiresStaffMin || 0;  
+    if(minStaff && (it.staffIds||[]).length < minStaff){  
+      toast(`"${it.name}" لازم ${minStaff}+ موظفات`);  
+      return;  
+    }  
+  }  
+  
+  const record = {  
+    id: uid(),  
+    date: todayKey(),  
+    ts: Date.now(),  
+    phone,  
+    items: inv.items.map(x=>({  
+      name:x.name,  
+      price:Number(x.price)||0,  
+      qty:Number(x.qty)||1,  
+      staffIds:(x.staffIds||[]).slice(),  
+      meta:x.meta||{}  
+    })),  
+    total: invTotal()  
+  };  
+  
+  S.invoices.push(record);  
+  persistAll();  
+  
+  const lines = record.items.map(it=>{  
+    const q = it.qty||1;  
+    const p = it.price||0;  
+    if(p===0) return `• ${it.name} ×${q}`;  
+    return `• ${it.name} ×${q} = ${fmtKD(p*q)}KD`;  
+  });  
+  
+  const msg =  
+`BH Invoice  
+Phone: ${phone}  
+${lines.join("\n")}  
+Total: ${fmtKD(record.total)} KD  
+شكرا لزيارة صالون bh`;  
+  
+  openWA(phone, msg);  
+  resetInv();  
+}  
+  
+/* ===== Reports / Stats ===== */  
+function invoicesByDate(d){ return S.invoices.filter(x=>x.date===d); }  
+  
+/* Daily stats with staff sales (commission percent hidden in UI) */  
+function dayStats(dateStr){  
+  const invs = invoicesByDate(dateStr);  
+  let income=0, invCount=invs.length;  
+  
+  const svcCounts={}, staffCounts={}, staffSales={};  
+  for(const st of S.staff){ staffCounts[st.id]=0; staffSales[st.id]=0; }  
+  
+  for(const inv of invs){  
+    income += Number(inv.total)||0;  
+    for(const it of inv.items){  
+      const qty = Number(it.qty)||1;  
+      svcCounts[it.name]=(svcCounts[it.name]||0)+qty;  
+  
+      const staffIds=(it.staffIds||[]).filter(Boolean);  
+      if(staffIds.length){  
+        for(const sid of staffIds) staffCounts[sid]=(staffCounts[sid]||0)+qty;  
+  
+        const line=(Number(it.price)||0)*qty;  
+        const share=staffIds.length ? (line/staffIds.length) : 0;  
+        for(const sid of staffIds) staffSales[sid]=(staffSales[sid]||0)+share;  
+      }  
+    }  
+  }  
+  
+  const totalServicesQty=Object.values(svcCounts).reduce((a,b)=>a+b,0);  
+  const commPct = getCommissionPct();  
+  
+  const commissions = S.staff.map(st=>({  
+    sid: st.id,  
+    sales: staffSales[st.id]||0,  
+    comm: (staffSales[st.id]||0) * (commPct/100)  
+  }));  
+  
+  return {invs,income,invCount,totalServicesQty,svcCounts,staffCounts,staffSales,commPct,commissions};  
+}  
+  
+function renderStats(){  
+  const d=todayKey();  
+  const st=dayStats(d);  
+  $("kpiIncome").textContent=fmtKD(st.income);  
+  $("kpiInv").textContent=st.invCount;  
+  $("kpiServices").textContent=st.totalServicesQty;  
+  
+  const svcRows = Object.entries(st.svcCounts).sort((a,b)=>b[1]-a[1]).map(([name,count])=>  
+    `<tr><td>${escapeHtml(name)}</td><td class="right"><b>${count}</b></td></tr>`  
+  ).join("");  
+  $("svcCounts").innerHTML = `  
+    <table>  
+      <thead><tr><th>Service • الخدمة</th><th class="right">Count • العدد</th></tr></thead>  
+      <tbody>${svcRows || `<tr><td colspan="2" class="tiny">No data</td></tr>`}</tbody>  
+    </table>  
+  `;  
+  
+  const staffRows = S.staff.map(stf=>{  
+    const c=st.staffCounts[stf.id]||0;  
+    const sales=st.staffSales[stf.id]||0;  
+    const comm = sales*(getCommissionPct()/100);  
+    return `  
+      <tr>  
+        <td><b>${escapeHtml(stf.name)}</b></td>  
+        <td class="right">${c}</td>  
+        <td class="right">${fmtKD(sales)}</td>  
+        <td class="right"><b>${fmtKD(comm)}</b></td>  
+      </tr>`;  
+  }).join("");  
+  $("staffCounts").innerHTML = `  
+    <table>  
+      <thead><tr>  
+        <th>Staff • الموظفة</th>  
+        <th class="right">Count • العدد</th>  
+        <th class="right">Sales KD • المبيعات</th>  
+        <th class="right">Commission • العمولة</th>  
+      </tr></thead>  
+      <tbody>${staffRows || `<tr><td colspan="4" class="tiny">No staff</td></tr>`}</tbody>  
+    </table>  
+  `;  
+}  
+  
+function renderToday(){  
+  const invs=invoicesByDate(todayKey()).sort((a,b)=>b.ts-a.ts);  
+  if(invs.length===0){ $("todayList").innerHTML=`<div class="tiny">No invoices today</div>`; return; }  
+  
+  $("todayList").innerHTML = invs.map(inv=>{  
+    const msgLines = inv.items.map(it=>{  
+      if((it.price||0)===0) return `• ${it.name} ×${it.qty}`;  
+      return `• ${it.name} ×${it.qty} = ${fmtKD((it.price||0)*(it.qty||1))}KD`;  
+    });  
+    const msg =  
+`BH Invoice  
+Phone: ${inv.phone}  
+${msgLines.join("\n")}  
+Total: ${fmtKD(inv.total)} KD  
+شكرا لزيارة صالون bh`;  
+  
+    const items = inv.items.map(it=>{  
+      const p=(it.price||0)*(it.qty||1);  
+      const staff=(it.staffIds||[]).map(staffName).join(", ")||"—";  
+      return `<div class="tiny">• <b>${escapeHtml(it.name)}</b> ×${it.qty} — ${fmtKD(p)}KD <span class="muted">(${escapeHtml(staff)})</span></div>`;  
+    }).join("");  
+  
+    return `  
+      <div class="item">  
+        <div class="flex">  
+          <div>  
+            <div class="itemname">Phone: <span class="mono">${inv.phone}</span></div>  
+            <div class="tiny muted">${new Date(inv.ts).toLocaleTimeString()}</div>  
+          </div>  
+          <div class="row">  
+            <span class="pill">Total: <b>${fmtKD(inv.total)}</b> KD</span>  
+            <button class="btn mint smallbtn" onclick='openWA("${inv.phone}", ${JSON.stringify(msg)})'>  
+              <span class="bi"><span class="en">WhatsApp</span><span class="ar">واتساب</span></span>  
+            </button>  
+          </div>  
+        </div>  
+        <div class="hr"></div>  
+        ${items}  
+      </div>`;  
+  }).join("");  
+}  
+window.openWA=openWA;  
+  
+/* ===== Daily / Monthly report (percent hidden in text header) ===== */  
+let lastDaily={text:"",html:""}, lastMonthly={text:"",html:""};  
+  
+function openPrintWindow(title, html){  
+  const w = window.open("", "_blank");  
+  if(!w){ toast("Popup blocked"); return; }  
+  w.document.open();  
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"/>  
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>  
+  <title>${escapeHtml(title)}</title>  
+  <style>  
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:18px;color:#111827;background:#fff}  
+    .card{border:1px solid rgba(17,24,39,.12);border-radius:16px;padding:14px}  
+    @media print { button{display:none!important} }  
+  </style></head><body>    <button onclick="window.print()" style="padding:10px 12px;border-radius:12px;border:1px solid rgba(17,24,39,.12);background:#111827;color:#fff;font-weight:900;cursor:pointer">  
+    Print / Save PDF  
+  </button>  
+  <div style="height:12px"></div>${html}</body></html>`);  
+  w.document.close();  
+}  function buildDaily(){
+const d=todayKey();
+const st=dayStats(d);
+
+const staffSummary = S.staff.map(s=>{
+const sales=st.staffSales[s.id]||0;
+const count=st.staffCounts[s.id]||0;
+const comm=sales*(getCommissionPct()/100);
+return {name:s.name,count,sales,comm};
+});
+
+const totalComm=staffSummary.reduce((a,x)=>a+(x.comm||0),0);
+
+const invHtml = st.invs.map(inv=>{
+const itemHtml = inv.items.map(it=>{
+const staff=(it.staffIds||[]).map(staffName).join(", ")||"—";
+return <div style="font-size:12px;color:#374151;margin:3px 0">• <b>${escapeHtml(it.name)}</b> ×${it.qty} — ${fmtKD((it.price||0)*(it.qty||1))}KD <span style="color:#6b7280">(${escapeHtml(staff)})</span></div>;
+}).join("");
+return <div style="border:1px solid rgba(17,24,39,.12);border-radius:14px;padding:10px;margin:10px 0;background:#fff">   <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">   <div><b>Phone:</b> ${escapeHtml(inv.phone)} <span style="color:#6b7280;font-size:12px">(${new Date(inv.ts).toLocaleTimeString()})</span></div>   <div><b>Total:</b> ${fmtKD(inv.total)} KD</div>   </div>   <div style="margin-top:6px">${itemHtml}</div>   </div>;
+}).join("");
+
+const staffRows=staffSummary.map(x=>   <tr>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10)"><b>${escapeHtml(x.name)}</b></td>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${x.count}</td>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${fmtKD(x.sales)}</td>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right"><b>${fmtKD(x.comm)}</b></td>   </tr>).join("");
+
+const html =   <div class="card">   <h2>BH Daily Report • تقرير يومي — ${d}</h2>   <div>Income: <b>${fmtKD(st.income)}</b> KD • Invoices: <b>${st.invCount}</b></div>   <div style="margin-top:6px">   <b>Commission System:</b> Fixed.   <span style="color:#6b7280">— نظام العمولة: ثابت.</span>   </div>   <hr/>   <h3>Invoices • الفواتير</h3>   ${invHtml ||<div>No invoices</div>}   <hr/>   <h3>Staff Summary • ملخص الموظفات</h3>   <table style="width:100%;border-collapse:collapse;border:1px solid rgba(17,24,39,.12)">   <thead style="background:rgba(17,24,39,.04)">   <tr>   <th style="padding:10px;text-align:left">Staff</th>   <th style="padding:10px;text-align:right">Count</th>   <th style="padding:10px;text-align:right">Sales</th>   <th style="padding:10px;text-align:right">Commission</th>   </tr>   </thead>   <tbody>${staffRows}</tbody>   </table>   <div style="margin-top:10px">Total Commission: <b>${fmtKD(totalComm)}</b> KD</div>   </div>   ;
+
+const textLines = staffSummary.map(x=>${x.name}: Sales ${fmtKD(x.sales)}KD • Comm ${fmtKD(x.comm)}KD).join("\n");
+
+const text =
 `BH Daily Report — ${d}
 Income: ${fmtKD(st.income)} KD
 Invoices: ${st.invCount}
@@ -1153,82 +1134,56 @@ ${textLines}
 
 (Use PDF for full table)`;
 
-  lastDaily={text,html};
-  $("dailyPreview").innerHTML=html;
-  toast("تم / Built");
+lastDaily={text,html};
+$("dailyPreview").innerHTML=html;
+toast("تم / Built");
 }
 
 function buildMonthly(){
-  const mk = $("monthSel").value;
-  if(!mk){ toast("اختاري شهر / Pick month"); return; }
+const mk = $("monthSel").value;
+if(!mk){ toast("اختاري شهر / Pick month"); return; }
 
-  const pct = Number(S.settings.commissionPct)||0;
+const pct = getCommissionPct();
+const invs = S.invoices.filter(inv => inv.date.slice(0,7) === mk);
 
-  const invs = S.invoices.filter(inv => inv.date.slice(0,7) === mk);
+const salesByStaff = {};
+for(const stf of S.staff) salesByStaff[stf.id] = 0;
 
-  const salesByStaff = {};
-  for(const stf of S.staff) salesByStaff[stf.id] = 0;
+for(const inv of invs){
+for(const it of inv.items){
+const qty = Number(it.qty)||1;
+const staffIds = (it.staffIds||[]).filter(Boolean);
+if(!staffIds.length) continue;
 
-  for(const inv of invs){
-    for(const it of inv.items){
-      const qty = Number(it.qty)||1;
-      const staffIds = (it.staffIds||[]).filter(Boolean);
-      if(!staffIds.length) continue;
+const line = (Number(it.price)||0) * qty;  
+  const share = line / staffIds.length;  
+  for(const sid of staffIds){  
+    salesByStaff[sid] = (salesByStaff[sid]||0) + share;  
+  }  
+}
 
-      const line = (Number(it.price)||0) * qty;
-      const share = line / staffIds.length;
-      for(const sid of staffIds){
-        salesByStaff[sid] = (salesByStaff[sid]||0) + share;
-      }
-    }
-  }
+}
 
-  const rows = S.staff.map(stf=>{
-    const sales = salesByStaff[stf.id] || 0;
-    const comm = sales * (pct/100);
-    return `
-      <tr>
-        <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10)"><b>${escapeHtml(stf.name)}</b></td>
-        <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${fmtKD(sales)}</td>
-        <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right"><b>${fmtKD(comm)}</b></td>
-      </tr>
-    `;
-  }).join("");
+const rows = S.staff.map(stf=>{
+const sales = salesByStaff[stf.id] || 0;
+const comm = sales * (pct/100);
+return   <tr>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10)"><b>${escapeHtml(stf.name)}</b></td>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${fmtKD(sales)}</td>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right"><b>${fmtKD(comm)}</b></td>   </tr>  ;
+}).join("");
 
-  const totalComm = S.staff.reduce((a,stf)=>{
-    const sales = salesByStaff[stf.id]||0;
-    return a + sales*(pct/100);
-  }, 0);
+const totalComm = S.staff.reduce((a,stf)=>{
+const sales = salesByStaff[stf.id]||0;
+return a + sales*(pct/100);
+}, 0);
 
-  const html = `
-    <div class="card">
-      <h2>BH Monthly Commission • عمولات — ${mk}</h2>
-      <div>
-        <b>Commission System:</b> Fixed.
-        <span style="color:#6b7280">— نظام العمولة: ثابت.</span>
-      </div>
-      <div style="margin-top:6px">Total Commission: <b>${fmtKD(totalComm)}</b> KD</div>
-      <hr/>
-      <table style="width:100%;border-collapse:collapse;border:1px solid rgba(17,24,39,.12)">
-        <thead style="background:rgba(17,24,39,.04)">
-          <tr>
-            <th style="padding:10px;text-align:left">Staff • الموظفة</th>
-            <th style="padding:10px;text-align:right">Sales • المبيعات</th>
-            <th style="padding:10px;text-align:right">Commission • العمولة</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  `;
+const html =   <div class="card">   <h2>BH Monthly Commission • عمولات — ${mk}</h2>   <div>   <b>Commission System:</b> Fixed.   <span style="color:#6b7280">— نظام العمولة: ثابت.</span>   </div>   <div style="margin-top:6px">Total Commission: <b>${fmtKD(totalComm)}</b> KD</div>   <hr/>   <table style="width:100%;border-collapse:collapse;border:1px solid rgba(17,24,39,.12)">   <thead style="background:rgba(17,24,39,.04)">   <tr>   <th style="padding:10px;text-align:left">Staff • الموظفة</th>   <th style="padding:10px;text-align:right">Sales • المبيعات</th>   <th style="padding:10px;text-align:right">Commission • العمولة</th>   </tr>   </thead>   <tbody>${rows}</tbody>   </table>   </div>  ;
 
-  const textLines = S.staff.map(stf=>{
-    const sales = salesByStaff[stf.id]||0;
-    const comm = sales*(pct/100);
-    return `${stf.name}: Sales ${fmtKD(sales)}KD • Comm ${fmtKD(comm)}KD`;
-  }).join("\n");
+const textLines = S.staff.map(stf=>{
+const sales = salesByStaff[stf.id]||0;
+const comm = sales*(pct/100);
+return ${stf.name}: Sales ${fmtKD(sales)}KD • Comm ${fmtKD(comm)}KD;
+}).join("\n");
 
-  const text =
+const text =
 `BH Monthly Commission — ${mk}
 Commission System: Fixed.
 نظام العمولة: ثابت.
@@ -1238,285 +1193,1687 @@ ${textLines}
 
 (Use PDF for full table.)`;
 
-  lastMonthly = {text, html};
-  $("monthlyPreview").innerHTML = html;
-  toast("تم / Built");
+lastMonthly = {text, html};
+$("monthlyPreview").innerHTML = html;
+toast("تم / Built");
 }
 
 /* ===== Manage ===== */
 function renderManageServices(){
-  const list=$("manageServices");
-  const cats=Array.from(new Set(S.services.map(s=>s.cat))).sort();
-  const byCat={}; for(const c of cats) byCat[c]=[];
-  for(const s of S.services) (byCat[s.cat]=byCat[s.cat]||[]).push(s);
+const list=$("manageServices");
+const cats=Array.from(new Set(S.services.map(s=>s.cat))).sort();
+const byCat={}; for(const c of cats) byCat[c]=[];
+for(const s of S.services) (byCat[s.cat]=byCat[s.cat]||[]).push(s);
 
-  list.innerHTML=cats.map(c=>{
-    const rows=(byCat[c]||[]).sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`
-      <div class="item">
-        <div class="flex">
-          <div>
-            <div class="itemname">${escapeHtml(s.name)}</div>
-            <div class="tiny muted">Price: <b>${fmtKD(s.price)}</b> KD ${s.meta?.requiresStaffMin?`• Min Staff: ${s.meta.requiresStaffMin}`:""}</div>
-          </div>
-          <div class="row">
-            <button class="btn purple smallbtn" onclick="editService('${s.id}')">Edit</button>
-            <button class="btn pink smallbtn" onclick="deleteService('${s.id}')">Delete</button>
-          </div>
-        </div>
-      </div>`).join("");
-    return `<div style="margin-bottom:12px">
-      <div class="row"><span class="pill"><b>${escapeHtml(c)}</b></span></div>
-      <div style="margin-top:8px" class="items">${rows || `<div class="tiny">No services</div>`}</div>
-    </div>`;
-  }).join("");
+list.innerHTML=cats.map(c=>{
+const rows=(byCat[c]||[]).sort((a,b)=>a.name.localeCompare(b.name)).map(s=>   <div class="item">   <div class="flex">   <div>   <div class="itemname">${escapeHtml(s.name)}</div>   <div class="tiny muted">Price: <b>${fmtKD(s.price)}</b> KD ${s.meta?.requiresStaffMin?• Min Staff: ${s.meta.requiresStaffMin}:""}</div>   </div>   <div class="row">   <button class="btn purple smallbtn" onclick="editService('${s.id}')">Edit</button>   <button class="btn pink smallbtn" onclick="deleteService('${s.id}')">Delete</button>   </div>   </div>   </div>).join("");
+return <div style="margin-bottom:12px">   <div class="row"><span class="pill"><b>${escapeHtml(c)}</b></span></div>   <div style="margin-top:8px" class="items">${rows || <div class="tiny">No services</div>}</div>   </div>;
+}).join("");
 }
 
 function renderManageStaff(){
-  const box=$("manageStaff");
-  box.innerHTML = S.staff.map(s=>`
-    <div class="item">
-      <div class="flex">
-        <div>
-          <div class="itemname">${escapeHtml(s.name)}</div>
-          <div class="tiny muted">ID: ${escapeHtml(s.id.slice(0,8))}…</div>
-        </div>
-        <div class="row">
-          <button class="btn purple smallbtn" onclick="editStaff('${s.id}')">Edit</button>
-          <button class="btn pink smallbtn" onclick="deleteStaff('${s.id}')">Delete</button>
-        </div>
-      </div>
-    </div>`).join("") || `<div class="tiny">No staff</div>`;
-}
-
-/* ✅ Commission box in Manage (admin pin required) */
-function renderManageCommissionBox(){
-  const pct = Number(S.settings.commissionPct)||0;
-  $("commPctInput").value = String(pct);
-  $("commNote").textContent = "Saved. (Hidden in reports text) — محفوظ. (مخفي كنص بالتقارير)";
-}
-
-function saveCommissionFromManage(){
-  const pin = String($("adminPinInput").value||"").trim();
-  if(!pin){ toast("اكتبي PIN"); return; }
-  if(pin !== String(S.settings.adminPin||"0000")){
-    toast("PIN خطأ");
-    return;
-  }
-  const pct = Math.max(0, Math.min(50, Number($("commPctInput").value)||0));
-  S.settings.commissionPct = pct;
-  persistAll();
-  $("adminPinInput").value="";
-  renderManageCommissionBox();
-  toast("تم حفظ العمولة");
+const box=$("manageStaff");
+box.innerHTML = S.staff.map(s=>   <div class="item">   <div class="flex">   <div>   <div class="itemname">${escapeHtml(s.name)}</div>   <div class="tiny muted">ID: ${escapeHtml(s.id.slice(0,8))}…</div>   </div>   <div class="row">   <button class="btn purple smallbtn" onclick="editStaff('${s.id}')">Edit</button>   <button class="btn pink smallbtn" onclick="deleteStaff('${s.id}')">Delete</button>   </div>   </div>   </div>).join("") || <div class="tiny">No staff</div>;
 }
 
 window.editService=(id)=>{
-  const s=S.services.find(x=>x.id===id); if(!s) return;
-  const name=prompt("Service name / اسم الخدمة:", s.name); if(name===null) return;
-  const cat=prompt("Category / القسم:", s.cat); if(cat===null) return;
-  const price=prompt("Price KD / السعر:", s.price); if(price===null) return;
-  let minStaff=s.meta?.requiresStaffMin||0;
-  const minStr=prompt("Min staff? 0 none / أقل عدد موظفات:", String(minStaff)); if(minStr===null) return;
-  minStaff=Math.max(0, Number(minStr)||0);
-  s.name=name.trim(); s.cat=cat.trim(); s.price=Number(price)||0;
-  s.meta=s.meta||{};
-  if(minStaff>0) s.meta.requiresStaffMin=minStaff; else delete s.meta.requiresStaffMin;
-  persistAll(); renderAllPickers(); renderManageServices(); toast("تم / Updated");
+const s=S.services.find(x=>x.id===id); if(!s) return;
+const name=prompt("Service name / اسم الخدمة:", s.name); if(name===null) return;
+const cat=prompt("Category / القسم:", s.cat); if(cat===null) return;
+const price=prompt("Price KD / السعر:", s.price); if(price===null) return;
+let minStaff=s.meta?.requiresStaffMin||0;
+const minStr=prompt("Min staff? 0 none / أقل عدد موظفات:", String(minStaff)); if(minStr===null) return;
+minStaff=Math.max(0, Number(minStr)||0);
+s.name=name.trim(); s.cat=cat.trim(); s.price=Number(price)||0;
+s.meta=s.meta||{};
+if(minStaff>0) s.meta.requiresStaffMin=minStaff; else delete s.meta.requiresStaffMin;
+persistAll(); renderAllPickers(); renderManageServices(); toast("تم / Updated");
 };
 window.deleteService=(id)=>{
-  if(!confirm("Delete service?")) return;
-  S.services=S.services.filter(x=>x.id!==id);
-  persistAll(); renderAllPickers(); renderManageServices(); toast("Deleted");
+if(!confirm("Delete service?")) return;
+S.services=S.services.filter(x=>x.id!==id);
+persistAll(); renderAllPickers(); renderManageServices(); toast("Deleted");
 };
 window.editStaff=(id)=>{
-  const s=S.staff.find(x=>x.id===id); if(!s) return;
-  const name=prompt("Staff name / اسم الموظفة:", s.name); if(name===null) return;
-  s.name=name.trim();
-  persistAll(); renderStaffPicker(); renderManageStaff(); toast("تم / Updated");
+const s=S.staff.find(x=>x.id===id); if(!s) return;
+const name=prompt("Staff name / اسم الموظفة:", s.name); if(name===null) return;
+s.name=name.trim();
+persistAll(); renderStaffPicker(); renderManageStaff(); toast("تم / Updated");
 };
 window.deleteStaff=(id)=>{
-  if(!confirm("Delete staff?")) return;
-  S.staff=S.staff.filter(x=>x.id!==id);
-  persistAll(); renderStaffPicker(); renderManageStaff(); toast("Deleted");
+if(!confirm("Delete staff?")) return;
+S.staff=S.staff.filter(x=>x.id!==id);
+persistAll(); renderStaffPicker(); renderManageStaff(); toast("Deleted");
 };
 
 function addServiceFlow(){
-  const name=prompt("Service name / اسم الخدمة:"); if(!name) return;
-  const cat=prompt("Category / القسم:", "Hair"); if(!cat) return;
-  const price=prompt("Price KD / السعر:", "0"); if(price===null) return;
-  const minStaff=prompt("Min staff? 0 none / أقل عدد موظفات:", "0"); if(minStaff===null) return;
+const name=prompt("Service name / اسم الخدمة:"); if(!name) return;
+const cat=prompt("Category / القسم:", "Hair"); if(!cat) return;
+const price=prompt("Price KD / السعر:", "0"); if(price===null) return;
+const minStaff=prompt("Min staff? 0 none / أقل عدد موظفات:", "0"); if(minStaff===null) return;
 
-  const svc={id:uid(),name:name.trim(),cat:cat.trim(),price:Number(price)||0};
-  const ms=Math.max(0, Number(minStaff)||0);
-  if(ms>0) svc.meta={requiresStaffMin:ms};
-  S.services.push(svc);
-  persistAll(); renderAllPickers(); renderManageServices(); toast("Added");
+const svc={id:uid(),name:name.trim(),cat:cat.trim(),price:Number(price)||0};
+const ms=Math.max(0, Number(minStaff)||0);
+if(ms>0) svc.meta={requiresStaffMin:ms};
+S.services.push(svc);
+persistAll(); renderAllPickers(); renderManageServices(); toast("Added");
 }
 function addStaffFlow(){
-  const name=prompt("Staff name / اسم الموظفة:"); if(!name) return;
-  S.staff.push({id:uid(),name:name.trim()});
-  persistAll(); renderStaffPicker(); renderManageStaff(); toast("Added");
+const name=prompt("Staff name / اسم الموظفة:"); if(!name) return;
+S.staff.push({id:uid(),name:name.trim()});
+persistAll(); renderStaffPicker(); renderManageStaff(); toast("Added");
+}
+
+/* ✅ Save commission percent (only here in Manage) */
+function saveCommissionPct(){
+const v = Number($("commissionPct").value);
+if(!isFinite(v) || v < 0 || v > 50){
+toast("نسبة غير صحيحة");
+return;
+}
+S.settings.commissionPct = v;
+persistAll();
+$("commissionSavedHint").style.color = "var(--ok)";
+$("commissionSavedHint").textContent = "Saved ✅ (hidden from reports)";
+toast("تم حفظ العمولة");
 }
 
 /* ===== Pickers ===== */
 function renderStaffPicker(){
-  $("staffPick").innerHTML = S.staff.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("");
+$("staffPick").innerHTML = S.staff.map(s=><option value="${s.id}">${escapeHtml(s.name)}</option>).join("");
 }
 function renderCatServicePickers(){
-  const cats=Array.from(new Set(S.services.map(s=>s.cat))).sort();
-  $("catSel").innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
-  function renderSvcs(){
-    const cat=$("catSel").value;
-    const svcs=S.services.filter(s=>s.cat===cat).sort((a,b)=>a.name.localeCompare(b.name));
-    $("svcSel").innerHTML = svcs.map(s=>`<option value="${s.id}">${escapeHtml(s.name)} — ${fmtKD(s.price)} KD</option>`).join("");
-  }
-  $("catSel").onchange=renderSvcs;
-  renderSvcs();
+const cats=Array.from(new Set(S.services.map(s=>s.cat))).sort();
+$("catSel").innerHTML = cats.map(c=><option value="${escapeHtml(c)}">${escapeHtml(c)}</option>).join("");
+function renderSvcs(){
+const cat=$("catSel").value;
+const svcs=S.services.filter(s=>s.cat===cat).sort((a,b)=>a.name.localeCompare(b.name));
+$("svcSel").innerHTML = svcs.map(s=><option value="${s.id}">${escapeHtml(s.name)} — ${fmtKD(s.price)} KD</option>).join("");
+}
+$("catSel").onchange=renderSvcs;
+renderSvcs();
 }
 function renderAllPickers(){ renderStaffPicker(); renderCatServicePickers(); }
 
 /* ===== Backup/Restore/Wipe ===== */
 function exportBackup(){
-  const payload={
-    version:4,
-    ts:Date.now(),
-    services:S.services,
-    staff:S.staff,
-    invoices:S.invoices,
-    subs:S.subs,
-    settings:S.settings
-  };
-  const text=JSON.stringify(payload,null,2);
-  const blob=new Blob([text],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob); a.download="BH_Backup.json"; a.click();
-  URL.revokeObjectURL(a.href);
-  toast("Backup جاهز");
+const payload={
+version:4,
+ts:Date.now(),
+services:S.services,
+staff:S.staff,
+invoices:S.invoices,
+subs:S.subs,
+settings:S.settings
+};
+const text=JSON.stringify(payload,null,2);
+const blob=new Blob([text],{type:"application/json"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob); a.download="BH_Backup.json"; a.click();
+URL.revokeObjectURL(a.href);
+toast("Backup جاهز");
 }
 function importBackup(){
-  const inp=document.createElement("input");
-  inp.type="file"; inp.accept="application/json";
-  inp.onchange=()=>{
-    const f=inp.files&&inp.files[0]; if(!f) return;
-    const r=new FileReader();
-    r.onload=()=>{
-      try{
-        const data=JSON.parse(r.result);
-        if(!data||!data.version) throw new Error("Invalid");
-        S.services=data.services||S.services;
-        S.staff=data.staff||S.staff;
-        S.invoices=data.invoices||S.invoices;
-        S.subs=data.subs||S.subs;
-        S.settings=Object.assign(defaultSettings(), data.settings||{});
-        persistAll(); initUI(); toast("تم الاسترجاع");
-      }catch(e){ alert("Restore failed"); }
-    };
-    r.readAsText(f);
-  };
-  inp.click();
+const inp=document.createElement("input");
+inp.type="file"; inp.accept="application/json";
+inp.onchange=()=>{
+const f=inp.files&&inp.files[0]; if(!f) return;
+const r=new FileReader();
+r.onload=()=>{
+try{
+const data=JSON.parse(r.result);
+if(!data||!data.version) throw new Error("Invalid");
+S.services=data.services||S.services;
+S.staff=data.staff||S.staff;
+S.invoices=data.invoices||S.invoices;
+S.subs=data.subs||S.subs;
+S.settings=Object.assign(defaultSettings(), data.settings||{});
+persistAll(); initUI(); toast("تم الاسترجاع");
+}catch(e){ alert("Restore failed"); }
+};
+r.readAsText(f);
+};
+inp.click();
 }
 function wipeAll(){
-  if(!confirm("Wipe all data?")) return;
-  for(const k of Object.values(K)) localStorage.removeItem(k);
-  S={services:defaultServices(),staff:defaultStaff(),invoices:[],subs:{},settings:defaultSettings()};
-  persistAll(); initUI(); toast("تم المسح");
+if(!confirm("Wipe all data?")) return;
+for(const k of Object.values(K)) localStorage.removeItem(k);
+S={services:defaultServices(),staff:defaultStaff(),invoices:[],subs:{},settings:defaultSettings()};
+persistAll(); initUI(); toast("تم المسح");
 }
 
 /* ===== Init ===== */
 function initUI(){
-  $("todayStr").textContent=todayKey();
+$("todayStr").textContent=todayKey();
 
-  initTabs();
-  renderAllPickers();
+initTabs();
+renderAllPickers();
 
-  $("mgrPhone").value = S.settings.managerPhone || "";
-  $("target10").value = S.settings.targetDaily ?? 10;
+$("mgrPhone").value = S.settings.managerPhone || "";
+$("target10").value = S.settings.targetDaily ?? 10;
 
-  $("custPhone").addEventListener("input", ()=>{
-    const c=cleanKuwaitPhone($("custPhone").value);
-    if(c.ok){
-      $("phoneHint").textContent="Normalized: "+c.phone;
-      $("phoneHint").style.color="var(--ok)";
-    }else{
-      $("phoneHint").textContent=c.msg||"";
-      $("phoneHint").style.color="var(--bad)";
-    }
-    refreshSubTag();
-  });
-
-  $("addItemBtn").onclick=addItemFromSelect;
-  $("manualOneBtn").onclick=addManualOneTime;
-  $("pkgMaskBtn").onclick=pkgMaskAction;
-  $("saveInvBtn").onclick=saveInvoiceAndWA;
-  $("clearInvBtn").onclick=resetInv;
-
-  $("refreshTodayBtn").onclick=renderToday;
-  $("printTodayBtn").onclick=()=>{
-    const invs=invoicesByDate(todayKey()).sort((a,b)=>b.ts-a.ts);
-    const html=`<div class="card"><h2>Today Invoices — ${todayKey()}</h2>` + invs.map(inv=>{
-      const items=inv.items.map(it=>`<div style="font-size:12px;color:#374151">• ${escapeHtml(it.name)} ×${it.qty} — ${fmtKD((it.price||0)*(it.qty||1))}KD</div>`).join("");
-      return `<div style="border:1px solid rgba(17,24,39,.12);border-radius:14px;padding:10px;margin:10px 0">
-        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
-          <div><b>Phone:</b> ${escapeHtml(inv.phone)}</div>
-          <div><b>Total:</b> ${fmtKD(inv.total)} KD</div>
-        </div><div style="margin-top:6px">${items}</div></div>`;
-    }).join("") + `</div>`;
-    openPrintWindow("BH Today Invoices", html);
-  };
-
-  $("refreshStatsBtn").onclick=renderStats;
-
-  $("buildDailyBtn").onclick=buildDaily;
-  $("sendDailyBtn").onclick=()=>{
-    if(!lastDaily.text) buildDaily();
-    const c=cleanKuwaitPhone($("mgrPhone").value);
-    if(!c.ok){ toast("رقم المديرة غير صحيح"); return; }
-    S.settings.managerPhone=c.phone; persistAll();
-    openWA(c.phone, lastDaily.text);
-  };
-  $("pdfDailyBtn").onclick=()=>{
-    if(!lastDaily.html) buildDaily();
-    openPrintWindow("BH Daily Report", lastDaily.html);
-  };
-
-  $("buildMonthlyBtn").onclick=buildMonthly;
-  $("sendMonthlyBtn").onclick=()=>{
-    if(!lastMonthly.text) buildMonthly();
-    const c=cleanKuwaitPhone($("mgrPhone").value);
-    if(!c.ok){ toast("رقم المديرة غير صحيح"); return; }
-    S.settings.managerPhone=c.phone; persistAll();
-    openWA(c.phone, lastMonthly.text);
-  };
-  $("pdfMonthlyBtn").onclick=()=>{
-    if(!lastMonthly.html) buildMonthly();
-    openPrintWindow("BH Monthly Commission", lastMonthly.html);
-  };
-
-  $("addSvcOpenBtn").onclick=addServiceFlow;
-  $("addStaffOpenBtn").onclick=addStaffFlow;
-
-  $("backupBtn").onclick=exportBackup;
-  $("restoreBtn").onclick=importBackup;
-  $("wipeAllBtn").onclick=wipeAll;
-
-  // settings save
-  const saveSettings=()=>{
-    const m=cleanKuwaitPhone($("mgrPhone").value);
-    if(m.ok) $("mgrPhone").value=m.phone;
-    S.settings.managerPhone=m.ok?m.phone:(S.settings.managerPhone||"");
-    S.settings.targetDaily=Number($("target10").value)||10;
-    persistAll();
-  };
-  $("mgrPhone").addEventListener("change", saveSettings);
-  $("target10").addEventListener("change", saveSettings);
-
-  // manage commission save
-  $("saveCommBtn").onclick = saveCommissionFromManage;
-
-  setPage("invoice");
-  renderItems(); refreshSubTag();
+$("custPhone").addEventListener("input", ()=>{
+const c=cleanKuwaitPhone($("custPhone").value);
+if(c.ok){
+$("phoneHint").textContent="Normalized: "+c.phone;
+$("phoneHint").style.color="var(--ok)";
+}else{
+$("phoneHint").textContent=c.msg||"";
+$("phoneHint").style.color="var(--bad)";
 }
+refreshSubTag();
+});
+
+$("addItemBtn").onclick=addItemFromSelect;
+$("addManualBtn").onclick=addManualItem;
+
+$("pkgMaskBtn").onclick=pkgMaskAction;
+$("saveInvBtn").onclick=saveInvoiceAndWA;
+$("clearInvBtn").onclick=resetInv;
+
+$("refreshTodayBtn").onclick=renderToday;
+$("printTodayBtn").onclick=()=>{
+const invs=invoicesByDate(todayKey()).sort((a,b)=>b.ts-a.ts);
+const html=<div class="card"><h2>Today Invoices — ${todayKey()}</h2> + invs.map(inv=>{
+const items=inv.items.map(it=><div style="font-size:12px;color:#374151">• ${escapeHtml(it.name)} ×${it.qty} — ${fmtKD((it.price||0)*(it.qty||1))}KD</div>).join("");
+return <div style="border:1px solid rgba(17,24,39,.12);border-radius:14px;padding:10px;margin:10px 0">   <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">   <div><b>Phone:</b> ${escapeHtml(inv.phone)}</div>   <div><b>Total:</b> ${fmtKD(inv.total)} KD</div>   </div><div style="margin-top:6px">${items}</div></div>;
+}).join("") + </div>;
+openPrintWindow("BH Today Invoices", html);
+};
+
+$("refreshStatsBtn").onclick=renderStats;
+
+$("buildDailyBtn").onclick=buildDaily;
+$("sendDailyBtn").onclick=()=>{
+if(!lastDaily.text) buildDaily();
+const c=cleanKuwaitPhone($("mgrPhone").value);
+if(!c.ok){ toast("رقم المديرة غير صحيح"); return; }
+S.settings.managerPhone=c.phone; persistAll();
+openWA(c.phone, lastDaily.text);
+};
+$("pdfDailyBtn").onclick=()=>{
+if(!lastDaily.html) buildDaily();
+openPrintWindow("BH Daily Report", lastDaily.html);
+};
+
+$("buildMonthlyBtn").onclick=buildMonthly;
+$("sendMonthlyBtn").onclick=()=>{
+if(!lastMonthly.text) buildMonthly();
+const c=cleanKuwaitPhone($("mgrPhone").value);
+if(!c.ok){ toast("رقم المديرة غير صحيح"); return; }
+S.settings.managerPhone=c.phone; persistAll();
+openWA(c.phone, lastMonthly.text);
+};
+$("pdfMonthlyBtn").onclick=()=>{
+if(!lastMonthly.html) buildMonthly();
+openPrintWindow("BH Monthly Commission", lastMonthly.html);
+};
+
+$("addSvcOpenBtn").onclick=addServiceFlow;
+$("addStaffOpenBtn").onclick=addStaffFlow;
+
+$("backupBtn").onclick=exportBackup;
+$("restoreBtn").onclick=importBackup;
+$("wipeAllBtn").onclick=wipeAll;
+
+const saveSettings=()=>{
+const m=cleanKuwaitPhone($("mgrPhone").value);
+if(m.ok) $("mgrPhone").value=m.phone;
+S.settings.managerPhone=m.ok?m.phone:(S.settings.managerPhone||"");
+S.settings.targetDaily=Number($("target10").value)||10;
+persistAll();
+};
+$("mgrPhone").addEventListener("change", saveSettings);
+$("target10").addEventListener("change", saveSettings);
+
+// Manage commission save
+const saveBtn = $("saveCommissionBtn");
+if(saveBtn) saveBtn.onclick = saveCommissionPct;
+
+setPage("invoice");
+renderItems(); refreshSubTag();
+}
+
 initUI();
 </script>
-</body>
+
+</body>  
+</html>
+<html lang="en" dir="ltr">  
+<head>  
+<meta charset="utf-8"/>  
+<meta name="viewport" content="width=device-width, initial-scale=1"/>  
+<title>BH — Invoices & Reports</title>  <style>  
+  :root{  
+    /* ===== Soft pastel + off-white ===== */  
+    --bg:#fbf8f3;          /* off-white */  
+    --card:rgba(255,255,255,.82);  
+    --ink:#111827;  
+    --muted:#6b7280;  
+    --line:rgba(17,24,39,.10);  
+    --shadow:0 10px 30px rgba(17,24,39,.07);  
+  
+    /* Pastels (more transparent look) */  
+    --p1:rgba(255,215,232,.85);   /* pink */  
+    --p2:rgba(215,243,255,.85);   /* baby blue */  
+    --p3:rgba(231,221,255,.85);   /* lavender */  
+    --p4:rgba(219,255,232,.85);   /* mint */  
+    --p5:rgba(255,241,204,.85);   /* butter */  
+    --p6:rgba(232,232,239,.88);   /* soft gray */  
+  
+    --accent:#111827;  
+    --ok:#16a34a;  
+    --warn:#f59e0b;  
+    --bad:#ef4444;  
+  
+    --radius:18px;  
+  }  
+  
+  *{box-sizing:border-box}  
+  body{  
+    margin:0;  
+    background:linear-gradient(180deg,#fff, var(--bg));  
+    color:var(--ink);  
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;  
+  }  
+  .wrap{max-width:1200px;margin:0 auto;padding:16px}  
+  .top{  
+    display:flex;gap:10px;align-items:center;justify-content:space-between;  
+    padding:12px 14px;border:1px solid var(--line);border-radius:22px;  
+    background:rgba(255,255,255,.72);  
+    backdrop-filter: blur(10px);  
+    box-shadow: var(--shadow);  
+    position:sticky;top:10px;z-index:5;  
+  }  
+  .brand{display:flex;align-items:center;gap:10px}  
+  .logo{  
+    width:42px;height:42px;border-radius:14px;border:1px solid var(--line);  
+    background:linear-gradient(135deg,var(--p2), #fff);  
+    display:grid;place-items:center;font-weight:900;letter-spacing:.5px;  
+  }  
+  .brand h1{font-size:15px;margin:0}  
+  .brand p{margin:2px 0 0 0;color:var(--muted);font-size:11px}  
+  
+  /* ===== Bilingual text helpers (Arabic smaller & lighter) ===== */  
+  .bi{display:inline-flex;flex-direction:column;line-height:1.12}  
+  .bi .en{font-weight:900;font-size:12.5px}  
+  .bi .ar{font-weight:650;font-size:10px;opacity:.88;direction:rtl}  
+  
+  .tabs{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-end}  
+  .tab{  
+    padding:8px 10px;border-radius:14px;border:1px solid transparent;  
+    cursor:pointer;font-weight:950;font-size:12px;  
+    background:var(--p6);  
+    box-shadow:0 6px 14px rgba(17,24,39,.05);  
+  }  
+  .tab[data-col="1"]{background:var(--p2)}  
+  .tab[data-col="2"]{background:var(--p3)}  
+  .tab[data-col="3"]{background:var(--p4)}  
+  .tab[data-col="4"]{background:var(--p1)}  
+  .tab[data-col="5"]{background:var(--p5)}  
+  .tab.active{outline:2px solid rgba(17,24,39,.14)}  
+  
+  .grid{display:grid;gap:12px;margin-top:12px}  
+  @media(min-width:980px){ .grid.two{grid-template-columns:1.15fr .85fr} }  
+  
+  .card{  
+    background:var(--card);  
+    border:1px solid var(--line);  
+    border-radius: var(--radius);  
+    box-shadow: var(--shadow);  
+    padding:12px;  
+  }  
+  .card h2{margin:0 0 10px 0;font-size:13.5px}  
+  
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}  
+  .field{flex:1;min-width:170px}  
+  label{display:block;font-size:11.5px;color:var(--muted);margin:0 0 6px 0}  
+  input, select, textarea{  
+    width:100%;padding:10px 11px;border-radius:14px;border:1px solid var(--line);  
+    background:#fff;color:var(--ink);outline:none;  
+  }  
+  textarea{min-height:90px;resize:vertical}  
+  
+  .btn{  
+    padding:9px 10px;border-radius:14px;border:1px solid transparent;  
+    cursor:pointer;font-weight:950;font-size:12px;  
+    background:var(--p6);  
+    box-shadow:0 6px 14px rgba(17,24,39,.05);  
+  }  
+  .btn.pink{background:var(--p1)}  
+  .btn.blue{background:var(--p2)}  
+  .btn.purple{background:var(--p3)}  
+  .btn.mint{background:var(--p4)}  
+  .btn.butter{background:var(--p5)}  
+  .btn.dark{background:#111827;color:#fff}  
+  .btn:active{transform:translateY(1px)}  
+  
+  .pill{  
+    display:inline-flex;align-items:center;gap:8px;  
+    padding:7px 9px;border:1px solid var(--line);  
+    border-radius:999px;background:rgba(255,255,255,.78);  
+    font-size:11.5px;color:var(--muted)  
+  }  
+  .tiny{font-size:11.5px;color:var(--muted)}  
+  .hr{height:1px;background:var(--line);margin:10px 0}  
+  
+  table{width:100%;border-collapse:separate;border-spacing:0 8px}  
+  th{font-size:11.5px;color:var(--muted);text-align:left;padding:0 10px}  
+  td{  
+    background:rgba(255,255,255,.88);  
+    border:1px solid var(--line);  
+    padding:9px;border-left:none;border-right:none;  
+  }  
+  tr td:first-child{border-left:1px solid var(--line);border-radius:14px 0 0 14px}  
+  tr td:last-child{border-right:1px solid var(--line);border-radius:0 14px 14px 0}  
+  .right{text-align:right}  
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}  
+  
+  .toast{  
+    position:fixed;left:50%;transform:translateX(-50%);  
+    bottom:18px;background:#111827;color:#fff;  
+    padding:10px 12px;border-radius:14px;opacity:0;pointer-events:none;  
+    transition:.25s;z-index:99;font-size:13px  
+  }  
+  .toast.show{opacity:1}  
+  .tag{  
+    display:inline-flex;gap:6px;align-items:center;  
+    font-size:11.5px;border-radius:999px;padding:7px 9px;border:1px solid var(--line);  
+    background:rgba(17,24,39,.04)  
+  }  
+  .tag.ok{border-color:rgba(22,163,74,.30);background:rgba(22,163,74,.10)}  
+  .tag.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10)}  
+  .tag.bad{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)}  
+  
+  .flex{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}  
+  .items{display:grid;gap:10px}  
+  .item{  
+    border:1px solid var(--line);  
+    border-radius:16px;padding:10px;background:rgba(255,255,255,.84)  
+  }  
+  .itemhead{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}  
+  .itemname{font-weight:950}  
+  .muted{color:var(--muted)}  
+  .kpi{display:grid;gap:10px}  
+  @media(min-width:980px){ .kpi{grid-template-columns:repeat(3,1fr)} }  
+  .kpi .box{  
+    border:1px solid var(--line);border-radius:18px;padding:12px;background:rgba(255,255,255,.86)  
+  }  
+  .box .v{font-size:20px;font-weight:950}  
+  .box .t{font-size:12px;color:var(--muted)}  
+  .smallbtn{padding:8px 9px;border-radius:12px;font-size:12px}  
+  
+  .softcard{  
+    border:1px dashed rgba(17,24,39,.16);  
+    border-radius:16px;  
+    padding:10px;  
+    background:rgba(255,255,255,.66);  
+  }  
+  
+  .inlineNote{  
+    font-size:11.5px;color:var(--muted);  
+    padding:8px 10px;border:1px solid rgba(17,24,39,.10);border-radius:14px;  
+    background:rgba(255,255,255,.70);  
+  }  
+</style>  </head>  <body>  
+<div class="wrap">  
+  <div class="top">  
+    <div class="brand">  
+      <div class="logo">BH</div>  
+      <div>  
+        <h1>BH — Invoices & Reports</h1>  
+        <p>Arabic + English • Pastel UI • LocalStorage • WhatsApp • Commission System: Fixed.</p>  
+      </div>  
+    </div>  
+    <div class="tabs" id="tabs"></div>  
+  </div>    <!-- PAGES -->    <div id="page-invoice" class="page">  
+    <div class="grid two">  
+      <div class="card">  
+        <div class="flex">  
+          <h2><span class="bi"><span class="en">Create Invoice</span><span class="ar">إنشاء فاتورة</span></span></h2>  
+          <div class="row">  
+            <span class="pill"><span class="bi"><span class="en">Today</span><span class="ar">اليوم</span></span>: <span class="mono" id="todayStr"></span></span>  
+            <span class="pill"><span class="bi"><span class="en">Auto Kuwait phone</span><span class="ar">تنسيق رقم الكويت تلقائيًا</span></span></span>  
+          </div>  
+        </div>  <div class="row" style="margin-top:10px">  
+      <div class="field">  
+        <label><span class="bi"><span class="en">Customer Phone (Kuwait only)</span><span class="ar">رقم الهاتف (كويتي فقط)</span></span></label>  
+        <input id="custPhone" inputmode="numeric" placeholder="51234567 أو +96551234567"/>  
+        <div class="tiny" id="phoneHint"></div>  
+      </div>  
+
+      <div class="field" style="min-width:260px">  
+        <label><span class="bi"><span class="en">Staff Picker (multi)</span><span class="ar">اختيار الموظفات (متعدد)</span></span></label>  
+        <select id="staffPick" multiple size="6"></select>  
+        <div class="tiny"><span class="bi"><span class="en">Select multiple if shared.</span><span class="ar">اختاري أكثر من موظفة عند مشاركة الخدمة.</span></span></div>  
+      </div>  
+
+      <div class="field" style="min-width:220px">  
+        <label><span class="bi"><span class="en">Quick Actions</span><span class="ar">إجراءات سريعة</span></span></label>  
+        <div class="row">  
+          <button class="btn mint" id="pkgMaskBtn" title="Sell package if not active / otherwise use a session">  
+            <span class="bi"><span class="en">Package Mask (5×)</span><span class="ar">بكج ماسك (٥ مرات)</span></span>  
+          </button>  
+          <button class="btn blue" id="addItemBtn">  
+            <span class="bi"><span class="en">Add Selected Service</span><span class="ar">إضافة الخدمة المختارة</span></span>  
+          </button>  
+        </div>  
+        <div class="tiny"><span class="bi">  
+          <span class="en">Package: sell 15 KD once, sessions 0 KD with staff.</span>  
+          <span class="ar">البكج: بيع ١٥ دك مرة، والجلسات ٠ دك مع تسجيل الموظفة.</span>  
+        </span></div>  
+      </div>  
+    </div>  
+
+    <div class="hr"></div>  
+
+    <div class="row">  
+      <div class="field" style="min-width:260px">  
+        <label><span class="bi"><span class="en">Category</span><span class="ar">القسم</span></span></label>  
+        <select id="catSel"></select>  
+      </div>  
+      <div class="field" style="min-width:360px">  
+        <label><span class="bi"><span class="en">Service</span><span class="ar">الخدمة</span></span></label>  
+        <select id="svcSel"></select>  
+      </div>  
+      <div class="field" style="max-width:120px">  
+        <label><span class="bi"><span class="en">Qty</span><span class="ar">العدد</span></span></label>  
+        <input id="qtySel" type="number" min="1" value="1"/>  
+      </div>  
+    </div>  
+
+    <!-- ✅ Manual / Temporary Service (one-time) -->  
+    <div class="hr"></div>  
+    <div class="softcard">  
+      <div class="flex">  
+        <div>  
+          <div class="itemname"><span class="bi"><span class="en">Temporary Service (Manual)</span><span class="ar">خدمة مؤقتة (يدوي)</span></span></div>  
+          <div class="tiny"><span class="bi"><span class="en">Adds to invoice only (not saved in services).</span><span class="ar">تُضاف للفاتورة فقط (لا تُحفظ ضمن الخدمات).</span></span></div>  
+        </div>  
+        <button class="btn butter" id="addManualBtn">  
+          <span class="bi"><span class="en">Add Manual</span><span class="ar">إضافة يدوي</span></span>  
+        </button>  
+      </div>  
+
+      <div class="row" style="margin-top:10px">  
+        <div class="field" style="min-width:260px">  
+          <label><span class="bi"><span class="en">Service Name</span><span class="ar">اسم الخدمة</span></span></label>  
+          <input id="manualName" placeholder="مثال: Hair Trial / خدمة مؤقتة"/>  
+        </div>  
+        <div class="field" style="max-width:160px">  
+          <label><span class="bi"><span class="en">Price (KD)</span><span class="ar">السعر (دك)</span></span></label>  
+          <input id="manualPrice" type="number" step="0.001" min="0" placeholder="0"/>  
+        </div>  
+        <div class="field" style="max-width:120px">  
+          <label><span class="bi"><span class="en">Qty</span><span class="ar">العدد</span></span></label>  
+          <input id="manualQty" type="number" min="1" value="1"/>  
+        </div>  
+      </div>  
+      <div class="inlineNote" style="margin-top:10px">  
+        <span class="bi">  
+          <span class="en">Choose staff from the Staff Picker above before adding manual service.</span>  
+          <span class="ar">اختاري الموظفات من قائمة الموظفات بالأعلى قبل إضافة الخدمة اليدوية.</span>  
+        </span>  
+      </div>  
+    </div>  
+
+    <div class="hr"></div>  
+
+    <h2><span class="bi"><span class="en">Invoice Items</span><span class="ar">بنود الفاتورة</span></span></h2>  
+    <div class="items" id="items"></div>  
+
+    <div class="hr"></div>  
+
+    <div class="flex">  
+      <div class="row">  
+        <span class="tag" id="subTag">Package: —</span>  
+        <span class="tag" id="cashboxTag">Cashbox: OK</span>  
+      </div>  
+      <div class="row">  
+        <div class="pill"><span class="bi"><span class="en">Total</span><span class="ar">الإجمالي</span></span>: <b id="invTotal">0.000</b> KD</div>  
+        <button class="btn pink" id="clearInvBtn"><span class="bi"><span class="en">Clear</span><span class="ar">مسح</span></span></button>  
+        <button class="btn dark" id="saveInvBtn"><span class="bi"><span class="en">Save + WhatsApp</span><span class="ar">حفظ + واتساب</span></span></button>  
+      </div>  
+    </div>  
+
+    <div class="tiny">  
+      <span class="bi">  
+        <span class="en">WhatsApp message is short: services + total + “شكرا لزيارة صالون bh”.</span>  
+        <span class="ar">رسالة الواتساب قصيرة: الخدمات + الإجمالي + “شكرا لزيارة صالون bh”.</span>  
+      </span>  
+    </div>  
+  </div>  
+
+  <div class="card">  
+    <div class="flex">  
+      <h2><span class="bi"><span class="en">Settings</span><span class="ar">الإعدادات</span></span></h2>  
+      <span class="pill"><span class="bi"><span class="en">Saved locally</span><span class="ar">حفظ محلي</span></span></span>  
+    </div>  
+
+    <div class="row" style="margin-top:10px">  
+      <div class="field">  
+        <label><span class="bi"><span class="en">Manager WhatsApp (Kuwait)</span><span class="ar">واتساب المديرة (كويتي)</span></span></label>  
+        <input id="mgrPhone" inputmode="numeric" placeholder="69977533"/>  
+        <div class="tiny"><span class="bi"><span class="en">Used for Daily + Monthly reports.</span><span class="ar">يستخدم لتقرير يومي + عمولات الشهر.</span></span></div>  
+      </div>  
+      <div class="field" style="max-width:220px">  
+        <label><span class="bi"><span class="en">Daily Target (only for display)</span><span class="ar">الهدف اليومي (للعرض فقط)</span></span></label>  
+        <input id="target10" type="number" min="1" value="10"/>  
+      </div>  
+    </div>  
+
+    <div class="hr"></div>  
+
+    <div class="row">  
+      <button class="btn butter" id="backupBtn"><span class="bi"><span class="en">Backup</span><span class="ar">نسخة احتياطية</span></span></button>  
+      <button class="btn purple" id="restoreBtn"><span class="bi"><span class="en">Restore</span><span class="ar">استرجاع</span></span></button>  
+      <button class="btn pink" id="wipeAllBtn"><span class="bi"><span class="en">Wipe ALL</span><span class="ar">مسح الكل</span></span></button>  
+    </div>  
+
+    <div class="tiny" style="margin-top:8px">  
+      <span class="bi">  
+        <span class="en">Backup recommended. Restore overwrites current data.</span>  
+        <span class="ar">مفضل تسوين نسخة احتياطية. الاسترجاع يستبدل البيانات الحالية.</span>  
+      </span>  
+    </div>  
+
+    <div class="hr"></div>  
+    <div class="tag ok">  
+      <span class="bi">  
+        <span class="en">Commission System: Fixed.</span>  
+        <span class="ar">نظام العمولة: ثابت.</span>  
+      </span>  
+    </div>  
+  </div>  
+</div>
+
+  </div>    <div id="page-today" class="page" style="display:none">  
+    <div class="card">  
+      <div class="flex">  
+        <h2><span class="bi"><span class="en">Today Invoices</span><span class="ar">فواتير اليوم</span></span></h2>  
+        <div class="row">  
+          <button class="btn blue" id="refreshTodayBtn"><span class="bi"><span class="en">Refresh</span><span class="ar">تحديث</span></span></button>  
+          <button class="btn butter" id="printTodayBtn"><span class="bi"><span class="en">PDF (Print)</span><span class="ar">PDF (طباعة)</span></span></button>  
+        </div>  
+      </div>  
+      <div class="tiny"><span class="bi"><span class="en">Each invoice has WhatsApp resend.</span><span class="ar">كل فاتورة فيها زر إعادة إرسال واتساب.</span></span></div>  
+      <div class="hr"></div>  
+      <div id="todayList"></div>  
+    </div>  
+  </div>    <div id="page-stats" class="page" style="display:none">  
+    <div class="card">  
+      <div class="flex">  
+        <h2><span class="bi"><span class="en">Statistics (Daily)</span><span class="ar">الإحصائية اليومية</span></span></h2>  
+        <button class="btn mint" id="refreshStatsBtn"><span class="bi"><span class="en">Refresh Statistics</span><span class="ar">تحديث الإحصائية</span></span></button>  
+      </div>  <div class="kpi" style="margin-top:12px">  
+    <div class="box"><div class="v" id="kpiIncome">0.000</div><div class="t">Income • الدخل</div></div>  
+    <div class="box"><div class="v" id="kpiInv">0</div><div class="t">Invoices • الفواتير</div></div>  
+    <div class="box"><div class="v" id="kpiServices">0</div><div class="t">Services Qty • عدد الخدمات</div></div>  
+  </div>  
+
+  <div class="hr"></div>  
+
+  <div class="grid two">  
+    <div class="card" style="box-shadow:none;background:transparent;border:none;padding:0">  
+      <h2><span class="bi"><span class="en">Services Count</span><span class="ar">عدد كل خدمة</span></span></h2>  
+      <div id="svcCounts"></div>  
+    </div>  
+    <div class="card" style="box-shadow:none;background:transparent;border:none;padding:0">  
+      <h2><span class="bi"><span class="en">Staff Count</span><span class="ar">عدد لكل موظفة</span></span></h2>  
+      <div id="staffCounts"></div>  
+      <div class="hr"></div>  
+      <div class="tag ok">  
+        <span class="bi">  
+          <span class="en">Commission System: Fixed.</span>  
+          <span class="ar">نظام العمولة: ثابت.</span>  
+        </span>  
+      </div>  
+    </div>  
+  </div>  
+</div>
+
+  </div>    <div id="page-daily" class="page" style="display:none">  
+    <div class="card">  
+      <div class="flex">  
+        <h2><span class="bi"><span class="en">Daily Report (Manager)</span><span class="ar">تقرير يومي (للمديرة)</span></span></h2>  
+        <div class="row">  
+          <button class="btn purple" id="buildDailyBtn"><span class="bi"><span class="en">Build</span><span class="ar">إنشاء</span></span></button>  
+          <button class="btn mint" id="sendDailyBtn"><span class="bi"><span class="en">Send WhatsApp</span><span class="ar">إرسال واتساب</span></span></button>  
+          <button class="btn butter" id="pdfDailyBtn"><span class="bi"><span class="en">PDF (Print)</span><span class="ar">PDF (طباعة)</span></span></button>  
+        </div>  
+      </div>  
+      <div class="tiny">  
+        <span class="bi">  
+          <span class="en">Includes invoices + staff sales + commission (hidden percent).</span>  
+          <span class="ar">يشمل الفواتير + مبيعات الموظفات + العمولة (النسبة مخفية).</span>  
+        </span>  
+      </div>  
+      <div class="hr"></div>  
+      <div id="dailyPreview"></div>  
+    </div>  
+  </div>    <div id="page-monthly" class="page" style="display:none">  
+    <div class="card">  
+      <div class="flex">  
+        <h2><span class="bi"><span class="en">Monthly Commission</span><span class="ar">عمولات نهاية الشهر</span></span></h2>  
+        <div class="row">  
+          <div class="field" style="min-width:220px">  
+            <label><span class="bi"><span class="en">Month</span><span class="ar">الشهر</span></span></label>  
+            <input id="monthSel" type="month"/>  
+          </div>  
+          <button class="btn purple" id="buildMonthlyBtn"><span class="bi"><span class="en">Build</span><span class="ar">إنشاء</span></span></button>  
+          <button class="btn mint" id="sendMonthlyBtn"><span class="bi"><span class="en">Send WhatsApp</span><span class="ar">إرسال واتساب</span></span></button>  
+          <button class="btn butter" id="pdfMonthlyBtn"><span class="bi"><span class="en">PDF (Print)</span><span class="ar">PDF (طباعة)</span></span></button>  
+        </div>  
+      </div>  
+      <div class="tiny">  
+        <span class="bi">  
+          <span class="en">Commission System: Fixed.</span>  
+          <span class="ar">نظام العمولة: ثابت.</span>  
+        </span>  
+      </div>  
+      <div class="hr"></div>  
+      <div id="monthlyPreview"></div>  
+    </div>  
+  </div>    <div id="page-manage" class="page" style="display:none">  
+    <div class="grid two">  
+      <div class="card">  
+        <div class="flex">  
+          <h2><span class="bi"><span class="en">Manage Services</span><span class="ar">إدارة الخدمات</span></span></h2>  
+          <button class="btn blue" id="addSvcOpenBtn"><span class="bi"><span class="en">Add Service</span><span class="ar">إضافة خدمة</span></span></button>  
+        </div>  
+        <div class="hr"></div>  
+        <div id="manageServices"></div>  
+      </div>  <div class="card">  
+    <div class="flex">  
+      <h2><span class="bi"><span class="en">Manage Staff</span><span class="ar">إدارة الموظفات</span></span></h2>  
+      <button class="btn blue" id="addStaffOpenBtn"><span class="bi"><span class="en">Add Staff</span><span class="ar">إضافة موظفة</span></span></button>  
+    </div>  
+    <div class="hr"></div>  
+    <div id="manageStaff"></div>  
+
+    <!-- ✅ Commission edit inside Manage -->  
+    <div class="hr"></div>  
+    <div class="softcard">  
+      <div class="itemname"><span class="bi"><span class="en">Commission (Admin)</span><span class="ar">العمولة (للمديرة)</span></span></div>  
+      <div class="tiny" style="margin-top:6px">  
+        <span class="bi">  
+          <span class="en">Percent is not shown in reports/screens (shows “Fixed” only).</span>  
+          <span class="ar">النسبة لا تظهر في التقارير/الشاشات (يظهر “ثابت” فقط).</span>  
+        </span>  
+      </div>  
+
+      <div class="row" style="margin-top:10px">  
+        <div class="field" style="max-width:210px">  
+          <label><span class="bi"><span class="en">Commission %</span><span class="ar">نسبة العمولة ٪</span></span></label>  
+          <input id="commissionPct" type="number" min="0" max="50" step="0.5" />  
+        </div>  
+        <button class="btn dark" id="saveCommissionBtn">  
+          <span class="bi"><span class="en">Save</span><span class="ar">حفظ</span></span>  
+        </button>  
+      </div>  
+
+      <div class="tiny" id="commissionSavedHint" style="margin-top:8px"></div>  
+    </div>  
+  </div>  
+</div>
+
+  </div>    <div class="toast" id="toast"></div>  
+</div>  <script>  
+/* =========================  
+   Commission System (Fixed — editable only in Manage)  
+   - We DO NOT show percent in reports/screens (show "Fixed." only)  
+   ========================= */  
+function getCommissionPct(){  
+  const v = Number((S?.settings?.commissionPct ?? 3));  
+  if(!isFinite(v) || v < 0) return 3;  
+  return v;  
+}  
+  
+/* =========================  
+   Storage keys  
+   ========================= */  
+const K = {  
+  services: "bh_services_v4",  
+  staff: "bh_staff_v4",  
+  invoices: "bh_invoices_v4",  
+  subs: "bh_subs_v4",  
+  settings: "bh_settings_v4",  
+  backup: "bh_autobackup_v4"  
+};  
+  
+const $ = (id)=>document.getElementById(id);  
+const todayKey = ()=> new Date().toISOString().slice(0,10);  
+  
+function toast(msg){  
+  const t=$("toast");  
+  t.textContent=msg;  
+  t.classList.add("show");  
+  clearTimeout(toast._tm);  
+  toast._tm=setTimeout(()=>t.classList.remove("show"),1600);  
+}  
+function fmtKD(n){  
+  const x = Math.round((Number(n)||0)*1000)/1000;  
+  return x.toFixed(3);  
+}  
+function escapeHtml(s){  
+  return (s??"").toString()  
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")  
+    .replaceAll('"',"&quot;").replaceAll("'","&#39;");  
+}  
+  
+/* ===== Kuwait Phone Cleaner ===== */  
+function cleanKuwaitPhone(raw){  
+  let s = (raw||"").toString().trim();  
+  if(!s) return {ok:false, msg:"اكتبي رقم الهاتف / Enter phone"};  
+  s = s.replace(/\s+/g,"");  
+  if(s.startsWith("+")) s = s.slice(1);  
+  if(s.startsWith("00")) s = s.slice(2);  
+  if(/^965\d{8}$/.test(s)) return {ok:true, phone:s};  
+  if(/^\d{8}$/.test(s)) return {ok:true, phone:"965"+s};  
+  return {ok:false, msg:"رقم غير كويتي / Not Kuwait number"};  
+}  
+function openWA(phone965, text){  
+  const url = "https://wa.me/" + encodeURIComponent(phone965) + "?text=" + encodeURIComponent(text);  
+  window.open(url, "_blank");  
+}  
+  
+/* ===== Data load/save ===== */  
+function loadJSON(key, fallback){  
+  try{  
+    const v = localStorage.getItem(key);  
+    return v ? JSON.parse(v) : fallback;  
+  }catch(e){ return fallback; }  
+}  
+function saveJSON(key, obj){  
+  localStorage.setItem(key, JSON.stringify(obj));  
+  localStorage.setItem(K.backup, JSON.stringify({ts:Date.now()}));  
+}  
+  
+/* ===== Defaults ===== */  
+function uid(){ return Math.random().toString(16).slice(2) + Date.now().toString(16); }  
+  
+function defaultServices(){  
+  return [  
+    {id:uid(), cat:"Spa", name:"Head Spa", price:10},  
+    {id:uid(), cat:"Spa", name:"Head Spa + Face", price:15},  
+    {id:uid(), cat:"Spa", name:"Massage", price:10},  
+    {id:uid(), cat:"Spa", name:"Massage 1/2", price:5},  
+    {id:uid(), cat:"Spa", name:"Hair Treatment + Head Spa", price:15},  
+    {id:uid(), cat:"Spa", name:"Hair Treatment + Head Spa + Face", price:20},  
+  
+    {id:uid(), cat:"Steam Bath", name:"Bath", price:10},  
+  
+    {id:uid(), cat:"Hair", name:"Blow Dry (3 KD)", price:3},  
+    {id:uid(), cat:"Hair", name:"Blow Dry (5 KD)", price:5},  
+    {id:uid(), cat:"Hair", name:"Wavy (5 KD)", price:5},  
+    {id:uid(), cat:"Hair", name:"Wavy (7 KD)", price:7},  
+    {id:uid(), cat:"Hair", name:"Hairstyle", price:10},  
+    {id:uid(), cat:"Hair", name:"Hair Wash", price:1},  
+    {id:uid(), cat:"Hair", name:"Treatment Hair Wash", price:3},  
+    {id:uid(), cat:"Hair", name:"Hair Mask", price:5},  
+    {id:uid(), cat:"Hair", name:"Hair Color Short", price:10},  
+    {id:uid(), cat:"Hair", name:"Hair Color Long", price:20},  
+    {id:uid(), cat:"Hair", name:"Hair Treatment", price:10},  
+    {id:uid(), cat:"Hair", name:"Hair Scrub", price:5},  
+    {id:uid(), cat:"Hair", name:"Retro", price:8},  
+  
+    {id:uid(), cat:"Nails", name:"Pedicure", price:2.5},  
+    {id:uid(), cat:"Nails", name:"Manicure", price:2.5},  
+    {id:uid(), cat:"Nails", name:"Pedi / Mani", price:5},  
+    {id:uid(), cat:"Nails", name:"Spa Pedicure", price:5},  
+    {id:uid(), cat:"Nails", name:"Spa Manicure", price:5},  
+    {id:uid(), cat:"Nails", name:"Spa Pedi / Mani", price:10},  
+    {id:uid(), cat:"Nails", name:"Extensions 1", price:5},  
+    {id:uid(), cat:"Nails", name:"Extensions 2", price:10},  
+    {id:uid(), cat:"Nails", name:"Nail Polish (1 KD)", price:1},  
+    {id:uid(), cat:"Nails", name:"Nail Polish (2 KD)", price:2},  
+    {id:uid(), cat:"Nails", name:"French Polish", price:3},  
+    {id:uid(), cat:"Nails", name:"Cat Eye Polish", price:4},  
+    {id:uid(), cat:"Nails", name:"Chrome", price:4},  
+    {id:uid(), cat:"Nails", name:"Nail Art", price:5},  
+    {id:uid(), cat:"Nails", name:"Removal", price:6},  
+  
+    {id:uid(), cat:"Hair Removal", name:"Upper Lip", price:1},  
+    {id:uid(), cat:"Hair Removal", name:"Eyebrow", price:1},  
+    {id:uid(), cat:"Hair Removal", name:"Face", price:3},  
+    {id:uid(), cat:"Hair Removal", name:"Body (5 KD)", price:5},  
+    {id:uid(), cat:"Hair Removal", name:"Body (10 KD)", price:10},  
+  
+    {id:uid(), cat:"Other Services", name:"Makeup Simple", price:10},  
+    {id:uid(), cat:"Other Services", name:"Makeup", price:15},  
+  
+    /* ✅ 3service requires 3+ staff */  
+    {id:uid(), cat:"Packages", name:"3service 15KD ashtrak", price:15, meta:{requiresStaffMin:3}},  
+  ];  
+}  
+  
+function defaultStaff(){  
+  return [  
+    {id:uid(), name:"kla"},  
+    {id:uid(), name:"bna"},  
+    {id:uid(), name:"meme"},  
+    {id:uid(), name:"sntsh"},  
+    {id:uid(), name:"nrml"},  
+    {id:uid(), name:"mlk"},  
+    {id:uid(), name:"indr"}  
+  ];  
+}  
+  
+function defaultSettings(){  
+  return {  
+    managerPhone:"96569977533",  
+    targetDaily:10,  
+    commissionPct:3  
+  };  
+}  
+  
+/* ===== State ===== */  
+let S = {  
+  services: loadJSON(K.services, null) || defaultServices(),  
+  staff: loadJSON(K.staff, null) || defaultStaff(),  
+  invoices: loadJSON(K.invoices, null) || [],  
+  subs: loadJSON(K.subs, null) || {},  
+  settings: Object.assign(defaultSettings(), loadJSON(K.settings, null)||{})  
+};  
+  
+function persistAll(){  
+  saveJSON(K.services, S.services);  
+  saveJSON(K.staff, S.staff);  
+  saveJSON(K.invoices, S.invoices);  
+  saveJSON(K.subs, S.subs);  
+  saveJSON(K.settings, S.settings);  
+}  
+  
+/* =========================  
+   Tabs / Pages (bilingual)  
+   ========================= */  
+const PAGES = [  
+  {id:"invoice", en:"Invoice", ar:"فاتورة"},  
+  {id:"today", en:"Today Invoices", ar:"فواتير اليوم"},  
+  {id:"stats", en:"Statistics", ar:"إحصائية"},  
+  {id:"daily", en:"Daily Report", ar:"تقرير يومي"},  
+  {id:"monthly", en:"Monthly Commission", ar:"عمولات الشهر"},  
+  {id:"manage", en:"Manage", ar:"إدارة"}  
+];  
+  
+function setPage(id){  
+  for(const p of PAGES){  
+    $("page-"+p.id).style.display = (p.id===id) ? "" : "none";  
+    const b = document.querySelector(`[data-tab="${p.id}"]`);  
+    if(b) b.classList.toggle("active", p.id===id);  
+  }  
+  if(id==="today") renderToday();  
+  if(id==="stats") renderStats();  
+  if(id==="daily") $("dailyPreview").innerHTML = `<div class="tiny">Build / إنشاء</div>`;  
+  if(id==="monthly") {  
+    if(!$("monthSel").value){  
+      const d=new Date(); $("monthSel").value = d.toISOString().slice(0,7);  
+    }  
+    $("monthlyPreview").innerHTML = `<div class="tiny">Choose month ثم Build</div>`;  
+  }  
+  if(id==="manage"){  
+    renderManageServices(); renderManageStaff();  
+    $("commissionPct").value = String(getCommissionPct());  
+    $("commissionSavedHint").textContent = "";  
+  }  
+}  
+  
+function initTabs(){  
+  const cols = ["1","2","3","4","5","1"];  
+  $("tabs").innerHTML = PAGES.map((p,i)=>`  
+    <button class="tab" data-col="${cols[i%cols.length]}" data-tab="${p.id}">  
+      <span class="bi"><span class="en">${p.en}</span><span class="ar">${p.ar}</span></span>  
+    </button>  
+  `).join("");  
+  for(const p of PAGES){  
+    document.querySelector(`[data-tab="${p.id}"]`).onclick = ()=>setPage(p.id);  
+  }  
+}  
+  
+/* =========================  
+   Invoice  
+   ========================= */  
+let inv = { phone:"", items:[] };  
+  
+function resetInv(){  
+  inv = {phone:"", items:[]};  
+  $("custPhone").value="";  
+  $("qtySel").value=1;  
+  $("staffPick").selectedIndex=-1;  
+  
+  $("manualName").value="";  
+  $("manualPrice").value="";  
+  $("manualQty").value=1;  
+  
+  renderItems();  
+  refreshSubTag();  
+  toast("تم / Done");  
+}  
+  
+function getSelectedStaffIds(){  
+  const sel = $("staffPick");  
+  const ids = [];  
+  for(const opt of sel.options){ if(opt.selected) ids.push(opt.value); }  
+  return ids;  
+}  
+function staffName(id){ return (S.staff.find(x=>x.id===id)||{}).name || "—"; }  
+function serviceById(id){ return S.services.find(x=>x.id===id); }  
+  
+function addItemFromSelect(){  
+  const svcId = $("svcSel").value;  
+  const svc = serviceById(svcId);  
+  if(!svc){ toast("اختاري خدمة / Pick service"); return; }  
+  
+  const qty = Math.max(1, Number($("qtySel").value)||1);  
+  const staffIds = getSelectedStaffIds();  
+  
+  const minStaff = svc?.meta?.requiresStaffMin || 0;  
+  if(minStaff && staffIds.length < minStaff){  
+    toast(`لازم ${minStaff}+ موظفات / Need ${minStaff}+ staff`);  
+    return;  
+  }  
+  
+  inv.items.push({  
+    id: uid(),  
+    refServiceId: svc.id,  
+    name: svc.name,  
+    price: Number(svc.price)||0,  
+    qty,  
+    staffIds: staffIds.slice(),  
+    meta: Object.assign({}, svc.meta||{}, {type:"normal"})  
+  });  
+  
+  renderItems();  
+  toast("تمت الإضافة / Added");  
+}  
+  
+/* ✅ Manual / Temporary service add */  
+function addManualItem(){  
+  const name = ($("manualName").value || "").trim();  
+  const price = Number($("manualPrice").value);  
+  const qty = Math.max(1, Number($("manualQty").value)||1);  
+  const staffIds = getSelectedStaffIds();  
+  
+  if(!name){ toast("اكتبي اسم الخدمة"); return; }  
+  if(!isFinite(price) || price < 0){ toast("اكتبي سعر صحيح"); return; }  
+  if(staffIds.length < 1){ toast("اختاري موظفة/موظفات"); return; }  
+  
+  inv.items.push({  
+    id: uid(),  
+    name: name,  
+    price: Number(price)||0,  
+    qty,  
+    staffIds: staffIds.slice(),  
+    meta: { type:"manual" } // not saved in services  
+  });  
+  
+  $("manualName").value="";  
+  $("manualPrice").value="";  
+  $("manualQty").value=1;  
+  
+  renderItems();  
+  toast("تمت الإضافة / Added");  
+}  
+  
+function removeItem(itemId){  
+  inv.items = inv.items.filter(x=>x.id!==itemId);  
+  renderItems();  
+}  
+function invTotal(){  
+  return inv.items.reduce((a,it)=>a + (Number(it.price)||0) * (Number(it.qty)||1), 0);  
+}  
+  
+function refreshSubTag(){  
+  const c = cleanKuwaitPhone($("custPhone").value);  
+  let tag = $("subTag");  
+  if(!c.ok){  
+    tag.className="tag";  
+    tag.textContent="Package: —";  
+    return;  
+  }  
+  const sub = S.subs[c.phone];  
+  if(sub && sub.active){  
+    const rem = Math.max(0, sub.max - sub.used);  
+    tag.className="tag ok";  
+    tag.textContent=`Package Mask: Used ${sub.used}/${sub.max} • Remaining ${rem}`;  
+  }else{  
+    tag.className="tag";  
+    tag.textContent="Package Mask: Not Active";  
+  }  
+}  
+  
+function renderItems(){  
+  $("invTotal").textContent = fmtKD(invTotal());  
+  const box = $("items");  
+  if(inv.items.length===0){  
+    box.innerHTML = `<div class="tiny">لا توجد بنود بعد / No items yet</div>`;  
+    return;  
+  }  
+  box.innerHTML = inv.items.map(it=>{  
+    const staff = (it.staffIds||[]).map(staffName).join(", ") || "—";  
+    const flags=[];  
+    if(it.meta?.type==="sub_sale") flags.push(`<span class="tag warn">Package Sale</span>`);  
+    if(it.meta?.type==="sub_use") flags.push(`<span class="tag ok">Package Use • ${it.meta.used}/${it.meta.max} • Rem ${it.meta.remaining}</span>`);  
+    if(it.meta?.requiresStaffMin) flags.push(`<span class="tag">Min Staff: ${it.meta.requiresStaffMin}</span>`);  
+    if(it.meta?.type==="manual") flags.push(`<span class="tag">Manual</span>`);  
+    return `  
+      <div class="item">  
+        <div class="itemhead">  
+          <div>  
+            <div class="itemname">${escapeHtml(it.name)}</div>  
+            <div class="tiny">Staff: <b>${escapeHtml(staff)}</b></div>  
+            ${flags.length? `<div class="row" style="margin-top:6px">${flags.join("")}</div>`:""}  
+          </div>  
+          <div class="right">  
+            <div><b>${fmtKD(it.price)}</b> KD × <b>${it.qty}</b></div>  
+            <div class="tiny muted">Line: ${fmtKD((it.price||0)*(it.qty||1))} KD</div>  
+            <div class="row" style="justify-content:flex-end;margin-top:6px">  
+              <button class="btn pink smallbtn" onclick="removeItem('${it.id}')">  
+                <span class="bi"><span class="en">Remove</span><span class="ar">حذف</span></span>  
+              </button>  
+            </div>  
+          </div>  
+        </div>  
+      </div>  
+    `;  
+  }).join("");  
+}  
+window.removeItem = removeItem;  
+  
+function ensurePhoneOrWarn(){  
+  const c = cleanKuwaitPhone($("custPhone").value);  
+  if(!c.ok){ toast("رقم غير صحيح / Invalid phone"); return null; }  
+  $("custPhone").value = c.phone;  
+  return c.phone;  
+}  
+  
+/* ===== Package Mask Logic ===== */  
+function pkgMaskAction(){  
+  const phone = ensurePhoneOrWarn();  
+  if(!phone) return;  
+  
+  let sub = S.subs[phone];  
+  if(!sub || !sub.active){  
+    sub = {active:true, max:5, used:0};  
+    S.subs[phone]=sub;  
+  
+    inv.items.push({  
+      id:uid(),  
+      name:"Package Mask (5 sessions)",  
+      price:15,  
+      qty:1,  
+      staffIds:getSelectedStaffIds().slice(),  
+      meta:{type:"sub_sale", max:5}  
+    });  
+  
+    persistAll();  
+    renderItems(); refreshSubTag();  
+    toast("تم بيع البكج / Package sold");  
+    return;  
+  }  
+  
+  const staffIds = getSelectedStaffIds();  
+  if(staffIds.length<1){ toast("اختاري موظفة للجلسة / Select staff"); return; }  
+  
+  sub.used = Math.min(sub.max, sub.used+1);  
+  const remaining = Math.max(0, sub.max - sub.used);  
+  
+  inv.items.push({  
+    id:uid(),  
+    name:"Mask Session (Package Mask)",  
+    price:0,  
+    qty:1,  
+    staffIds:[staffIds[0]],  
+    meta:{type:"sub_use", used:sub.used, remaining, max:sub.max}  
+  });  
+  
+  if(sub.used>=sub.max){  
+    sub.active=false; sub.used=0;  
+    toast("آخر جلسة — تصفير / Reset");  
+  }else{  
+    toast(`جلسة ${sub.used}/${sub.max}`);  
+  }  
+  
+  S.subs[phone]=sub;  
+  persistAll();  
+  renderItems(); refreshSubTag();  
+}  
+  
+/* ===== Save Invoice + WhatsApp ===== */  
+function saveInvoiceAndWA(){  
+  const phone = ensurePhoneOrWarn();  
+  if(!phone) return;  
+  if(inv.items.length===0){ toast("أضيفي خدمة / Add item"); return; }  
+  
+  for(const it of inv.items){  
+    const minStaff = it.meta?.requiresStaffMin || 0;  
+    if(minStaff && (it.staffIds||[]).length < minStaff){  
+      toast(`"${it.name}" لازم ${minStaff}+ موظفات`);  
+      return;  
+    }  
+  }  
+  
+  const record = {  
+    id: uid(),  
+    date: todayKey(),  
+    ts: Date.now(),  
+    phone,  
+    items: inv.items.map(x=>({  
+      name:x.name,  
+      price:Number(x.price)||0,  
+      qty:Number(x.qty)||1,  
+      staffIds:(x.staffIds||[]).slice(),  
+      meta:x.meta||{}  
+    })),  
+    total: invTotal()  
+  };  
+  
+  S.invoices.push(record);  
+  persistAll();  
+  
+  const lines = record.items.map(it=>{  
+    const q = it.qty||1;  
+    const p = it.price||0;  
+    if(p===0) return `• ${it.name} ×${q}`;  
+    return `• ${it.name} ×${q} = ${fmtKD(p*q)}KD`;  
+  });  
+  
+  const msg =  
+`BH Invoice  
+Phone: ${phone}  
+${lines.join("\n")}  
+Total: ${fmtKD(record.total)} KD  
+شكرا لزيارة صالون bh`;  
+  
+  openWA(phone, msg);  
+  resetInv();  
+}  
+  
+/* ===== Reports / Stats ===== */  
+function invoicesByDate(d){ return S.invoices.filter(x=>x.date===d); }  
+  
+/* Daily stats with staff sales (commission percent hidden in UI) */  
+function dayStats(dateStr){  
+  const invs = invoicesByDate(dateStr);  
+  let income=0, invCount=invs.length;  
+  
+  const svcCounts={}, staffCounts={}, staffSales={};  
+  for(const st of S.staff){ staffCounts[st.id]=0; staffSales[st.id]=0; }  
+  
+  for(const inv of invs){  
+    income += Number(inv.total)||0;  
+    for(const it of inv.items){  
+      const qty = Number(it.qty)||1;  
+      svcCounts[it.name]=(svcCounts[it.name]||0)+qty;  
+  
+      const staffIds=(it.staffIds||[]).filter(Boolean);  
+      if(staffIds.length){  
+        for(const sid of staffIds) staffCounts[sid]=(staffCounts[sid]||0)+qty;  
+  
+        const line=(Number(it.price)||0)*qty;  
+        const share=staffIds.length ? (line/staffIds.length) : 0;  
+        for(const sid of staffIds) staffSales[sid]=(staffSales[sid]||0)+share;  
+      }  
+    }  
+  }  
+  
+  const totalServicesQty=Object.values(svcCounts).reduce((a,b)=>a+b,0);  
+  const commPct = getCommissionPct();  
+  
+  const commissions = S.staff.map(st=>({  
+    sid: st.id,  
+    sales: staffSales[st.id]||0,  
+    comm: (staffSales[st.id]||0) * (commPct/100)  
+  }));  
+  
+  return {invs,income,invCount,totalServicesQty,svcCounts,staffCounts,staffSales,commPct,commissions};  
+}  
+  
+function renderStats(){  
+  const d=todayKey();  
+  const st=dayStats(d);  
+  $("kpiIncome").textContent=fmtKD(st.income);  
+  $("kpiInv").textContent=st.invCount;  
+  $("kpiServices").textContent=st.totalServicesQty;  
+  
+  const svcRows = Object.entries(st.svcCounts).sort((a,b)=>b[1]-a[1]).map(([name,count])=>  
+    `<tr><td>${escapeHtml(name)}</td><td class="right"><b>${count}</b></td></tr>`  
+  ).join("");  
+  $("svcCounts").innerHTML = `  
+    <table>  
+      <thead><tr><th>Service • الخدمة</th><th class="right">Count • العدد</th></tr></thead>  
+      <tbody>${svcRows || `<tr><td colspan="2" class="tiny">No data</td></tr>`}</tbody>  
+    </table>  
+  `;  
+  
+  const staffRows = S.staff.map(stf=>{  
+    const c=st.staffCounts[stf.id]||0;  
+    const sales=st.staffSales[stf.id]||0;  
+    const comm = sales*(getCommissionPct()/100);  
+    return `  
+      <tr>  
+        <td><b>${escapeHtml(stf.name)}</b></td>  
+        <td class="right">${c}</td>  
+        <td class="right">${fmtKD(sales)}</td>  
+        <td class="right"><b>${fmtKD(comm)}</b></td>  
+      </tr>`;  
+  }).join("");  
+  $("staffCounts").innerHTML = `  
+    <table>  
+      <thead><tr>  
+        <th>Staff • الموظفة</th>  
+        <th class="right">Count • العدد</th>  
+        <th class="right">Sales KD • المبيعات</th>  
+        <th class="right">Commission • العمولة</th>  
+      </tr></thead>  
+      <tbody>${staffRows || `<tr><td colspan="4" class="tiny">No staff</td></tr>`}</tbody>  
+    </table>  
+  `;  
+}  
+  
+function renderToday(){  
+  const invs=invoicesByDate(todayKey()).sort((a,b)=>b.ts-a.ts);  
+  if(invs.length===0){ $("todayList").innerHTML=`<div class="tiny">No invoices today</div>`; return; }  
+  
+  $("todayList").innerHTML = invs.map(inv=>{  
+    const msgLines = inv.items.map(it=>{  
+      if((it.price||0)===0) return `• ${it.name} ×${it.qty}`;  
+      return `• ${it.name} ×${it.qty} = ${fmtKD((it.price||0)*(it.qty||1))}KD`;  
+    });  
+    const msg =  
+`BH Invoice  
+Phone: ${inv.phone}  
+${msgLines.join("\n")}  
+Total: ${fmtKD(inv.total)} KD  
+شكرا لزيارة صالون bh`;  
+  
+    const items = inv.items.map(it=>{  
+      const p=(it.price||0)*(it.qty||1);  
+      const staff=(it.staffIds||[]).map(staffName).join(", ")||"—";  
+      return `<div class="tiny">• <b>${escapeHtml(it.name)}</b> ×${it.qty} — ${fmtKD(p)}KD <span class="muted">(${escapeHtml(staff)})</span></div>`;  
+    }).join("");  
+  
+    return `  
+      <div class="item">  
+        <div class="flex">  
+          <div>  
+            <div class="itemname">Phone: <span class="mono">${inv.phone}</span></div>  
+            <div class="tiny muted">${new Date(inv.ts).toLocaleTimeString()}</div>  
+          </div>  
+          <div class="row">  
+            <span class="pill">Total: <b>${fmtKD(inv.total)}</b> KD</span>  
+            <button class="btn mint smallbtn" onclick='openWA("${inv.phone}", ${JSON.stringify(msg)})'>  
+              <span class="bi"><span class="en">WhatsApp</span><span class="ar">واتساب</span></span>  
+            </button>  
+          </div>  
+        </div>  
+        <div class="hr"></div>  
+        ${items}  
+      </div>`;  
+  }).join("");  
+}  
+window.openWA=openWA;  
+  
+/* ===== Daily / Monthly report (percent hidden in text header) ===== */  
+let lastDaily={text:"",html:""}, lastMonthly={text:"",html:""};  
+  
+function openPrintWindow(title, html){  
+  const w = window.open("", "_blank");  
+  if(!w){ toast("Popup blocked"); return; }  
+  w.document.open();  
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"/>  
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>  
+  <title>${escapeHtml(title)}</title>  
+  <style>  
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:18px;color:#111827;background:#fff}  
+    .card{border:1px solid rgba(17,24,39,.12);border-radius:16px;padding:14px}  
+    @media print { button{display:none!important} }  
+  </style></head><body>    <button onclick="window.print()" style="padding:10px 12px;border-radius:12px;border:1px solid rgba(17,24,39,.12);background:#111827;color:#fff;font-weight:900;cursor:pointer">  
+    Print / Save PDF  
+  </button>  
+  <div style="height:12px"></div>${html}</body></html>`);  
+  w.document.close();  
+}  function buildDaily(){
+const d=todayKey();
+const st=dayStats(d);
+
+const staffSummary = S.staff.map(s=>{
+const sales=st.staffSales[s.id]||0;
+const count=st.staffCounts[s.id]||0;
+const comm=sales*(getCommissionPct()/100);
+return {name:s.name,count,sales,comm};
+});
+
+const totalComm=staffSummary.reduce((a,x)=>a+(x.comm||0),0);
+
+const invHtml = st.invs.map(inv=>{
+const itemHtml = inv.items.map(it=>{
+const staff=(it.staffIds||[]).map(staffName).join(", ")||"—";
+return <div style="font-size:12px;color:#374151;margin:3px 0">• <b>${escapeHtml(it.name)}</b> ×${it.qty} — ${fmtKD((it.price||0)*(it.qty||1))}KD <span style="color:#6b7280">(${escapeHtml(staff)})</span></div>;
+}).join("");
+return <div style="border:1px solid rgba(17,24,39,.12);border-radius:14px;padding:10px;margin:10px 0;background:#fff">   <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">   <div><b>Phone:</b> ${escapeHtml(inv.phone)} <span style="color:#6b7280;font-size:12px">(${new Date(inv.ts).toLocaleTimeString()})</span></div>   <div><b>Total:</b> ${fmtKD(inv.total)} KD</div>   </div>   <div style="margin-top:6px">${itemHtml}</div>   </div>;
+}).join("");
+
+const staffRows=staffSummary.map(x=>   <tr>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10)"><b>${escapeHtml(x.name)}</b></td>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${x.count}</td>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${fmtKD(x.sales)}</td>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right"><b>${fmtKD(x.comm)}</b></td>   </tr>).join("");
+
+const html =   <div class="card">   <h2>BH Daily Report • تقرير يومي — ${d}</h2>   <div>Income: <b>${fmtKD(st.income)}</b> KD • Invoices: <b>${st.invCount}</b></div>   <div style="margin-top:6px">   <b>Commission System:</b> Fixed.   <span style="color:#6b7280">— نظام العمولة: ثابت.</span>   </div>   <hr/>   <h3>Invoices • الفواتير</h3>   ${invHtml ||<div>No invoices</div>}   <hr/>   <h3>Staff Summary • ملخص الموظفات</h3>   <table style="width:100%;border-collapse:collapse;border:1px solid rgba(17,24,39,.12)">   <thead style="background:rgba(17,24,39,.04)">   <tr>   <th style="padding:10px;text-align:left">Staff</th>   <th style="padding:10px;text-align:right">Count</th>   <th style="padding:10px;text-align:right">Sales</th>   <th style="padding:10px;text-align:right">Commission</th>   </tr>   </thead>   <tbody>${staffRows}</tbody>   </table>   <div style="margin-top:10px">Total Commission: <b>${fmtKD(totalComm)}</b> KD</div>   </div>   ;
+
+const textLines = staffSummary.map(x=>${x.name}: Sales ${fmtKD(x.sales)}KD • Comm ${fmtKD(x.comm)}KD).join("\n");
+
+const text =
+`BH Daily Report — ${d}
+Income: ${fmtKD(st.income)} KD
+Invoices: ${st.invCount}
+
+Commission System: Fixed.
+نظام العمولة: ثابت.
+
+${textLines}
+
+(Use PDF for full table)`;
+
+lastDaily={text,html};
+$("dailyPreview").innerHTML=html;
+toast("تم / Built");
+}
+
+function buildMonthly(){
+const mk = $("monthSel").value;
+if(!mk){ toast("اختاري شهر / Pick month"); return; }
+
+const pct = getCommissionPct();
+const invs = S.invoices.filter(inv => inv.date.slice(0,7) === mk);
+
+const salesByStaff = {};
+for(const stf of S.staff) salesByStaff[stf.id] = 0;
+
+for(const inv of invs){
+for(const it of inv.items){
+const qty = Number(it.qty)||1;
+const staffIds = (it.staffIds||[]).filter(Boolean);
+if(!staffIds.length) continue;
+
+const line = (Number(it.price)||0) * qty;  
+  const share = line / staffIds.length;  
+  for(const sid of staffIds){  
+    salesByStaff[sid] = (salesByStaff[sid]||0) + share;  
+  }  
+}
+
+}
+
+const rows = S.staff.map(stf=>{
+const sales = salesByStaff[stf.id] || 0;
+const comm = sales * (pct/100);
+return   <tr>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10)"><b>${escapeHtml(stf.name)}</b></td>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right">${fmtKD(sales)}</td>   <td style="padding:8px;border-bottom:1px solid rgba(17,24,39,.10);text-align:right"><b>${fmtKD(comm)}</b></td>   </tr>  ;
+}).join("");
+
+const totalComm = S.staff.reduce((a,stf)=>{
+const sales = salesByStaff[stf.id]||0;
+return a + sales*(pct/100);
+}, 0);
+
+const html =   <div class="card">   <h2>BH Monthly Commission • عمولات — ${mk}</h2>   <div>   <b>Commission System:</b> Fixed.   <span style="color:#6b7280">— نظام العمولة: ثابت.</span>   </div>   <div style="margin-top:6px">Total Commission: <b>${fmtKD(totalComm)}</b> KD</div>   <hr/>   <table style="width:100%;border-collapse:collapse;border:1px solid rgba(17,24,39,.12)">   <thead style="background:rgba(17,24,39,.04)">   <tr>   <th style="padding:10px;text-align:left">Staff • الموظفة</th>   <th style="padding:10px;text-align:right">Sales • المبيعات</th>   <th style="padding:10px;text-align:right">Commission • العمولة</th>   </tr>   </thead>   <tbody>${rows}</tbody>   </table>   </div>  ;
+
+const textLines = S.staff.map(stf=>{
+const sales = salesByStaff[stf.id]||0;
+const comm = sales*(pct/100);
+return ${stf.name}: Sales ${fmtKD(sales)}KD • Comm ${fmtKD(comm)}KD;
+}).join("\n");
+
+const text =
+`BH Monthly Commission — ${mk}
+Commission System: Fixed.
+نظام العمولة: ثابت.
+Total Commission: ${fmtKD(totalComm)} KD
+
+${textLines}
+
+(Use PDF for full table.)`;
+
+lastMonthly = {text, html};
+$("monthlyPreview").innerHTML = html;
+toast("تم / Built");
+}
+
+/* ===== Manage ===== */
+function renderManageServices(){
+const list=$("manageServices");
+const cats=Array.from(new Set(S.services.map(s=>s.cat))).sort();
+const byCat={}; for(const c of cats) byCat[c]=[];
+for(const s of S.services) (byCat[s.cat]=byCat[s.cat]||[]).push(s);
+
+list.innerHTML=cats.map(c=>{
+const rows=(byCat[c]||[]).sort((a,b)=>a.name.localeCompare(b.name)).map(s=>   <div class="item">   <div class="flex">   <div>   <div class="itemname">${escapeHtml(s.name)}</div>   <div class="tiny muted">Price: <b>${fmtKD(s.price)}</b> KD ${s.meta?.requiresStaffMin?• Min Staff: ${s.meta.requiresStaffMin}:""}</div>   </div>   <div class="row">   <button class="btn purple smallbtn" onclick="editService('${s.id}')">Edit</button>   <button class="btn pink smallbtn" onclick="deleteService('${s.id}')">Delete</button>   </div>   </div>   </div>).join("");
+return <div style="margin-bottom:12px">   <div class="row"><span class="pill"><b>${escapeHtml(c)}</b></span></div>   <div style="margin-top:8px" class="items">${rows || <div class="tiny">No services</div>}</div>   </div>;
+}).join("");
+}
+
+function renderManageStaff(){
+const box=$("manageStaff");
+box.innerHTML = S.staff.map(s=>   <div class="item">   <div class="flex">   <div>   <div class="itemname">${escapeHtml(s.name)}</div>   <div class="tiny muted">ID: ${escapeHtml(s.id.slice(0,8))}…</div>   </div>   <div class="row">   <button class="btn purple smallbtn" onclick="editStaff('${s.id}')">Edit</button>   <button class="btn pink smallbtn" onclick="deleteStaff('${s.id}')">Delete</button>   </div>   </div>   </div>).join("") || <div class="tiny">No staff</div>;
+}
+
+window.editService=(id)=>{
+const s=S.services.find(x=>x.id===id); if(!s) return;
+const name=prompt("Service name / اسم الخدمة:", s.name); if(name===null) return;
+const cat=prompt("Category / القسم:", s.cat); if(cat===null) return;
+const price=prompt("Price KD / السعر:", s.price); if(price===null) return;
+let minStaff=s.meta?.requiresStaffMin||0;
+const minStr=prompt("Min staff? 0 none / أقل عدد موظفات:", String(minStaff)); if(minStr===null) return;
+minStaff=Math.max(0, Number(minStr)||0);
+s.name=name.trim(); s.cat=cat.trim(); s.price=Number(price)||0;
+s.meta=s.meta||{};
+if(minStaff>0) s.meta.requiresStaffMin=minStaff; else delete s.meta.requiresStaffMin;
+persistAll(); renderAllPickers(); renderManageServices(); toast("تم / Updated");
+};
+window.deleteService=(id)=>{
+if(!confirm("Delete service?")) return;
+S.services=S.services.filter(x=>x.id!==id);
+persistAll(); renderAllPickers(); renderManageServices(); toast("Deleted");
+};
+window.editStaff=(id)=>{
+const s=S.staff.find(x=>x.id===id); if(!s) return;
+const name=prompt("Staff name / اسم الموظفة:", s.name); if(name===null) return;
+s.name=name.trim();
+persistAll(); renderStaffPicker(); renderManageStaff(); toast("تم / Updated");
+};
+window.deleteStaff=(id)=>{
+if(!confirm("Delete staff?")) return;
+S.staff=S.staff.filter(x=>x.id!==id);
+persistAll(); renderStaffPicker(); renderManageStaff(); toast("Deleted");
+};
+
+function addServiceFlow(){
+const name=prompt("Service name / اسم الخدمة:"); if(!name) return;
+const cat=prompt("Category / القسم:", "Hair"); if(!cat) return;
+const price=prompt("Price KD / السعر:", "0"); if(price===null) return;
+const minStaff=prompt("Min staff? 0 none / أقل عدد موظفات:", "0"); if(minStaff===null) return;
+
+const svc={id:uid(),name:name.trim(),cat:cat.trim(),price:Number(price)||0};
+const ms=Math.max(0, Number(minStaff)||0);
+if(ms>0) svc.meta={requiresStaffMin:ms};
+S.services.push(svc);
+persistAll(); renderAllPickers(); renderManageServices(); toast("Added");
+}
+function addStaffFlow(){
+const name=prompt("Staff name / اسم الموظفة:"); if(!name) return;
+S.staff.push({id:uid(),name:name.trim()});
+persistAll(); renderStaffPicker(); renderManageStaff(); toast("Added");
+}
+
+/* ✅ Save commission percent (only here in Manage) */
+function saveCommissionPct(){
+const v = Number($("commissionPct").value);
+if(!isFinite(v) || v < 0 || v > 50){
+toast("نسبة غير صحيحة");
+return;
+}
+S.settings.commissionPct = v;
+persistAll();
+$("commissionSavedHint").style.color = "var(--ok)";
+$("commissionSavedHint").textContent = "Saved ✅ (hidden from reports)";
+toast("تم حفظ العمولة");
+}
+
+/* ===== Pickers ===== */
+function renderStaffPicker(){
+$("staffPick").innerHTML = S.staff.map(s=><option value="${s.id}">${escapeHtml(s.name)}</option>).join("");
+}
+function renderCatServicePickers(){
+const cats=Array.from(new Set(S.services.map(s=>s.cat))).sort();
+$("catSel").innerHTML = cats.map(c=><option value="${escapeHtml(c)}">${escapeHtml(c)}</option>).join("");
+function renderSvcs(){
+const cat=$("catSel").value;
+const svcs=S.services.filter(s=>s.cat===cat).sort((a,b)=>a.name.localeCompare(b.name));
+$("svcSel").innerHTML = svcs.map(s=><option value="${s.id}">${escapeHtml(s.name)} — ${fmtKD(s.price)} KD</option>).join("");
+}
+$("catSel").onchange=renderSvcs;
+renderSvcs();
+}
+function renderAllPickers(){ renderStaffPicker(); renderCatServicePickers(); }
+
+/* ===== Backup/Restore/Wipe ===== */
+function exportBackup(){
+const payload={
+version:4,
+ts:Date.now(),
+services:S.services,
+staff:S.staff,
+invoices:S.invoices,
+subs:S.subs,
+settings:S.settings
+};
+const text=JSON.stringify(payload,null,2);
+const blob=new Blob([text],{type:"application/json"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob); a.download="BH_Backup.json"; a.click();
+URL.revokeObjectURL(a.href);
+toast("Backup جاهز");
+}
+function importBackup(){
+const inp=document.createElement("input");
+inp.type="file"; inp.accept="application/json";
+inp.onchange=()=>{
+const f=inp.files&&inp.files[0]; if(!f) return;
+const r=new FileReader();
+r.onload=()=>{
+try{
+const data=JSON.parse(r.result);
+if(!data||!data.version) throw new Error("Invalid");
+S.services=data.services||S.services;
+S.staff=data.staff||S.staff;
+S.invoices=data.invoices||S.invoices;
+S.subs=data.subs||S.subs;
+S.settings=Object.assign(defaultSettings(), data.settings||{});
+persistAll(); initUI(); toast("تم الاسترجاع");
+}catch(e){ alert("Restore failed"); }
+};
+r.readAsText(f);
+};
+inp.click();
+}
+function wipeAll(){
+if(!confirm("Wipe all data?")) return;
+for(const k of Object.values(K)) localStorage.removeItem(k);
+S={services:defaultServices(),staff:defaultStaff(),invoices:[],subs:{},settings:defaultSettings()};
+persistAll(); initUI(); toast("تم المسح");
+}
+
+/* ===== Init ===== */
+function initUI(){
+$("todayStr").textContent=todayKey();
+
+initTabs();
+renderAllPickers();
+
+$("mgrPhone").value = S.settings.managerPhone || "";
+$("target10").value = S.settings.targetDaily ?? 10;
+
+$("custPhone").addEventListener("input", ()=>{
+const c=cleanKuwaitPhone($("custPhone").value);
+if(c.ok){
+$("phoneHint").textContent="Normalized: "+c.phone;
+$("phoneHint").style.color="var(--ok)";
+}else{
+$("phoneHint").textContent=c.msg||"";
+$("phoneHint").style.color="var(--bad)";
+}
+refreshSubTag();
+});
+
+$("addItemBtn").onclick=addItemFromSelect;
+$("addManualBtn").onclick=addManualItem;
+
+$("pkgMaskBtn").onclick=pkgMaskAction;
+$("saveInvBtn").onclick=saveInvoiceAndWA;
+$("clearInvBtn").onclick=resetInv;
+
+$("refreshTodayBtn").onclick=renderToday;
+$("printTodayBtn").onclick=()=>{
+const invs=invoicesByDate(todayKey()).sort((a,b)=>b.ts-a.ts);
+const html=<div class="card"><h2>Today Invoices — ${todayKey()}</h2> + invs.map(inv=>{
+const items=inv.items.map(it=><div style="font-size:12px;color:#374151">• ${escapeHtml(it.name)} ×${it.qty} — ${fmtKD((it.price||0)*(it.qty||1))}KD</div>).join("");
+return <div style="border:1px solid rgba(17,24,39,.12);border-radius:14px;padding:10px;margin:10px 0">   <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">   <div><b>Phone:</b> ${escapeHtml(inv.phone)}</div>   <div><b>Total:</b> ${fmtKD(inv.total)} KD</div>   </div><div style="margin-top:6px">${items}</div></div>;
+}).join("") + </div>;
+openPrintWindow("BH Today Invoices", html);
+};
+
+$("refreshStatsBtn").onclick=renderStats;
+
+$("buildDailyBtn").onclick=buildDaily;
+$("sendDailyBtn").onclick=()=>{
+if(!lastDaily.text) buildDaily();
+const c=cleanKuwaitPhone($("mgrPhone").value);
+if(!c.ok){ toast("رقم المديرة غير صحيح"); return; }
+S.settings.managerPhone=c.phone; persistAll();
+openWA(c.phone, lastDaily.text);
+};
+$("pdfDailyBtn").onclick=()=>{
+if(!lastDaily.html) buildDaily();
+openPrintWindow("BH Daily Report", lastDaily.html);
+};
+
+$("buildMonthlyBtn").onclick=buildMonthly;
+$("sendMonthlyBtn").onclick=()=>{
+if(!lastMonthly.text) buildMonthly();
+const c=cleanKuwaitPhone($("mgrPhone").value);
+if(!c.ok){ toast("رقم المديرة غير صحيح"); return; }
+S.settings.managerPhone=c.phone; persistAll();
+openWA(c.phone, lastMonthly.text);
+};
+$("pdfMonthlyBtn").onclick=()=>{
+if(!lastMonthly.html) buildMonthly();
+openPrintWindow("BH Monthly Commission", lastMonthly.html);
+};
+
+$("addSvcOpenBtn").onclick=addServiceFlow;
+$("addStaffOpenBtn").onclick=addStaffFlow;
+
+$("backupBtn").onclick=exportBackup;
+$("restoreBtn").onclick=importBackup;
+$("wipeAllBtn").onclick=wipeAll;
+
+const saveSettings=()=>{
+const m=cleanKuwaitPhone($("mgrPhone").value);
+if(m.ok) $("mgrPhone").value=m.phone;
+S.settings.managerPhone=m.ok?m.phone:(S.settings.managerPhone||"");
+S.settings.targetDaily=Number($("target10").value)||10;
+persistAll();
+};
+$("mgrPhone").addEventListener("change", saveSettings);
+$("target10").addEventListener("change", saveSettings);
+
+// Manage commission save
+const saveBtn = $("saveCommissionBtn");
+if(saveBtn) saveBtn.onclick = saveCommissionPct;
+
+setPage("invoice");
+renderItems(); refreshSubTag();
+}
+
+initUI();
+</script>
+
+</body>  
 </html>
