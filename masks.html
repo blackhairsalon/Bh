@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BH — Hair Mask Subscriptions (5 Sessions)</title>
+  <style>
+    :root{--bg:#fbf8f3;--card:#fff;--ink:#111827;--muted:#6b7280;--line:rgba(17,24,39,.12);--shadow:0 10px 30px rgba(0,0,0,.08);--btn:#111827}
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;background:var(--bg);margin:0;padding:18px;color:var(--ink)}
+    .card{background:var(--card);padding:18px;border-radius:16px;max-width:860px;margin:auto;box-shadow:var(--shadow);border:1px solid var(--line)}
+    h2{margin:0 0 12px;font-size:18px}
+    label{display:block;margin:10px 0 6px;color:var(--muted);font-size:13px}
+    input{padding:12px;border-radius:12px;border:1px solid var(--line);width:100%;font-size:15px;outline:none;background:#fff}
+    input:focus{border-color:rgba(17,24,39,.35)}
+    .stats{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+    .box{flex:1;min-width:190px;border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+    .box .t{color:var(--muted);font-size:12px}
+    .box .n{font-size:22px;font-weight:700;margin-top:6px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{padding:12px 14px;border-radius:12px;border:0;background:var(--btn);color:#fff;cursor:pointer;font-size:14px}
+    button.secondary{background:#374151}
+    button.warn{background:#f59e0b}
+    button.ok{background:#16a34a}
+    button.bad{background:#ef4444}
+    .hint{margin-top:10px;color:var(--muted);font-size:13px;line-height:1.6}
+    .mini{font-size:12px;color:var(--muted);margin-top:6px}
+    .pill{display:inline-block;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:13px}
+    .divider{height:1px;background:var(--line);margin:14px 0}
+  </style>
+</head>
+<body>
+<div class="card">
+  <h2>BH — اشتراك ماسكات الشعر (5 جلسات)</h2>
+  <div class="mini">يحفظ البيانات داخل الجهاز (localStorage). بعد الجلسة الخامسة يبدأ دورة جديدة تلقائياً.</div>
+
+  <label>اسم العميل</label>
+  <input id="name" placeholder="مثال: نورة" autocomplete="off">
+
+  <label>رقم الهاتف الكويتي</label>
+  <input id="phone" placeholder="مثال: 69977533 أو 96569977533 أو 0096569977533" inputmode="tel" autocomplete="off">
+
+  <div class="divider"></div>
+
+  <h2 style="font-size:16px;margin:0 0 10px">قائمة الاشتراكات النشطة</h2>
+  <div class="mini">اضغطي على أي عميلة لفتح اشتراكها بسرعة.</div>
+
+  <label>بحث (اسم / رقم)</label>
+  <input id="subSearch" placeholder="ابحثي بالاسم أو الرقم..." autocomplete="off">
+
+  <div class="stats" style="margin-top:10px">
+    <div class="box">
+      <div class="t">إجمالي الاشتراكات النشطة</div>
+      <div class="n"><span id="subsCount">0</span></div>
+      <div class="t">آخر تحديث: <strong id="subsLast">-</strong></div>
+    </div>
+  </div>
+
+  <div class="box" style="padding:0;overflow:auto">
+    <table style="width:100%;border-collapse:collapse;min-width:640px">
+      <thead>
+        <tr style="background:#fbf8f3">
+          <th style="text-align:right;padding:10px;border-bottom:1px solid var(--line)">العميلة</th>
+          <th style="text-align:right;padding:10px;border-bottom:1px solid var(--line)">الهاتف</th>
+          <th style="text-align:right;padding:10px;border-bottom:1px solid var(--line)">المستخدم</th>
+          <th style="text-align:right;padding:10px;border-bottom:1px solid var(--line)">المتبقي</th>
+          <th style="text-align:right;padding:10px;border-bottom:1px solid var(--line)">الدورة</th>
+          <th style="text-align:right;padding:10px;border-bottom:1px solid var(--line)">فتح</th>
+        </tr>
+      </thead>
+      <tbody id="subsTableBody">
+        <tr><td colspan="6" style="padding:12px;color:var(--muted)">لا يوجد</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="stats">
+    <div class="box">
+      <div class="t">الجلسات المستخدمة (الدورة الحالية)</div>
+      <div class="n"><span id="used">0</span> / 5</div>
+      <div class="t">المتبقي: <strong id="remain">5</strong></div>
+    </div>
+    <div class="box">
+      <div class="t">رقم الدورة</div>
+      <div class="n">#<span id="cycle">1</span></div>
+      <div class="t">بعد 5/5 يبدأ دورة جديدة</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="ok" onclick="loadOrCreate()">تحميل الاشتراك</button>
+    <button class="ok" onclick="addSession()">تسجيل جلسة</button>
+    <button class="secondary" onclick="undo()">تراجع</button>
+    <button class="bad" onclick="resetClient()">مسح اشتراك العميل</button>
+  </div>
+
+  <div class="row">
+    <button onclick="sendClient()">إرسال (المستخدم/المتبقي) للعميل واتساب</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="mini">رقم المديرة (واتساب): <span class="pill">0096569977533</span></div>
+  <div class="row">
+    <button class="warn" onclick="sendDaily()">تقرير يومي للمديرة</button>
+    <button class="warn" onclick="sendMonthly()">تقرير شهري للمديرة</button>
+    <button class="secondary" onclick="clearToday()">مسح سجل اليوم (للتقرير فقط)</button>
+  </div>
+
+  <div class="hint">
+    ملاحظة: أزرار واتساب تفتح المحادثة برسالة جاهزة فقط (واتساب لا يرسل تلقائيًا).
+  </div>
+</div>
+
+<script>
+const KEY_SUBS = "bh_mask_subs_v2";
+const KEY_LOGS = "bh_mask_logs_v2";
+const MANAGER = "96569977533"; // digits only
+
+function cleanPhone(raw){
+  if(!raw) return "";
+  let p = String(raw).trim().replace(/[^0-9]/g,'');
+  if(p.startsWith("00")) p = p.slice(2);
+  if(p.startsWith("965") && p.length===11) return p;
+  if(p.length===8) return "965"+p;
+  return "";
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function waLink(phone965, text){
+  return "https://wa.me/"+phone965+"?text="+encodeURIComponent(text);
+}
+
+function todayISO(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return y+"-"+m+"-"+day;
+}
+
+function monthKey(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  return y+"-"+m;
+}
+
+function timeHM(){
+  return new Date().toLocaleTimeString("ar-KW",{hour:"2-digit",minute:"2-digit"});
+}
+
+function loadSubs(){
+  try{return JSON.parse(localStorage.getItem(KEY_SUBS)||"{}");}catch(e){return {};}
+}
+function saveSubs(o){ localStorage.setItem(KEY_SUBS, JSON.stringify(o)); try{renderActiveList();}catch(e){} }
+
+function loadLogs(){
+  try{return JSON.parse(localStorage.getItem(KEY_LOGS)||"[]");}catch(e){return [];}
+}
+function saveLogs(a){ localStorage.setItem(KEY_LOGS, JSON.stringify(a)); }
+
+function currentClient(){
+  const name=document.getElementById("name").value.trim();
+  const phone965=cleanPhone(document.getElementById("phone").value);
+  return {name, phone965};
+}
+
+function setUI(sub){
+  document.getElementById("used").innerText = sub.used;
+  document.getElementById("remain").innerText = 5 - sub.used;
+  document.getElementById("cycle").innerText = sub.cycle;
+}
+
+function getOrCreate(phone965, name){
+  const subs=loadSubs();
+  if(!subs[phone965]){
+    subs[phone965]={name:name||"", used:0, cycle:1, updatedAt:Date.now()};
+    saveSubs(subs);
+  }else{
+    if(name) subs[phone965].name=name;
+    subs[phone965].updatedAt=Date.now();
+    saveSubs(subs);
+  }
+  return loadSubs()[phone965];
+}
+
+function loadOrCreate(){
+  const {name, phone965}=currentClient();
+  if(!phone965){ alert("رقم غير صحيح"); return; }
+  const sub=getOrCreate(phone965, name);
+  setUI(sub);
+}
+
+function logSession(entry){
+  const logs=loadLogs();
+  logs.push(entry);
+  saveLogs(logs);
+}
+
+function addSession(){
+  const {name, phone965}=currentClient();
+  if(!name){ alert("اكتبي اسم العميل"); return; }
+  if(!phone965){ alert("رقم غير صحيح"); return; }
+
+  const subs=loadSubs();
+  const sub = subs[phone965] || {name:name, used:0, cycle:1, updatedAt:Date.now()};
+
+  // increment used; if reach 5, auto cycle reset to 0 and cycle++
+  let completed=false;
+  sub.used += 1;
+  if(sub.used >= 5){
+    completed=true;
+    sub.used = 0;
+    sub.cycle += 1;
+  }
+  sub.name = name;
+  sub.updatedAt = Date.now();
+  subs[phone965]=sub;
+  saveSubs(subs);
+  setUI(sub);
+
+  logSession({
+    dateISO: todayISO(),
+    month: monthKey(),
+    time: timeHM(),
+    name: name,
+    phone965: phone965,
+    phoneLocal: phone965.slice(3),
+    completedCycle: completed ? 1 : 0
+  });
+}
+
+function undo(){
+  const {phone965}=currentClient();
+  if(!phone965){ alert("رقم غير صحيح"); return; }
+  const subs=loadSubs();
+  const sub=subs[phone965];
+  if(!sub){ alert("لا يوجد اشتراك"); return; }
+
+  if(sub.used > 0){
+    sub.used -= 1;
+  }else{
+    if(sub.cycle > 1){
+      sub.cycle -= 1;
+      sub.used = 4; // رجوع قبل اكتمال 5
+    }else{
+      alert("لا يوجد ما يمكن التراجع عنه");
+      return;
+    }
+  }
+  sub.updatedAt=Date.now();
+  subs[phone965]=sub;
+  saveSubs(subs);
+  setUI(sub);
+}
+
+function resetClient(){
+  const {phone965}=currentClient();
+  if(!phone965){ alert("رقم غير صحيح"); return; }
+  const subs=loadSubs();
+  if(!subs[phone965]){ alert("لا يوجد اشتراك"); return; }
+  delete subs[phone965];
+  saveSubs(subs);
+  setUI({used:0, cycle:1});
+}
+
+function sendClient(){
+  const {name, phone965}=currentClient();
+  if(!phone965){ alert("رقم غير صحيح"); return; }
+  const subs=loadSubs();
+  const sub = subs[phone965] || getOrCreate(phone965, name);
+
+  const msg = [
+    "BH Salon — Hair Mask Subscription (5)",
+    "Name: " + (sub.name || "-"),
+    "Phone: " + (phone965.slice(3) || "-"),
+    "",
+    "Used (current cycle): " + sub.used + "/5",
+    "Remaining: " + (5 - sub.used),
+    "Cycle #: " + sub.cycle
+  ].join("\n");
+
+  window.open(waLink(phone965, msg), "_blank");
+}
+
+function sendDaily(){
+  const logs=loadLogs();
+  const t=todayISO();
+  const today=logs.filter(x=>x.dateISO===t);
+
+  const total = today.length;
+  const byClient = {};
+  today.forEach(e=>{
+    const k=e.phone965;
+    if(!byClient[k]) byClient[k]={name:e.name, phoneLocal:e.phoneLocal, count:0};
+    byClient[k].count += 1;
+  });
+
+  let lines=[];
+  lines.push("BH — Daily Mask Report");
+  lines.push("Date: " + t);
+  lines.push("Total sessions: " + total);
+  lines.push("Clients: " + Object.keys(byClient).length);
+  lines.push("");
+  lines.push("Clients list:");
+  if(Object.keys(byClient).length===0){
+    lines.push("- No sessions");
+  }else{
+    Object.values(byClient).forEach(v=>{
+      lines.push("- " + (v.name||"-") + " (" + (v.phoneLocal||"-") + ") : " + v.count);
+    });
+  }
+
+  window.open(waLink(MANAGER, lines.join("\n")), "_blank");
+}
+
+function sendMonthly(){
+  const logs=loadLogs();
+  const mk=monthKey();
+  const monthLogs=logs.filter(x=>x.month===mk);
+
+  const total = monthLogs.length;
+  const byClient = {};
+  monthLogs.forEach(e=>{
+    const k=e.phone965;
+    if(!byClient[k]) byClient[k]={name:e.name, phoneLocal:e.phoneLocal, count:0};
+    byClient[k].count += 1;
+  });
+
+  let lines=[];
+  lines.push("BH — Monthly Mask Report");
+  lines.push("Month: " + mk);
+  lines.push("Total sessions: " + total);
+  lines.push("Clients: " + Object.keys(byClient).length);
+  lines.push("");
+  lines.push("Clients list:");
+  if(Object.keys(byClient).length===0){
+    lines.push("- No sessions this month");
+  }else{
+    // sort by count desc
+    const arr = Object.values(byClient).sort((a,b)=>b.count-a.count);
+    arr.forEach(v=>{
+      lines.push("- " + (v.name||"-") + " (" + (v.phoneLocal||"-") + ") : " + v.count);
+    });
+  }
+
+  window.open(waLink(MANAGER, lines.join("\n")), "_blank");
+}
+
+function clearToday(){
+  const logs=loadLogs();
+  const t=todayISO();
+  const kept = logs.filter(x=>x.dateISO!==t);
+  saveLogs(kept);
+  alert("تم مسح سجل اليوم فقط");
+}
+
+
+// Auto-fill phone from URL (?phone=...)
+(function prefillPhoneFromURL(){
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const p = params.get("phone");
+    if(p){
+      document.getElementById("phone").value = p;
+    }
+  }catch(e){}
+})();
+
+// ===== Active subscriptions dashboard =====
+function fmtTime(ts){
+  try{
+    return new Date(ts).toLocaleString("ar-KW",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+  }catch(e){ return "-"; }
+}
+
+function renderActiveList(){
+  const subs = loadSubs();
+  const q = (document.getElementById("subSearch")?.value || "").trim().toLowerCase();
+
+  let arr = Object.entries(subs).map(([phone965, sub])=>{
+    const used = Number(sub.used||0);
+    const remain = 5 - used;
+    return {
+      phone965,
+      phoneLocal: String(phone965).startsWith("965") ? phone965.slice(3) : phone965,
+      name: sub.name || "",
+      used,
+      remain,
+      cycle: Number(sub.cycle||1),
+      updatedAt: Number(sub.updatedAt||0)
+    };
+  });
+
+  // filter
+  if(q){
+    arr = arr.filter(x =>
+      x.name.toLowerCase().includes(q) ||
+      x.phoneLocal.includes(q) ||
+      x.phone965.includes(q)
+    );
+  }
+
+  // sort: newest first
+  arr.sort((a,b)=>b.updatedAt-a.updatedAt);
+
+  const body = document.getElementById("subsTableBody");
+  const countEl = document.getElementById("subsCount");
+  const lastEl = document.getElementById("subsLast");
+
+  countEl.innerText = String(Object.keys(subs).length || 0);
+  lastEl.innerText = arr.length && arr[0].updatedAt ? fmtTime(arr[0].updatedAt) : "-";
+
+  if(!arr.length){
+    body.innerHTML = `<tr><td colspan="6" style="padding:12px;color:var(--muted)">لا يوجد اشتراكات مطابقة</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = arr.map(x=>`
+    <tr>
+      <td style="padding:10px;border-bottom:1px solid var(--line)">${x.name ? escapeHtml(x.name) : "-"}</td>
+      <td style="padding:10px;border-bottom:1px solid var(--line)">${escapeHtml(x.phoneLocal)}</td>
+      <td style="padding:10px;border-bottom:1px solid var(--line)">${x.used}/5</td>
+      <td style="padding:10px;border-bottom:1px solid var(--line)">${x.remain}</td>
+      <td style="padding:10px;border-bottom:1px solid var(--line)">#${x.cycle}</td>
+      <td style="padding:10px;border-bottom:1px solid var(--line)">
+        <button class="secondary" style="padding:8px 10px;border-radius:10px" onclick="openFromList('${x.phone965}')">فتح</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function openFromList(phone965){
+  const subs = loadSubs();
+  const sub = subs[phone965];
+  if(!sub){ return; }
+  document.getElementById("phone").value = phone965;
+  document.getElementById("name").value = sub.name || "";
+  setUI(sub);
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+document.getElementById("subSearch")?.addEventListener("input", renderActiveList);
+
+
+// init dashboard
+try{renderActiveList();}catch(e){}
+</script>
+</body>
+</html>
