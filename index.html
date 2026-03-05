@@ -579,6 +579,7 @@ const DEFAULT_DATA = {
 
 let state = loadState();
 let cart = [];
+let editingMeta = null; // {id, iso} when editing an existing invoice
 
 function $(id){return document.getElementById(id);}
 function nowISO(){return new Date().toISOString();}
@@ -839,11 +840,18 @@ $("saveInvoiceBtn").addEventListener("click", ()=>{
       return;
     }
   }
-  const inv = { id: "inv_" + Date.now(), iso: nowISO(), items: deepClone(cart) };
+  const inv = {
+    id: (editingMeta && editingMeta.id) ? editingMeta.id : ("inv_" + Date.now()),
+    iso: (editingMeta && editingMeta.iso) ? editingMeta.iso : nowISO(),
+    phone: ($("custPhone") ? $("custPhone").value.trim() : ""),
+    items: deepClone(cart)
+  };
   state.invoices.push(inv);
   saveState();
   populateMonthSelect();
+  editingMeta = null;
   cart=[];
+  if($("custPhone")) $("custPhone").value="";
   renderCart();
   toast("Saved");
 });
@@ -927,10 +935,14 @@ function refreshDailyUI(){
     const lines = inv.items.map(it=>`${it.name} x${it.qty} = ${formatKD(it.price*it.qty)}`).join("\n");
     return `
       <tr>
-        <td>${idx+1}</td>
-        <td><pre style="margin:0;white-space:pre-wrap;font:inherit">${escapeHtml(lines)}</pre></td>
-        <td class="right" style="font-weight:800">${formatKD(invTotal)}</td>
-      </tr>`;
+  <td>${idx+1}</td>
+  <td><pre style="margin:0;white-space:pre-wrap;font:inherit">${escapeHtml(lines)}</pre></td>
+  <td class="right" style="font-weight:800">${formatKD(invTotal)}</td>
+  <td>
+    <button class="btn" style="min-height:auto;padding:8px 10px" data-editinv="${inv.id}">✏️ <span class="en">Edit</span></button>
+    <button class="btn danger" style="min-height:auto;padding:8px 10px;margin-top:6px" data-delinv="${inv.id}">🗑️ <span class="en">Delete</span></button>
+  </td>
+</tr>`;
   }).join("");
 
   const staffHtml = staffRows.map(r=>`
@@ -960,10 +972,11 @@ function refreshDailyUI(){
             <th style="width:70px">#</th>
             <th><span class="en">Services + Price</span> <span class="ar">الخدمات + السعر</span></th>
             <th class="right" style="width:160px"><span class="en">Invoice Total</span> <span class="ar">إجمالي الفاتورة</span></th>
+            <th style="width:150px"><span class="en">Actions</span> <span class="ar">إجراءات</span></th>
           </tr>
         </thead>
         <tbody>
-          ${invHtml || `<tr><td colspan="3" class="muted small"><span class="en">No invoices.</span> <span class="ar">لا توجد فواتير</span></td></tr>`}
+          ${invHtml || `<tr><td colspan="4" class="muted small"><span class="en">No invoices.</span> <span class="ar">لا توجد فواتير</span></td></tr>`}
         </tbody>
       </table>
     </div>
@@ -987,6 +1000,14 @@ function refreshDailyUI(){
         </tbody>
       </table>
     </div>
+  // Actions: Edit / Delete invoice
+  $("dailyStats").querySelectorAll("[data-delinv]").forEach(btn=>{
+    btn.addEventListener("click", ()=> deleteInvoice(btn.getAttribute("data-delinv")));
+  });
+  $("dailyStats").querySelectorAll("[data-editinv]").forEach(btn=>{
+    btn.addEventListener("click", ()=> editInvoice(btn.getAttribute("data-editinv")));
+  });
+
   `;
 }
 function refreshMonthlyUI(){
@@ -1326,6 +1347,38 @@ $("restoreFile").addEventListener("change", async (e)=>{
     $("restoreFile").value = "";
   }
 });
+
+
+function deleteInvoice(id){
+  if(!id) return;
+  if(!confirm("Delete this invoice?")) return;
+
+  state.invoices = state.invoices.filter(inv => inv.id !== id);
+  saveState();
+  refreshReports();
+  toast("Invoice deleted");
+}
+
+function editInvoice(id){
+  const inv = state.invoices.find(i=>i.id===id);
+  if(!inv) return;
+
+  // Remove it from saved invoices first (so you can re-save after editing)
+  state.invoices = state.invoices.filter(i=>i.id!==id);
+  saveState();
+
+  // Load items into current invoice cart
+  cart = deepClone(inv.items || []);
+  editingMeta = { id: inv.id, iso: inv.iso };
+
+  // Restore phone if present
+  if($("custPhone")) $("custPhone").value = inv.phone || "";
+
+  // Go to invoice tab
+  document.querySelector('[data-tab="invoice"]').click();
+  renderCart();
+  toast("Loaded for edit");
+}
 
 (function init(){
   $("reportDate").value = todayISODate();
