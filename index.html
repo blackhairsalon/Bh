@@ -1000,15 +1000,15 @@ function refreshDailyUI(){
         </tbody>
       </table>
     </div>
-  // Actions: Edit / Delete invoice
+  `;
+
+  // Actions: Edit / Delete invoice (bind after rendering)
   $("dailyStats").querySelectorAll("[data-delinv]").forEach(btn=>{
     btn.addEventListener("click", ()=> deleteInvoice(btn.getAttribute("data-delinv")));
   });
   $("dailyStats").querySelectorAll("[data-editinv]").forEach(btn=>{
     btn.addEventListener("click", ()=> editInvoice(btn.getAttribute("data-editinv")));
   });
-
-  `;
 }
 function refreshMonthlyUI(){
   populateMonthSelect();
