@@ -1357,7 +1357,10 @@ db
             const toEl = document.getElementById('report-to');
             if(fromEl) fromEl.value = today;
             if(toEl) toEl.value = today;
-            if(typeof loadDataFromFirebase === 'function') { loadDataFromFirebase(); }
+            db.ref('bh_salon').on('value', function(snapshot) {
+    window.salonData = snapshot.val() || {};
+    location.reload();
+});
 
     </script>
 </body>
