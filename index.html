@@ -287,7 +287,7 @@
 
     </div>
 
-    <!-- نافذة فواتير اليوم -->
+    <!-- نافذة فواتير اليوم المحدثة -->
     <div id="today-invoices-modal-container">
         <div class="today-invoices-box">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -317,15 +317,16 @@
     </div>
 
     <script>
-        // إعدادات ربط Firebase
+        // إعدادات ربط Firebase الحقيقية والمزامنة اللحظية
         const firebaseConfig = {
-            apiKey: "AIzaSy...",
-            authDomain: "bh-salon.firebaseapp.com",
-            databaseURL: "https://bh-salon-default-rtdb.firebaseio.com",
-            projectId: "bh-salon",
-            storageBucket: "bh-salon.appspot.com",
-            messagingSenderId: "...",
-            appId: "..."
+          apiKey: "AIzaSyCj32hE_3we6AOtIYdrArEUOHY03U96uYQ",
+          authDomain: "date-a81ed.firebaseapp.com",
+          databaseURL: "https://date-a81ed-default-rtdb.firebaseio.com",
+          projectId: "date-a81ed",
+          storageBucket: "date-a81ed.firebasestorage.app",
+          messagingSenderId: "1080232485188",
+          appId: "1:1080232485188:web:7eb7dd853cd026fc5cb711",
+          measurementId: "G-FJV29W0YBF"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -526,63 +527,10 @@
             if(!document.getElementById('admin-tab').classList.contains('d-none')) { renderAdminServices(); renderAdminStaff(); }
         }
 
-        let services = [
-            { id: 101, name: "Blow Dry", price: 3.000, cat: "HAIR" },
-            { id: 102, name: "Wavy", price: 5.000, cat: "HAIR" },
-            { id: 103, name: "Hair Mask", price: 5.000, cat: "HAIR" },
-            { id: 104, name: "color rot", price: 10.000, cat: "HAIR" },
-            { id: 105, name: "color 1", price: 20.000, cat: "HAIR" },
-            { id: 106, name: "color 2", price: 30.000, cat: "HAIR" },
-            { id: 107, name: "blowdry long hair", price: 5.000, cat: "HAIR" },
-            { id: 108, name: "wavey long hair", price: 7.000, cat: "HAIR" },
-            { id: 109, name: "tksir", price: 7.000, cat: "HAIR" },
-            { id: 110, name: "long hair tksir", price: 10.000, cat: "HAIR" },
-            { id: 111, name: "style tsriha", price: 10.000, cat: "HAIR" },
-            { id: 112, name: "wash tretment", price: 5.000, cat: "HAIR" },
-            { id: 113, name: "tretment", price: 10.000, cat: "HAIR" },
-            { id: 114, name: "scrab", price: 5.000, cat: "HAIR" },
-            { id: 115, name: "cut", price: 5.000, cat: "HAIR" },
-            { id: 116, name: "cut strait", price: 2.000, cat: "HAIR" },
-            { id: 201, name: "Pedicure", price: 2.500, cat: "NAILS" },
-            { id: 202, name: "Manicure", price: 2.500, cat: "NAILS" },
-            { id: 203, name: "Pedi / Mani", price: 5.000, cat: "NAILS" },
-            { id: 204, name: "Nail Polish", price: 1.000, cat: "NAILS" },
-            { id: 205, name: "Russian Pedicure/Manicure", price: 10.000, cat: "NAILS" },
-            { id: 206, name: "Nail Polish", price: 2.000, cat: "NAILS" },
-            { id: 207, name: "Removal", price: 10.000, cat: "NAILS" },
-            { id: 208, name: "Russian", price: 5.000, cat: "NAILS" },
-            { id: 209, name: "frinsh", price: 3.000, cat: "NAILS" },
-            { id: 210, name: "art", price: 5.000, cat: "NAILS" },
-            { id: 211, name: "3D", price: 10.000, cat: "NAILS" },
-            { id: 212, name: "trkib normal", price: 5.000, cat: "NAILS" },
-            { id: 213, name: "extention", price: 10.000, cat: "NAILS" },
-            { id: 401, name: "haf face", price: 3.000, cat: "face" },
-            { id: 402, name: "haf hwaib", price: 2.000, cat: "face" },
-            { id: 403, name: "haf shnb", price: 1.000, cat: "face" },
-            { id: 501, name: "Steam Bath", price: 10.000, cat: "STEAM BATH" },
-            { id: 601, name: "Head Spa", price: 10.000, cat: "SPA" },
-            { id: 602, name: "head face tretment", price: 20.000, cat: "SPA" },
-            { id: 603, name: "massage full body", price: 10.000, cat: "SPA" },
-            { id: 604, name: "massage 1/2 body", price: 5.000, cat: "SPA" },
-            { id: 605, name: "add face or tretment", price: 5.000, cat: "SPA" },
-            { id: 701, name: "shira full body", price: 10.000, cat: "BODY" },
-            { id: 702, name: "shira 1/2 body", price: 5.000, cat: "BODY" },
-            { id: 801, name: "Hair Mask", price: 5.000, cat: "ASHTRAK", isSession: true },
-            { id: 802, name: "mask + blowdry", price: 5.000, cat: "ASHTRAK", isSession: true }
-        ];
-
-        let staff = [
-            { id: 1, name: "mm", rate: 5 },
-            { id: 2, name: "kl", rate: 5 },
-            { id: 3, name: "bn", rate: 5 },
-            { id: 4, name: "nrml", rate: 5 },
-            { id: 5, name: "sn", rate: 5 },
-            { id: 6, name: "mlk", rate: 5 },
-            { id: 7, name: "indr", rate: 5 }
-        ];
-
+        let services = [];
+        let staff = [];
         let subscriptions = [];
-        let invoices = JSON.parse(localStorage.getItem('bh_invoices_local')) || [];
+        let invoices = [];
         let cart = JSON.parse(localStorage.getItem('bh_cart_draft')) || [];
         let activeEvalData = null;
 
@@ -598,14 +546,35 @@
             if(savedPhone) document.getElementById('cust-phone').value = savedPhone;
         }
 
+        // الاستماع الفوري للتحديثات السحابية عبر الأجهزة المتعددة
         db.ref('bh_salon/services').on('value', snapshot => {
-            if(snapshot.exists()) services = Object.values(snapshot.val());
+            if(snapshot.exists()) {
+                services = Object.values(snapshot.val());
+            } else {
+                // بيانات افتراضية أولية إذا كانت القاعدة فارغة
+                services = [
+                    { id: 101, name: "Blow Dry", price: 3.000, cat: "HAIR" },
+                    { id: 102, name: "Wavy", price: 5.000, cat: "HAIR" },
+                    { id: 201, name: "Pedicure", price: 2.500, cat: "NAILS" },
+                    { id: 202, name: "Manicure", price: 2.500, cat: "NAILS" },
+                    { id: 801, name: "Hair Mask", price: 5.000, cat: "ASHTRAK", isSession: true },
+                    { id: 802, name: "mask + blowdry", price: 5.000, cat: "ASHTRAK", isSession: true }
+                ];
+            }
             renderServices();
             renderAdminServices();
         });
 
         db.ref('bh_salon/staff').on('value', snapshot => {
-            if(snapshot.exists()) staff = Object.values(snapshot.val());
+            if(snapshot.exists()) {
+                staff = Object.values(snapshot.val());
+            } else {
+                staff = [
+                    { id: 1, name: "mm", rate: 5 },
+                    { id: 2, name: "kl", rate: 5 },
+                    { id: 3, name: "bn", rate: 5 }
+                ];
+            }
             updateStaffDropdowns();
             renderAdminStaff();
         });
@@ -618,7 +587,8 @@
         db.ref('bh_salon/invoices').on('value', snapshot => {
             if(snapshot.exists()) {
                 invoices = Object.values(snapshot.val());
-                localStorage.setItem('bh_invoices_local', JSON.stringify(invoices));
+            } else {
+                invoices = [];
             }
             if(!document.getElementById('reports-tab').classList.contains('d-none')) generateReport();
             if(document.getElementById('today-invoices-modal-container').style.display === 'flex') {
@@ -627,7 +597,6 @@
         });
 
         function saveDataToFirebase() {
-            localStorage.setItem('bh_invoices_local', JSON.stringify(invoices));
             db.ref('bh_salon').set({
                 services: services,
                 staff: staff,
@@ -668,6 +637,7 @@
             const grid = document.getElementById('services-grid');
             const cat = document.getElementById('category-filter').value;
             const t = translations[currentLang];
+            if(!grid) return;
             grid.innerHTML = '';
 
             const filtered = cat === 'ALL' ? services : services.filter(s => s.cat === cat);
@@ -815,6 +785,7 @@
         function renderCart() {
             const t = translations[currentLang];
             const list = document.getElementById('cart-list');
+            if(!list) return;
             list.innerHTML = '';
             let total = 0;
             let currencySymbol = currentLang === 'en' ? 'KD' : 'د.ك';
@@ -887,29 +858,6 @@
             document.getElementById('cust-name').value = '';
             document.getElementById('cust-phone').value = '';
             renderCart();
-        }
-
-        function editInvoice(invoiceId) {
-            const invIndex = invoices.findIndex(i => i.id === invoiceId);
-            if(invIndex === -1) return alert('الفاتورة غير موجودة!');
-
-            const inv = invoices[invIndex];
-            
-            // إرجاع البيانات لحقول الفاتورة الرئيسية
-            document.getElementById('cust-name').value = inv.customer;
-            document.getElementById('cust-phone').value = cleanPhone(inv.phone);
-            saveDraftInputs();
-
-            // إرجاع الخدمات للسلة
-            cart = [...inv.items];
-            renderCart();
-
-            // حذف الفاتورة مؤقتاً من السجل لمنع التكرار عند إعادة الحفظ
-            invoices.splice(invIndex, 1);
-            saveDataToFirebase();
-
-            closeTodayInvoicesModal();
-            alert('تم استرجاع الفاتورة إلى السلة للتعديل عليها بنجاح.');
         }
 
         function sendInvoiceToCustomerWhatsapp(invoiceId) {
@@ -985,14 +933,9 @@
                             </div>
                             <p class="small text-muted mb-1"><i class="fa-solid fa-phone me-1"></i>${inv.phone}</p>
                             ${itemsHtml}
-                            <div class="d-flex gap-2 mb-2">
-                                <button class="btn btn-outline-primary btn-sm flex-grow-1" onclick="editInvoice(${inv.id})">
-                                    <i class="fa-solid fa-pen-to-square me-1"></i> تعديل الفاتورة
-                                </button>
-                                <button class="btn btn-warning btn-sm text-dark fw-bold flex-grow-1" onclick="openEvalModalForInvoice(${inv.id})">
-                                    <i class="fa-solid fa-star me-1"></i> تقييم الخدمات
-                                </button>
-                            </div>
+                            <button class="btn btn-warning btn-sm text-dark fw-bold w-100 mb-2" onclick="openEvalModalForInvoice(${inv.id})">
+                                <i class="fa-solid fa-star me-1"></i> فتح نافذة تقييم الخدمات للعميلة
+                            </button>
                             <button class="btn btn-success btn-sm w-100" onclick="sendInvoiceToCustomerWhatsapp(${inv.id})">
                                 <i class="fa-brands fa-whatsapp me-1"></i> إرسال الفاتورة للعميلة واتساب
                             </button>
@@ -1115,6 +1058,7 @@
         function renderSubscriptions() {
             const t = translations[currentLang];
             const tbody = document.getElementById('subscriptions-table-body');
+            if(!tbody) return;
             tbody.innerHTML = '';
             subscriptions.forEach(s => {
                 const isFinished = s.remaining === 0;
@@ -1200,6 +1144,7 @@
 
             let totalCommission = 0;
             const tbody = document.getElementById('report-staff-body');
+            if(!tbody) return;
             tbody.innerHTML = '';
             let currencySymbol = currentLang === 'en' ? 'KD' : 'د.ك';
 
@@ -1282,6 +1227,7 @@
         function renderAdminServices() {
             const t = translations[currentLang];
             const tbody = document.getElementById('admin-services-list');
+            if(!tbody) return;
             tbody.innerHTML = '';
             services.forEach(s => {
                 tbody.innerHTML += `
@@ -1314,7 +1260,8 @@
         function renderAdminStaff() {
             const t = translations[currentLang];
             const tbody = document.getElementById('admin-staff-list');
-            tbody.innerHTML = ``;
+            if(!tbody) return;
+            tbody.innerHTML = '';
             staff.forEach(st => {
                 tbody.innerHTML += `
                     <tr>
@@ -1341,7 +1288,7 @@
             saveDataToFirebase();
             document.getElementById('staff-form').reset();
         }
-db
+
         function deleteStaff(id) {
             staff = staff.filter(s => s.id !== id);
             saveDataToFirebase();
@@ -1351,20 +1298,13 @@ db
             applyLanguage();
             loadDraftInputs();
             renderCart();
-                if (typeof initApp === 'function') initApp();
-    if (typeof setupEventListeners === 'function') setupEventListeners();
-    if (typeof loadDataFromFirebase === 'function') loadDataFromFirebase();
-
             const now = new Date();
             const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             const fromEl = document.getElementById('report-from');
             const toEl = document.getElementById('report-to');
             if(fromEl) fromEl.value = today;
             if(toEl) toEl.value = today;
-                
-    
-
-
+        };
     </script>
 </body>
 </html>
