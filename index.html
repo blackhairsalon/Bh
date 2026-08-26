@@ -1357,17 +1357,8 @@ db
             const toEl = document.getElementById('report-to');
             if(fromEl) fromEl.value = today;
             if(toEl) toEl.value = today;
-                db.ref('bh_salon').on('value', function(snapshot) {
-        window.appData = snapshot.val() || {};
-        if (typeof loadDataFromFirebase === 'function') {
-            loadDataFromFirebase();
-        } else if (typeof renderServices === 'function') {
-            renderServices();
-        }
-    });
-    </script>
-    </body>
-    </html>
+                
+    
 
 
     </script>
