@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BH Salon - نظام إدارة الصالون والتقييم السحابي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" id="bootstrap-css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- مكتبات Firebase السحابية -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar-brand { font-weight: bold; color: #d63384 !important; }
+        .card-header { background-color: #f1f3f5; font-weight: bold; }
+        .btn-salon { background-color: #d63384; color: white; }
+        .btn-salon:hover { background-color: #b8216b; color: white; }
+        .phone-input-group .input-group-text { background-color: #e9ecef; font-weight: bold; direction: ltr; }
+        select[multiple] { height: 80px !important; }
+        #eval-modal-container, #today-invoices-modal-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 15px; }
+        .eval-box, .today-invoices-box { background: #fff; width: 100%; max-width: 650px; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .service-eval-item { border-bottom: 1px solid #eee; padding: 12px 0; }
+        .stars-group { display: flex; gap: 5px; font-size: 28px; cursor: pointer; direction: ltr; justify-content: flex-end; }
+        .star-icon { color: #ccc; transition: color 0.2s; }
+        .star-icon.active { color: #ffc107; }
+    </style>
+</head>
+<body>
+
+    <!-- شريط التنقل -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <a class="navbar-brand fs-3 me-3" href="#"><i class="fa-solid fa-scissors me-2"></i>BH Salon</a>
+                <button class="btn btn-outline-secondary btn-sm" onclick="toggleLanguage()"><i class="fa-solid fa-globe me-1"></i><span id="lang-btn-text">English</span></button>
+            </div>
+            <div class="navbar-nav">
+                <button class="nav-link btn btn-link active" onclick="showTab('invoice-tab')" data-i18n="navInvoice">الفاتورة والخدمات</button>
+                <button class="nav-link btn btn-link" onclick="showTab('subscriptions-tab')" data-i18n="navSubs">سجل الاشتراكات والكارت <i class="fa-solid fa-lock text-muted small ms-1"></i></button>
+                <button class="nav-link btn btn-link" onclick="showTab('reports-tab')" data-i18n="navReports">تقرير الفترة والعمولات <i class="fa-solid fa-lock text-muted small ms-1"></i></button>
+                <button class="nav-link btn btn-link" onclick="showTab('admin-tab')" data-i18n="navAdmin">الإدارة الشاملة <i class="fa-solid fa-lock text-muted small ms-1"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        
+        <!-- تبويب الفاتورة والخدمات -->
+        <div id="invoice-tab" class="tab-content">
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-receipt me-2"></i><span data-i18n="invoiceData">بيانات الفاتورة</span></span>
+                            <button class="btn btn-outline-success btn-sm" onclick="sendAllInvoicesToManager()"><i class="fa-brands fa-whatsapp me-1"></i><span data-i18n="sendAllInv">إرسال جميع الفواتير للمديرة</span></button>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label" data-i18n="custName">اسم العميلة</label>
+                                <input type="text" id="cust-name" class="form-control" placeholder="أدخل اسم العميلة" data-i18n-placeholder="custNamePH" oninput="saveDraftInputs()">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" data-i18n="custPhone">رقم الهاتف (الكويت)</label>
+                                <div class="input-group phone-input-group" dir="ltr">
+                                    <span class="input-group-text">+965</span>
+                                    <input type="tel" id="cust-phone" class="form-control text-end" dir="rtl" placeholder="XXXXXXXX" maxlength="8" oninput="saveDraftInputs()">
+                                </div>
+                            </div>
+                            <hr>
+                            <h5 data-i18n="addedServices">الخدمات المضافة</h5>
+                            <ul id="cart-list" class="list-group mb-3"></ul>
+                            <div class="d-flex justify-content-between fs-5 fw-bold mb-3">
+                                <span data-i18n="totalDue">الإجمالي المطلوب دفعه:</span>
+                                <span id="cart-total">0.000 د.ك</span>
+                            </div>
+                            <button class="btn btn-salon w-100 btn-lg mb-2" onclick="checkout()"><i class="fa-solid fa-check me-2"></i><span data-i18n="saveInvoiceBtn">حفظ الفاتورة وتثبيت الحركات</span></button>
+                            
+                            <!-- زر فواتير اليوم -->
+                            <div class="mb-2">
+                                <button class="btn btn-primary w-100 fw-bold py-2" onclick="openTodayInvoicesModal()"><i class="fa-solid fa-list-check me-1"></i> فواتير اليوم</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قسم تفعيل باقة اشتراك جديدة -->
+                    <div class="card shadow-sm mb-4 border-warning">
+                        <div class="card-header bg-warning text-dark"><i class="fa-solid fa-id-card me-2"></i><span data-i18n="activateSubHeader">تفعيل باقة اشتراك جديدة (الجلسة الأولى)</span></div>
+                        <div class="card-body">
+                            <p class="small text-muted mb-2" data-i18n="activateSubDesc">اختر الباقة هنا فقط عند بيع الكارت لأول مرة:</p>
+                            <div class="mb-2">
+                                <select id="sub-package-select" class="form-select">
+                                    <option value="Hair Mask" data-i18n="pkg1">باقة ماسك للشعر (15.000 د.ك شاملة 5 جلسات)</option>
+                                    <option value="mask + blowdry" data-i18n="pkg2">باقة ماسك + ستشوار (20.000 د.ك شاملة 5 جلسات)</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small mb-1" data-i18n="firstSessionStaff">الموظفة المنفذة للجلسة الأولى</label>
+                                <select id="sub-staff-select" class="form-select staff-select"></select>
+                            </div>
+                            <button class="btn btn-dark w-100" onclick="buyNewSubscription()" data-i18n="activateCardBtn">تفعيل الكارت وإضافة الجلسة الأولى للسلة</button>
+                        </div>
+                    </div>
+
+                    <!-- إضافة خدمة مخصصة -->
+                    <div class="card shadow-sm">
+                        <div class="card-header"><i class="fa-solid fa-plus-circle me-2"></i><span data-i18n="customServiceHeader">إضافة خدمة مخصصة</span></div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <div class="col-6"><input type="text" id="custom-name" class="form-control" placeholder="اسم الخدمة" data-i18n-placeholder="customNamePH"></div>
+                                <div class="col-6"><input type="number" id="custom-price" class="form-control" placeholder="السعر (د.ك)" step="0.001" data-i18n-placeholder="customPricePH"></div>
+                                <div class="col-6"><input type="number" id="custom-qty" class="form-control" value="1" min="1" placeholder="العدد" data-i18n-placeholder="customQtyPH"></div>
+                                <div class="col-6">
+                                    <label class="form-label small mb-1" data-i18n="staffMultiLabel">الموظفات (Ctrl للمتعدد)</label>
+                                    <select id="custom-staff" class="form-select staff-select" multiple></select>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <button class="btn btn-secondary w-100" onclick="addCustomService()" data-i18n="addToCartBtn">إضافة للفاتورة</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-7">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-list me-2"></i><span data-i18n="servicesListHeader">قائمة الخدمات وصرف الجلسات المجانية</span></span>
+                            <select id="category-filter" class="form-select w-auto" onchange="renderServices()">
+                                <option value="ALL" data-i18n="catAll">جميع الفئات</option>
+                                <option value="HAIR">HAIR</option>
+                                <option value="NAILS">NAILS</option>
+                                <option value="face">face</option>
+                                <option value="STEAM BATH">STEAM BATH</option>
+                                <option value="SPA">SPA</option>
+                                <option value="BODY">BODY</option>
+                                <option value="ASHTRAK" data-i18n="catAshtrak">ASHTRAK (صرف جلسات الكارت)</option>
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="services-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب الاشتراكات -->
+        <div id="subscriptions-tab" class="tab-content d-none">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-id-card me-2"></i><span data-i18n="subsTabHeader">سجل كروت الاشتراكات (5 جلسات) وتواريخها</span></span>
+                    <button class="btn btn-success btn-sm" onclick="sendSubscriptionsWhatsapp()"><i class="fa-brands fa-whatsapp me-2"></i><span data-i18n="sendSubsWhatsapp">إرسال سجل الاشتراكات واتساب (69977533)</span></button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th data-i18n="thCustName">اسم العميلة</th>
+                                    <th data-i18n="thPhone">رقم الهاتف</th>
+                                    <th data-i18n="thPkgType">نوع الباقة</th>
+                                    <th data-i18n="thUsedSessions">الجلسات المستخدمة</th>
+                                    <th data-i18n="thHistory">تواريخ الجلسات وسجل الحركات</th>
+                                    <th data-i18n="thRemaining">الجلسات المتبقية</th>
+                                    <th data-i18n="thStatus">الحالة</th>
+                                    <th data-i18n="thActions">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscriptions-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب التقارير -->
+        <div id="reports-tab" class="tab-content d-none">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-chart-line me-2"></i><span data-i18n="reportsTabHeader">تقرير الفترة والعمولة</span></span>
+                    <button class="btn btn-success" onclick="sendDailyReportWhatsapp()"><i class="fa-brands fa-whatsapp me-2"></i><span data-i18n="sendDailyRepWhatsapp">إرسال التقرير اليومي/الفترة واتساب (69977533)</span></button>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-end mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label" data-i18n="fromDate">من تاريخ:</label>
+                            <input type="date" id="report-from" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" data-i18n="toDate">إلى تاريخ:</label>
+                            <input type="date" id="report-to" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100" onclick="generateReport()" data-i18n="applyFilterBtn">تطبيق الفلترة</button>
+                        </div>
+                    </div>
+
+                    <div class="row text-center mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded border">
+                                <h5 data-i18n="totalSales">إجمالي المبيعات</h5>
+                                <h3 id="report-total-sales" class="text-primary">0.000 د.ك</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded border">
+                                <h5 data-i18n="totalCommissions">إجمالي العمولات</h5>
+                                <h3 id="report-total-commissions" class="text-success">0.000 د.ك</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 data-i18n="staffRepDetails">تفاصيل المبيعات والعمولات حسب الموظفة</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped text-center">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="thStaff">الموظفة</th>
+                                    <th data-i18n="thRate">نسبة العمولة (%)</th>
+                                    <th data-i18n="thSalesVal">إجمالي المبيعات</th>
+                                    <th data-i18n="thCommShare">حصة العمولة (د.ك)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-staff-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب الإدارة -->
+        <div id="admin-tab" class="tab-content d-none">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header"><i class="fa-solid fa-concierge-bell me-2"></i><span data-i18n="manageServicesHeader">إدارة الخدمات الأساسية</span></div>
+                        <div class="card-body">
+                            <form id="service-form" onsubmit="saveService(event)" class="row g-2 mb-3">
+                                <input type="hidden" id="service-id">
+                                <div class="col-6"><input type="text" id="admin-service-name" class="form-control" placeholder="اسم الخدمة" data-i18n-placeholder="serviceNamePH" required></div>
+                                <div class="col-6"><input type="number" step="0.001" id="admin-service-price" class="form-control" placeholder="السعر" data-i18n-placeholder="servicePricePH" required></div>
+                                <div class="col-12">
+                                    <select id="admin-service-cat" class="form-select">
+                                        <option value="HAIR">HAIR</option>
+                                        <option value="NAILS">NAILS</option>
+                                        <option value="face">face</option>
+                                        <option value="STEAM BATH">STEAM BATH</option>
+                                        <option value="SPA">SPA</option>
+                                        <option value="BODY">BODY</option>
+                                        <option value="ASHTRAK">ASHTRAK</option>
+                                    </select>
+                                </div>
+                                <div class="col-12"><button class="btn btn-salon w-100" type="submit" data-i18n="saveServiceBtn">حفظ الخدمة</button></div>
+                            </form>
+                            <div class="table-responsive" style="max-height: 300px;">
+                                <table class="table table-sm text-center">
+                                    <thead><tr><th data-i18n="thName">الاسم</th><th data-i18n="thPrice">السعر</th><th data-i18n="thCat">الفئة</th><th data-i18n="thAction">إجراء</th></tr></thead>
+                                    <tbody id="admin-services-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header"><i class="fa-solid fa-users me-2"></i><span data-i18n="manageStaffHeader">إدارة العاملات والعمولات</span></div>
+                        <div class="card-body">
+                            <form id="staff-form" onsubmit="saveStaff(event)" class="row g-2 mb-3">
+                                <div class="col-6"><input type="text" id="admin-staff-name" class="form-control" placeholder="اسم الموظفة" data-i18n-placeholder="staffNamePH" required></div>
+                                <div class="col-6"><input type="number" id="admin-staff-rate" class="form-control" placeholder="نسبة العمولة %" data-i18n-placeholder="staffRatePH" required></div>
+                                <div class="col-12"><button class="btn btn-salon w-100" type="submit" data-i18n="saveStaffBtn">إضافة / تحديث الموظفة</button></div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table table-sm text-center">
+                                    <thead><tr><th data-i18n="thStaff">الموظفة</th><th data-i18n="thRate">النسبة</th><th data-i18n="thAction">إجراء</th></tr></thead>
+                                    <tbody id="admin-staff-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- نافذة فواتير اليوم -->
+    <div id="today-invoices-modal-container">
+        <div class="today-invoices-box">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 style="color: #d63384; margin: 0;"><i class="fa-solid fa-calendar-day me-2"></i>فواتير اليوم المسجلة</h3>
+                <button class="btn-close" onclick="closeTodayInvoicesModal()"></button>
+            </div>
+            <p id="today-invoices-date-label" class="text-muted fw-bold mb-3"></p>
+            <div id="today-invoices-list-content" style="max-height: 60vh; overflow-y: auto;"></div>
+            <hr>
+            <button class="btn btn-secondary w-100 mt-2" onclick="closeTodayInvoicesModal()">إغلاق النافذة</button>
+        </div>
+    </div>
+
+    <!-- نافذة تقييم العميلة -->
+    <div id="eval-modal-container">
+        <div class="eval-box">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h3 style="color: #d63384; margin: 0;">BH Salon - تقييم الخدمات</h3>
+                <button class="btn-close" onclick="closeEvalModal()"></button>
+            </div>
+            <p id="eval-client-info" class="text-center text-muted fw-bold mb-3"></p>
+            <div id="eval-services-list"></div>
+            <textarea id="eval-client-notes" placeholder="أتركي لنا ملاحظتك أو اقتراحك (اختياري)..." class="form-control mb-3" rows="3"></textarea>
+            <button class="btn btn-success w-100 py-2 fs-5 mb-2" onclick="submitClientRatingToManager()">إرسال التقييم للمديرة عبر واتساب</button>
+            <button class="btn btn-outline-secondary w-100" onclick="closeEvalModal()">إغلاق النافذة</button>
+        </div>
+    </div>
+
+    <script>
+        // إعدادات ربط Firebase
+        const firebaseConfig = {
+            apiKey: "ضع_مفتاحك_هنا",
+            authDomain: "ضع_رابط_المشروع.firebaseapp.com",
+            databaseURL: "ضع_رابط_قاعدة_البيانات_هنا.firebasedatabase.app",
+            projectId: "ضع_معرف_المشروع",
+            storageBucket: "ضع_رابط_التخزين",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const translations = {
+            ar: {
+                navInvoice: "الفاتورة والخدمات",
+                navSubs: "سجل الاشتراكات والكارت",
+                navReports: "تقرير الفترة والعمولات",
+                navAdmin: "الإدارة الشاملة",
+                invoiceData: "بيانات الفاتورة",
+                sendAllInv: "إرسال جميع الفواتير للمديرة",
+                custName: "اسم العميلة",
+                custNamePH: "أدخل اسم العميلة",
+                custPhone: "رقم الهاتف (الكويت)",
+                addedServices: "الخدمات المضافة",
+                totalDue: "الإجمالي المطلوب دفعه:",
+                saveInvoiceBtn: "حفظ الفاتورة وتثبيت الحركات",
+                activateSubHeader: "تفعيل باقة اشتراك جديدة (الجلسة الأولى)",
+                activateSubDesc: "اختر الباقة هنا فقط عند بيع الكارت لأول مرة:",
+                pkg1: "باقة ماسك للشعر (15.000 د.ك شاملة 5 جلسات)",
+                pkg2: "باقة ماسك + ستشوار (20.000 د.ك شاملة 5 جلسات)",
+                firstSessionStaff: "الموظفة المنفذة للجلسة الأولى",
+                activateCardBtn: "تفعيل الكارت وإضافة الجلسة الأولى للسلة",
+                customServiceHeader: "إضافة خدمة مخصصة",
+                customNamePH: "اسم الخدمة",
+                customPricePH: "السعر (د.ك)",
+                customQtyPH: "العدد",
+                staffMultiLabel: "الموظفات (Ctrl للمتعدد)",
+                addToCartBtn: "إضافة للفاتورة",
+                servicesListHeader: "قائمة الخدمات وصرف الجلسات المجانية",
+                catAll: "جميع الفئات",
+                catAshtrak: "ASHTRAK (صرف جلسات الكارت)",
+                addCartGrid: "إضافة للفاتورة",
+                freeSessionBadge: "جلسة مجانية من الكارت",
+                subsTabHeader: "سجل كروت الاشتراكات (5 جلسات) وتواريخها",
+                sendSubsWhatsapp: "إرسال سجل الاشتراكات واتساب (69977533)",
+                thCustName: "اسم العميلة",
+                thPhone: "رقم الهاتف",
+                thPkgType: "نوع الباقة",
+                thUsedSessions: "الجلسات المستخدمة",
+                thHistory: "تواريخ الجلسات وسجل الحركات",
+                thRemaining: "الجلسات المتبقية",
+                thStatus: "الحالة",
+                thActions: "إجراءات",
+                reportsTabHeader: "تقرير الفترة والعمولة",
+                sendDailyRepWhatsapp: "إرسال التقرير اليومي/الفترة واتساب (69977533)",
+                fromDate: "من تاريخ:",
+                toDate: "إلى تاريخ:",
+                applyFilterBtn: "تطبيق الفلترة",
+                totalSales: "إجمالي المبيعات",
+                totalCommissions: "إجمالي العمولات",
+                staffRepDetails: "تفاصيل المبيعات والعمولات حسب الموظفة",
+                thStaff: "الموظفة",
+                thRate: "نسبة العمولة (%)",
+                thSalesVal: "إجمالي المبيعات",
+                thCommShare: "حصة العمولة (د.ك)",
+                manageServicesHeader: "إدارة الخدمات الأساسية",
+                serviceNamePH: "اسم الخدمة",
+                servicePricePH: "السعر",
+                saveServiceBtn: "حفظ الخدمة",
+                thName: "الاسم",
+                thPrice: "السعر",
+                thCat: "الفئة",
+                thAction: "إجراء",
+                manageStaffHeader: "إدارة العاملات والعمولات",
+                staffNamePH: "اسم الموظفة",
+                staffRatePH: "نسبة العمولة %",
+                saveStaffBtn: "إضافة / تحديث الموظفة",
+                deleteText: "حذف",
+                activeText: "نشطة",
+                finishedText: "⚠️ منتهية (5/5)",
+                noHistoryText: "لا توجد تفاصيل مسجلة",
+                cartEmptyAlert: "السلة فارغة",
+                fillDataAlert: "يرجى كتابة اسم العميلة ورقم الهاتف الصحيح (8 أرقام)",
+                selectStaffAlert: "الرجاء اختيار موظفة واحدة على الأقل",
+                subActiveAlert: "تم تفعيل الكارت بنجاح وتوثيق تاريخ ووقت الجلسة الأولى.",
+                invSavedAlert: "تم حفظ الفاتورة وتوثيق مواعيد جلسات الكارت بنجاح!",
+                deleteSubConfirm: "هل أنت متأكد من حذف هذا الكارت؟"
+            },
+            en: {
+                navInvoice: "Invoice & Services",
+                navSubs: "Subscriptions & Cards",
+                navReports: "Period & Commissions",
+                navAdmin: "Administration",
+                invoiceData: "Invoice Details",
+                sendAllInv: "Send All Invoices to Manager",
+                custName: "Client Name",
+                custNamePH: "Enter client name",
+                custPhone: "Phone Number (Kuwait)",
+                addedServices: "Added Services",
+                totalDue: "Total Amount Due:",
+                saveInvoiceBtn: "Save Invoice & Post Movements",
+                activateSubHeader: "Activate New Subscription Package (1st Session)",
+                activateSubDesc: "Select package here only when selling the card for the first time:",
+                pkg1: "Hair Mask Package (15.000 KD incl. 5 sessions)",
+                pkg2: "Mask + Blowdry Package (20.000 KD incl. 5 sessions)",
+                firstSessionStaff: "Staff for First Session",
+                activateCardBtn: "Activate Card & Add 1st Session to Cart",
+                customServiceHeader: "Add Custom Service",
+                customNamePH: "Service Name",
+                customPricePH: "Price (KD)",
+                customQtyPH: "Qty",
+                staffMultiLabel: "Staff (Ctrl for multi)",
+                addToCartBtn: "Add to Invoice",
+                servicesListHeader: "Services List & Free Session Redemption",
+                catAll: "All Categories",
+                catAshtrak: "ASHTRAK (Redeem Card Sessions)",
+                addCartGrid: "Add to Invoice",
+                freeSessionBadge: "Free Card Session",
+                subsTabHeader: "Subscription Cards Log (5 Sessions) & Dates",
+                sendSubsWhatsapp: "Send Subs Log via WhatsApp (69977533)",
+                thCustName: "Client Name",
+                thPhone: "Phone Number",
+                thPkgType: "Package Type",
+                thUsedSessions: "Used Sessions",
+                thHistory: "Session Dates & Log",
+                thRemaining: "Remaining",
+                thStatus: "Status",
+                thActions: "Actions",
+                reportsTabHeader: "Period & Commission Report",
+                sendDailyRepWhatsapp: "Send Period Report via WhatsApp (69977533)",
+                fromDate: "From Date:",
+                toDate: "To Date:",
+                applyFilterBtn: "Apply Filter",
+                totalSales: "Total Sales",
+                totalCommissions: "Total Commissions",
+                staffRepDetails: "Sales & Commissions Breakdown by Staff",
+                thStaff: "Staff",
+                thRate: "Commission Rate (%)",
+                thSalesVal: "Total Sales",
+                thCommShare: "Commission Share (KD)",
+                manageServicesHeader: "Manage Core Services",
+                serviceNamePH: "Service Name",
+                servicePricePH: "Price",
+                saveServiceBtn: "Save Service",
+                thName: "Name",
+                thPrice: "Price",
+                thCat: "Category",
+                thAction: "Action",
+                manageStaffHeader: "Manage Staff & Commissions",
+                staffNamePH: "Staff Name",
+                staffRatePH: "Commission Rate %",
+                saveStaffBtn: "Add / Update Staff",
+                deleteText: "Delete",
+                activeText: "Active",
+                finishedText: "⚠️ Finished (5/5)",
+                noHistoryText: "No history recorded",
+                cartEmptyAlert: "Cart is empty",
+                fillDataAlert: "Please enter client name and correct phone number (8 digits)",
+                selectStaffAlert: "Please select at least one staff member",
+                subActiveAlert: "Card activated successfully and first session date/time recorded.",
+                invSavedAlert: "Invoice saved and card session schedules documented successfully!",
+                deleteSubConfirm: "Are you sure you want to delete this card?"
+            }
+        };
+
+        let currentLang = localStorage.getItem('bh_lang') || 'ar';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'ar' ? 'en' : 'ar';
+            localStorage.setItem('bh_lang', currentLang);
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            const t = translations[currentLang];
+            const htmlRoot = document.getElementById('html-root');
+            const bootstrapCss = document.getElementById('bootstrap-css');
+
+            if(currentLang === 'en') {
+                htmlRoot.setAttribute('lang', 'en');
+                htmlRoot.setAttribute('dir', 'ltr');
+                bootstrapCss.setAttribute('href', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css');
+                document.getElementById('lang-btn-text').innerText = 'العربية';
+            } else {
+                htmlRoot.setAttribute('lang', 'ar');
+                htmlRoot.setAttribute('dir', 'rtl');
+                bootstrapCss.setAttribute('href', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css');
+                document.getElementById('lang-btn-text').innerText = 'English';
+            }
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(t[key]) el.innerText = t[key];
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if(t[key]) el.setAttribute('placeholder', t[key]);
+            });
+
+            renderCart();
+            renderServices();
+            if(!document.getElementById('subscriptions-tab').classList.contains('d-none')) renderSubscriptions();
+            if(!document.getElementById('reports-tab').classList.contains('d-none')) generateReport();
+            if(!document.getElementById('admin-tab').classList.contains('d-none')) { renderAdminServices(); renderAdminStaff(); }
+        }
+
+        let services = [
+            { id: 101, name: "Blow Dry", price: 3.000, cat: "HAIR" },
+            { id: 102, name: "Wavy", price: 5.000, cat: "HAIR" },
+            { id: 103, name: "Hair Mask", price: 5.000, cat: "HAIR" },
+            { id: 104, name: "color rot", price: 10.000, cat: "HAIR" },
+            { id: 105, name: "color 1", price: 20.000, cat: "HAIR" },
+            { id: 106, name: "color 2", price: 30.000, cat: "HAIR" },
+            { id: 107, name: "blowdry long hair", price: 5.000, cat: "HAIR" },
+            { id: 108, name: "wavey long hair", price: 7.000, cat: "HAIR" },
+            { id: 109, name: "tksir", price: 7.000, cat: "HAIR" },
+            { id: 110, name: "long hair tksir", price: 10.000, cat: "HAIR" },
+            { id: 111, name: "style tsriha", price: 10.000, cat: "HAIR" },
+            { id: 112, name: "wash tretment", price: 5.000, cat: "HAIR" },
+            { id: 113, name: "tretment", price: 10.000, cat: "HAIR" },
+            { id: 114, name: "scrab", price: 5.000, cat: "HAIR" },
+            { id: 115, name: "cut", price: 5.000, cat: "HAIR" },
+            { id: 116, name: "cut strait", price: 2.000, cat: "HAIR" },
+            { id: 201, name: "Pedicure", price: 2.500, cat: "NAILS" },
+            { id: 202, name: "Manicure", price: 2.500, cat: "NAILS" },
+            { id: 203, name: "Pedi / Mani", price: 5.000, cat: "NAILS" },
+            { id: 204, name: "Nail Polish", price: 1.000, cat: "NAILS" },
+            { id: 205, name: "Russian Pedicure/Manicure", price: 10.000, cat: "NAILS" },
+            { id: 206, name: "Nail Polish", price: 2.000, cat: "NAILS" },
+            { id: 207, name: "Removal", price: 10.000, cat: "NAILS" },
+            { id: 208, name: "Russian", price: 5.000, cat: "NAILS" },
+            { id: 209, name: "frinsh", price: 3.000, cat: "NAILS" },
+            { id: 210, name: "art", price: 5.000, cat: "NAILS" },
+            { id: 211, name: "3D", price: 10.000, cat: "NAILS" },
+            { id: 212, name: "trkib normal", price: 5.000, cat: "NAILS" },
+            { id: 213, name: "extention", price: 10.000, cat: "NAILS" },
+            { id: 401, name: "haf face", price: 3.000, cat: "face" },
+            { id: 402, name: "haf hwaib", price: 2.000, cat: "face" },
+            { id: 403, name: "haf shnb", price: 1.000, cat: "face" },
+            { id: 501, name: "Steam Bath", price: 10.000, cat: "STEAM BATH" },
+            { id: 601, name: "Head Spa", price: 10.000, cat: "SPA" },
+            { id: 602, name: "head face tretment", price: 20.000, cat: "SPA" },
+            { id: 603, name: "massage full body", price: 10.000, cat: "SPA" },
+            { id: 604, name: "massage 1/2 body", price: 5.000, cat: "SPA" },
+            { id: 605, name: "add face or tretment", price: 5.000, cat: "SPA" },
+            { id: 701, name: "shira full body", price: 10.000, cat: "BODY" },
+            { id: 702, name: "shira 1/2 body", price: 5.000, cat: "BODY" },
+            { id: 801, name: "Hair Mask", price: 5.000, cat: "ASHTRAK", isSession: true },
+            { id: 802, name: "mask + blowdry", price: 5.000, cat: "ASHTRAK", isSession: true }
+        ];
+
+        let staff = [
+            { id: 1, name: "mm", rate: 5 },
+            { id: 2, name: "kl", rate: 5 },
+            { id: 3, name: "bn", rate: 5 },
+            { id: 4, name: "nrml", rate: 5 },
+            { id: 5, name: "sn", rate: 5 },
+            { id: 6, name: "mlk", rate: 5 },
+            { id: 7, name: "indr", rate: 5 }
+        ];
+
+        let subscriptions = [];
+        let invoices = JSON.parse(localStorage.getItem('bh_invoices_local')) || [];
+        let cart = JSON.parse(localStorage.getItem('bh_cart_draft')) || [];
+        let activeEvalData = null;
+
+        function saveDraftInputs() {
+            localStorage.setItem('bh_cust_name', document.getElementById('cust-name').value);
+            localStorage.setItem('bh_cust_phone', document.getElementById('cust-phone').value);
+        }
+
+        function loadDraftInputs() {
+            const savedName = localStorage.getItem('bh_cust_name');
+            const savedPhone = localStorage.getItem('bh_cust_phone');
+            if(savedName) document.getElementById('cust-name').value = savedName;
+            if(savedPhone) document.getElementById('cust-phone').value = savedPhone;
+        }
+
+        db.ref('bh_salon/services').on('value', snapshot => {
+            if(snapshot.exists()) services = Object.values(snapshot.val());
+            renderServices();
+            renderAdminServices();
+        });
+
+        db.ref('bh_salon/staff').on('value', snapshot => {
+            if(snapshot.exists()) staff = Object.values(snapshot.val());
+            updateStaffDropdowns();
+            renderAdminStaff();
+        });
+
+        db.ref('bh_salon/subscriptions').on('value', snapshot => {
+            subscriptions = snapshot.exists() ? Object.values(snapshot.val()) : [];
+            if(!document.getElementById('subscriptions-tab').classList.contains('d-none')) renderSubscriptions();
+        });
+
+        db.ref('bh_salon/invoices').on('value', snapshot => {
+            if(snapshot.exists()) {
+                invoices = Object.values(snapshot.val());
+                localStorage.setItem('bh_invoices_local', JSON.stringify(invoices));
+            }
+            if(!document.getElementById('reports-tab').classList.contains('d-none')) generateReport();
+            if(document.getElementById('today-invoices-modal-container').style.display === 'flex') {
+                renderTodayInvoicesModalContent();
+            }
+        });
+
+        function saveDataToFirebase() {
+            localStorage.setItem('bh_invoices_local', JSON.stringify(invoices));
+            db.ref('bh_salon').set({
+                services: services,
+                staff: staff,
+                subscriptions: subscriptions,
+                invoices: invoices
+            });
+        }
+
+        function showTab(tabId) {
+            if (tabId === 'admin-tab' || tabId === 'subscriptions-tab' || tabId === 'reports-tab') {
+                let password = prompt(currentLang === 'ar' ? "الرقم السرّي للوصول:" : "Password required:");
+                if (password !== "bh") {
+                    alert(currentLang === 'ar' ? "الرقم السرّي غير صحيح!" : "Incorrect password!");
+                    return;
+                }
+            }
+
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('d-none'));
+            document.getElementById(tabId).classList.remove('d-none');
+            if(tabId === 'subscriptions-tab') renderSubscriptions();
+            if(tabId === 'reports-tab') generateReport();
+            if(tabId === 'admin-tab') { renderAdminServices(); renderAdminStaff(); }
+        }
+
+        function updateStaffDropdowns() {
+            const selects = document.querySelectorAll('.staff-select');
+            selects.forEach(sel => {
+                const currentVal = sel.value;
+                sel.innerHTML = '';
+                staff.forEach(st => {
+                    sel.innerHTML += `<option value="${st.name}">${st.name}</option>`;
+                });
+                if(currentVal) sel.value = currentVal;
+            });
+        }
+
+        function renderServices() {
+            const grid = document.getElementById('services-grid');
+            const cat = document.getElementById('category-filter').value;
+            const t = translations[currentLang];
+            grid.innerHTML = '';
+
+            const filtered = cat === 'ALL' ? services : services.filter(s => s.cat === cat);
+            filtered.forEach(s => {
+                let badge = s.cat === 'ASHTRAK' ? `<span class="badge bg-info text-dark">${t.freeSessionBadge}</span>` : '';
+                let currencySymbol = currentLang === 'en' ? 'KD' : 'د.ك';
+
+                grid.innerHTML += `
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 text-center p-2 shadow-sm border">
+                            <h6>${s.name} ${badge}</h6>
+                            <p class="text-salon fw-bold mb-1">${s.price.toFixed(3)} ${currencySymbol}</p>
+                            <label class="form-label small mb-1 text-muted">${t.staffMultiLabel}</label>
+                            <select class="form-select form-select-sm mb-2 staff-select" id="staff-sel-${s.id}" multiple></select>
+                            <button class="btn btn-sm btn-salon" onclick="addToCart(${s.id})">${t.addCartGrid}</button>
+                        </div>
+                    </div>
+                `;
+            });
+            updateStaffDropdowns();
+        }
+
+        function cleanPhone(phone) {
+            if (!phone) return '';
+            let cleaned = phone.replace(/\D/g, '');
+            if (cleaned.startsWith('965')) {
+                cleaned = cleaned.substring(3);
+            }
+            return cleaned;
+        }
+
+        function getCurrentDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `${year}-${month}-${day} (${time})`;
+        }
+
+        function buyNewSubscription() {
+            const t = translations[currentLang];
+            const name = document.getElementById('cust-name').value;
+            const rawPhone = document.getElementById('cust-phone').value;
+            const cleanP = cleanPhone(rawPhone);
+            const formattedPhone = cleanP.length > 0 ? '+965' + cleanP : '';
+            const subType = document.getElementById('sub-package-select').value;
+            
+            const staffSel = document.getElementById('sub-staff-select');
+            const selectedStaff = Array.from(staffSel.selectedOptions).map(opt => opt.value);
+
+            if(!name || cleanP.length < 8) return alert(t.fillDataAlert);
+            if(selectedStaff.length === 0) return alert(t.selectStaffAlert);
+
+            let packagePrice = subType === 'Hair Mask' ? 15.000 : 20.000;
+            const dateTimeStr = getCurrentDateTime();
+
+            cart = cart.filter(item => item.subKey !== subType);
+
+            cart.push({
+                id: Date.now(),
+                name: `Package: ${subType} (5 sessions - Session 1)`,
+                price: packagePrice,
+                originalPrice: packagePrice,
+                qty: 1,
+                staff: selectedStaff,
+                cat: 'PACKAGE_PURCHASE',
+                subKey: subType
+            });
+
+            let sub = subscriptions.find(s => cleanPhone(s.phone) === cleanP && s.subType === subType);
+            if (!sub) {
+                subscriptions.push({
+                    id: Date.now(),
+                    name: name,
+                    phone: formattedPhone,
+                    subType: subType,
+                    used: 1,
+                    remaining: 4,
+                    history: [`Session 1 (Activation): ${dateTimeStr} by (${selectedStaff.join(', ')})`]
+                });
+            } else {
+                sub.used = 1;
+                sub.remaining = 4;
+                sub.name = name;
+                sub.phone = formattedPhone;
+                sub.history = [`Session 1 (New Activation): ${dateTimeStr} by (${selectedStaff.join(', ')})`];
+            }
+
+            saveDataToFirebase();
+            renderCart();
+            alert(t.subActiveAlert);
+        }
+
+        function addToCart(serviceId) {
+            const t = translations[currentLang];
+            const s = services.find(x => x.id === serviceId);
+            const selectEl = document.getElementById(`staff-sel-${serviceId}`);
+            const selectedStaff = selectEl ? Array.from(selectEl.selectedOptions).map(opt => opt.value) : [];
+            const rawPhone = document.getElementById('cust-phone').value;
+            const inputCleanPhone = cleanPhone(rawPhone);
+
+            if(selectedStaff.length === 0) return alert(t.selectStaffAlert);
+
+            let itemPrice = s.price;
+            let itemName = s.name;
+
+            if (s.cat === 'ASHTRAK') {
+                if (inputCleanPhone.length < 8) return alert(t.fillDataAlert);
+
+                let sub = subscriptions.find(sub => cleanPhone(sub.phone) === inputCleanPhone && sub.subType === s.name);
+
+                if (!sub) {
+                    return alert(`No active subscription card found for (${s.name}). Please activate a new package first!`);
+                }
+                if (sub.remaining <= 0) {
+                    return alert(`⚠️ All sessions have been exhausted.`);
+                }
+
+                itemPrice = 0.000;
+                let nextSessionNum = sub.used + 1;
+                itemName = `${s.name} - Session ${nextSessionNum}`;
+            }
+
+            cart.push({ ...s, name: itemName, baseName: s.name, price: itemPrice, originalPrice: s.price, staff: selectedStaff, qty: 1 });
+            renderCart();
+        }
+
+        function addCustomService() {
+            const t = translations[currentLang];
+            const name = document.getElementById('custom-name').value;
+            const price = parseFloat(document.getElementById('custom-price').value);
+            const qty = parseInt(document.getElementById('custom-qty').value);
+            const selectEl = document.getElementById('custom-staff');
+            const selectedStaff = Array.from(selectEl.selectedOptions).map(opt => opt.value);
+
+            if(!name || isNaN(price) || selectedStaff.length === 0) return alert(t.fillDataAlert);
+
+            cart.push({ id: Date.now(), name, price, originalPrice: price, qty, staff: selectedStaff, cat: 'CUSTOM' });
+            renderCart();
+            document.getElementById('custom-name').value = '';
+            document.getElementById('custom-price').value = '';
+        }
+
+        function renderCart() {
+            const t = translations[currentLang];
+            const list = document.getElementById('cart-list');
+            list.innerHTML = '';
+            let total = 0;
+            let currencySymbol = currentLang === 'en' ? 'KD' : 'د.ك';
+
+            cart.forEach((item, index) => {
+                total += item.price * item.qty;
+                const staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
+                let subBadge = item.price === 0 ? `<span class="badge bg-success">${t.freeSessionBadge}</span>` : '';
+                list.innerHTML += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${item.name}</strong> ${subBadge}
+                            <br><small class="text-primary"><i class="fa-solid fa-user me-1"></i>${staffDisplay}</small>
+                            <br><small class="text-muted">${item.price.toFixed(3)} x ${item.qty}</small>
+                        </div>
+                        <div>
+                            <span class="me-2 fw-bold">${(item.price * item.qty).toFixed(3)}</span>
+                            <button class="btn btn-sm btn-danger" onclick="cart.splice(${index},1); renderCart();">X</button>
+                        </div>
+                    </li>
+                `;
+            });
+            document.getElementById('cart-total').innerText = total.toFixed(3) + ' ' + currencySymbol;
+            localStorage.setItem('bh_cart_draft', JSON.stringify(cart));
+        }
+
+        function checkout() {
+            const t = translations[currentLang];
+            const name = document.getElementById('cust-name').value;
+            const rawPhone = document.getElementById('cust-phone').value;
+            const cleanP = cleanPhone(rawPhone);
+            const formattedPhone = cleanP.length > 0 ? '+965' + cleanP : '';
+
+            if(!name || cleanP.length < 8) return alert(t.fillDataAlert);
+            if(cart.length === 0) return alert(t.cartEmptyAlert);
+
+            const now = new Date();
+            const invoiceDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const dateTimeStr = getCurrentDateTime();
+
+            cart.forEach(item => {
+                if(item.cat === 'ASHTRAK' && item.price === 0) {
+                    let targetSub = subscriptions.find(s => cleanPhone(s.phone) === cleanP && item.name.includes(s.subType));
+
+                    if (targetSub && targetSub.remaining > 0) {
+                        targetSub.used += 1;
+                        targetSub.remaining -= 1;
+                        if(!targetSub.history) targetSub.history = [];
+                        const staffStr = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
+                        targetSub.history.push(`Session ${targetSub.used}: ${dateTimeStr} by (${staffStr})`);
+                    }
+                }
+            });
+
+            invoices.push({
+                id: Date.now(),
+                date: invoiceDate,
+                customer: name,
+                phone: formattedPhone,
+                items: [...cart],
+                total: cart.reduce((a,b) => a + (b.price * b.qty), 0)
+            });
+
+            saveDataToFirebase();
+            alert(t.invSavedAlert);
+            cart = [];
+            localStorage.removeItem('bh_cart_draft');
+            localStorage.removeItem('bh_cust_name');
+            localStorage.removeItem('bh_cust_phone');
+            document.getElementById('cust-name').value = '';
+            document.getElementById('cust-phone').value = '';
+            renderCart();
+        }
+
+        function sendInvoiceToCustomerWhatsapp(invoiceId) {
+            const inv = invoices.find(i => i.id === invoiceId);
+            if(!inv) return alert('الفاتورة غير موجودة!');
+
+            const cleanP = cleanPhone(inv.phone);
+            if(cleanP.length < 8) return alert('رقم هاتف العميلة غير صحيح.');
+
+            let total = 0;
+            activeEvalData = {
+                id: inv.id,
+                customer: inv.customer,
+                phone: inv.phone,
+                items: [...inv.items]
+            };
+
+            let msg = `*BH Salon Invoice*\n----------------------------------\nClient: *${inv.customer}*\nDate: ${inv.date}\n----------------------------------\n`;
+            
+            inv.items.forEach((item, idx) => {
+                total += item.price * item.qty;
+                let staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
+                msg += `${idx + 1}. *${item.name}*\n   - Price: ${item.price.toFixed(3)} KD (Qty: ${item.qty})\n   - Staff: ${staffDisplay}\n----------------------------------\n`;
+            });
+
+            msg += `*Total Due: ${total.toFixed(3)} KD*\n\n⭐ شكراً لزيارتكم BH Salon، نسعد دائماً بخدمتكم.\nThank you for visiting BH Salon ❤️`;
+            
+            window.open(`https://wa.me/965${cleanP}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function openTodayInvoicesModal() {
+            renderTodayInvoicesModalContent();
+            document.getElementById('today-invoices-modal-container').style.display = 'flex';
+        }
+
+        function closeTodayInvoicesModal() {
+            document.getElementById('today-invoices-modal-container').style.display = 'none';
+        }
+
+        function renderTodayInvoicesModalContent() {
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            document.getElementById('today-invoices-date-label').innerText = `التاريخ الحالي: ${todayStr}`;
+
+            const container = document.getElementById('today-invoices-list-content');
+            container.innerHTML = '';
+
+            const todayInvoices = invoices.filter(inv => {
+                if(!inv.date) return false;
+                return inv.date === todayStr || inv.date.startsWith(todayStr);
+            });
+
+            if(todayInvoices.length === 0) {
+                container.innerHTML = `<p class="text-center text-muted py-4">لا توجد فواتير مسجلة لهذا اليوم (${todayStr}) حتى الآن.</p>`;
+                return;
+            }
+
+            let currencySymbol = currentLang === 'en' ? 'KD' : 'د.ك';
+            todayInvoices.forEach((inv, index) => {
+                let itemsHtml = '<ul class="list-unstyled small mb-2">';
+                inv.items.forEach(item => {
+                    let staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
+                    itemsHtml += `<li>• ${item.name} (${item.price.toFixed(3)} ${currencySymbol}) - <span class="text-primary">${staffDisplay}</span></li>`;
+                });
+                itemsHtml += '</ul>';
+
+                container.innerHTML += `
+                    <div class="card mb-3 border">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 fw-bold">الفاتورة #${index + 1} - العميلة: ${inv.customer}</h6>
+                                <span class="badge bg-primary">${inv.total.toFixed(3)} ${currencySymbol}</span>
+                            </div>
+                            <p class="small text-muted mb-1"><i class="fa-solid fa-phone me-1"></i>${inv.phone}</p>
+                            ${itemsHtml}
+                            <button class="btn btn-warning btn-sm text-dark fw-bold w-100 mb-2" onclick="openEvalModalForInvoice(${inv.id})">
+                                <i class="fa-solid fa-star me-1"></i> فتح نافذة تقييم الخدمات للعميلة
+                            </button>
+                            <button class="btn btn-success btn-sm w-100" onclick="sendInvoiceToCustomerWhatsapp(${inv.id})">
+                                <i class="fa-brands fa-whatsapp me-1"></i> إرسال الفاتورة للعميلة واتساب
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openEvalModalForInvoice(invoiceId) {
+            const inv = invoices.find(i => i.id === invoiceId);
+            if(!inv) return alert('الفاتورة غير موجودة!');
+
+            activeEvalData = {
+                id: inv.id,
+                customer: inv.customer,
+                phone: inv.phone,
+                items: inv.items
+            };
+
+            closeTodayInvoicesModal();
+            openEvalModal(activeEvalData);
+        }
+
+        function openEvalModal(data) {
+            document.getElementById('eval-client-info').innerText = `العميلة: ${data.customer} (${data.phone})`;
+            const container = document.getElementById('eval-services-list');
+            container.innerHTML = '';
+
+            data.items.forEach((item, index) => {
+                let staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
+                container.innerHTML += `
+                    <div class="service-eval-item" data-index="${index}">
+                        <p class="mb-1"><b>${item.name}</b><br><small class="text-muted">الموظفة: ${staffDisplay}</small></p>
+                        <div class="stars-group" data-service-idx="${index}" data-rating="0">
+                            <span class="star-icon" data-value="1">★</span>
+                            <span class="star-icon" data-value="2">★</span>
+                            <span class="star-icon" data-value="3">★</span>
+                            <span class="star-icon" data-value="4">★</span>
+                            <span class="star-icon" data-value="5">★</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            initModalStarsEvents();
+            document.getElementById('eval-modal-container').style.display = 'flex';
+        }
+
+        function closeEvalModal() {
+            document.getElementById('eval-modal-container').style.display = 'none';
+        }
+
+        function initModalStarsEvents() {
+            document.querySelectorAll('.stars-group').forEach(container => {
+                const stars = container.querySelectorAll('.star-icon');
+                stars.forEach(star => {
+                    star.addEventListener('click', () => {
+                        const value = star.getAttribute('data-value');
+                        container.setAttribute('data-rating', value);
+                        stars.forEach(s => {
+                            if (s.getAttribute('data-value') <= value) {
+                                s.classList.add('active');
+                            } else {
+                                s.classList.remove('active');
+                            }
+                        });
+                    });
+                });
+            });
+        }
+
+        function submitClientRatingToManager() {
+            if (!activeEvalData) return;
+            const notes = document.getElementById('eval-client-notes').value;
+            let ratingText = `🔔 *تقييم جديد من عميلة*\n📄 فاتورة للعميلة: *${activeEvalData.customer}*\n📞 رقم الهاتف: *${activeEvalData.phone}*\n\n`;
+
+            document.querySelectorAll('.service-eval-item').forEach(box => {
+                const idx = box.getAttribute('data-index');
+                const item = activeEvalData.items[idx];
+                const staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
+                const rating = box.querySelector('.stars-group').getAttribute('data-rating');
+                
+                let starsStr = rating > 0 ? '⭐'.repeat(rating) : 'لم يتم التقييم';
+                ratingText += `▫️ *${item.name}* (الموظفة: ${staffDisplay})\n  التقييم: ${starsStr} (${rating}/5)\n\n`;
+            });
+
+            if(notes.trim() !== "") {
+                ratingText += `💬 *ملاحظة العميلة:* "${notes}"`;
+            }
+
+            const managerPhone = "96569977533";
+            let whatsappURL = `https://wa.me/${managerPhone}?text=` + encodeURIComponent(ratingText);
+            
+            closeEvalModal();
+            window.open(whatsappURL, '_blank');
+        }
+
+        function sendAllInvoicesToManager() {
+            if (invoices.length === 0) return alert('No saved invoices found.');
+
+            let msg = `*BH Salon - All Invoices*\n==================================\n`;
+            let grandTotal = 0;
+
+            invoices.forEach((inv, idx) => {
+                grandTotal += inv.total;
+                msg += `Invoice (${idx + 1})\n- Client: *${inv.customer}*\n- Phone: ${inv.phone}\n- Date: ${inv.date}\n- Items:\n`;
+                inv.items.forEach(item => {
+                    let staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
+                    msg += `  • ${item.name} | Price: ${item.price.toFixed(3)} KD | Staff: (${staffDisplay})\n`;
+                });
+                msg += `- *Total: ${inv.total.toFixed(3)} KD*\n----------------------------------\n`;
+            });
+
+            msg += `\n💰 *Grand Total Sales: ${grandTotal.toFixed(3)} KD*`;
+
+            window.open(`https://wa.me/96569977533?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function renderSubscriptions() {
+            const t = translations[currentLang];
+            const tbody = document.getElementById('subscriptions-table-body');
+            tbody.innerHTML = '';
+            subscriptions.forEach(s => {
+                const isFinished = s.remaining === 0;
+                const rowClass = isFinished ? 'table-danger' : '';
+                const statusHtml = isFinished ? `<span class="text-danger fw-bold">${t.finishedText}</span>` : `<span class="text-success fw-bold">${t.activeText}</span>`;
+                
+                let historyHtml = '<ul class="list-unstyled small text-start m-0 p-0">';
+                if(s.history && s.history.length > 0) {
+                    s.history.forEach(h => { historyHtml += `<li>• ${h}</li>`; });
+                } else {
+                    historyHtml += `<li>${t.noHistoryText}</li>`;
+                }
+                historyHtml += '</ul>';
+
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td>${s.name}</td>
+                        <td dir="ltr" class="text-center">${s.phone}</td>
+                        <td>${s.subType}</td>
+                        <td>${s.used} / 5</td>
+                        <td>${historyHtml}</td>
+                        <td>${s.remaining}</td>
+                        <td>${statusHtml}</td>
+                        <td><button class="btn btn-sm btn-outline-danger" onclick="deleteSubscription(${s.id})"><i class="fa-solid fa-trash me-1"></i>${t.deleteText}</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function deleteSubscription(id) {
+            const t = translations[currentLang];
+            if(confirm(t.deleteSubConfirm)) {
+                subscriptions = subscriptions.filter(s => s.id !== id);
+                saveDataToFirebase();
+                renderSubscriptions();
+            }
+        }
+
+        function sendSubscriptionsWhatsapp() {
+            if (subscriptions.length === 0) return alert('No subscriptions found.');
+            let msg = `*BH Salon - Subscriptions Log*\n----------------------------------\n`;
+            subscriptions.forEach((s, idx) => {
+                let statusText = s.remaining === 0 ? 'Finished (5/5)' : `Active (${s.used}/5)`;
+                msg += `${idx + 1}. ${s.name}\n${s.phone}\n${statusText}\n----------------------------------\n`;
+            });
+            window.open(`https://wa.me/96569977533?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function generateReport() {
+            const t = translations[currentLang];
+            const from = document.getElementById('report-from').value;
+            const to = document.getElementById('report-to').value;
+
+            let filteredInvoices = invoices;
+            if(from && to) {
+                filteredInvoices = invoices.filter(inv => inv.date >= from && inv.date <= to);
+            }
+
+            let totalSales = 0;
+            let staffStats = {};
+            staff.forEach(st => staffStats[st.name] = { sales: 0, rate: st.rate, commission: 0, servicesCount: 0 });
+
+            filteredInvoices.forEach(inv => {
+                totalSales += inv.total;
+
+                inv.items.forEach(item => {
+                    const basePrice = item.originalPrice !== undefined ? item.originalPrice : item.price;
+                    const lineValueForCommission = basePrice * item.qty;
+                    const staffList = Array.isArray(item.staff) ? item.staff : [item.staff];
+                    
+                    if (staffList.length > 0) {
+                        const splitSales = lineValueForCommission / staffList.length;
+                        const splitCount = item.qty / staffList.length;
+                        staffList.forEach(stName => { 
+                            if(staffStats[stName]) {
+                                staffStats[stName].sales += splitSales;
+                                staffStats[stName].servicesCount += splitCount;
+                            } 
+                        });
+                    }
+                });
+            });
+
+            let totalCommission = 0;
+            const tbody = document.getElementById('report-staff-body');
+            tbody.innerHTML = '';
+            let currencySymbol = currentLang === 'en' ? 'KD' : 'د.ك';
+
+            for (let stName in staffStats) {
+                const st = staffStats[stName];
+                st.commission = (st.sales * st.rate) / 100;
+                totalCommission += st.commission;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${stName}</td>
+                        <td>${st.rate}%</td>
+                        <td>${st.sales.toFixed(3)} ${currencySymbol} (خدمات: ${st.servicesCount})</td>
+                        <td>${st.commission.toFixed(3)} ${currencySymbol}</td>
+                    </tr>
+                `;
+            }
+
+            document.getElementById('report-total-sales').innerText = totalSales.toFixed(3) + ' ' + currencySymbol;
+            document.getElementById('report-total-commissions').innerText = totalCommission.toFixed(3) + ' ' + currencySymbol;
+        }
+
+        function sendDailyReportWhatsapp() {
+            const from = document.getElementById('report-from').value;
+            const to = document.getElementById('report-to').value;
+            
+            let filteredInvoices = invoices;
+            let periodText = "All Period";
+            
+            if(from && to) {
+                filteredInvoices = invoices.filter(inv => inv.date >= from && inv.date <= to);
+                periodText = `From ${from} To ${to}`;
+            } else {
+                const now = new Date();
+                const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                filteredInvoices = invoices.filter(inv => inv.date === today);
+                periodText = today;
+            }
+
+            let totalSales = 0;
+            let staffStats = {};
+            staff.forEach(st => staffStats[st.name] = { sales: 0, rate: st.rate, commission: 0, servicesCount: 0 });
+
+            filteredInvoices.forEach(inv => {
+                totalSales += inv.total;
+                inv.items.forEach(item => {
+                    const basePrice = item.originalPrice !== undefined ? item.originalPrice : item.price;
+                    const lineValue = basePrice * item.qty;
+                    const staffList = Array.isArray(item.staff) ? item.staff : [item.staff];
+                    if (staffList.length > 0) {
+                        const splitSales = lineValue / staffList.length;
+                        const splitCount = item.qty / staffList.length;
+                        staffList.forEach(stName => { 
+                            if(staffStats[stName]) {
+                                staffStats[stName].sales += splitSales;
+                                staffStats[stName].servicesCount += splitCount;
+                            } 
+                        });
+                    }
+                });
+            });
+
+            let totalCommission = 0;
+            for (let stName in staffStats) {
+                staffStats[stName].commission = (staffStats[stName].sales * staffStats[stName].rate) / 100;
+                totalCommission += staffStats[stName].commission;
+            }
+
+            let msg = `*BH Salon - Period & Staff Report*\nPeriod: ${periodText}\n----------------------------------\n`;
+            msg += `*Total Sales:* ${totalSales.toFixed(3)} KD\n*Total Commissions:* ${totalCommission.toFixed(3)} KD\n----------------------------------\n*Staff Performance:*\n`;
+            
+            for (let stName in staffStats) {
+                const st = staffStats[stName];
+                msg += `- *${stName}*:\n  • Services Count: ${st.servicesCount}\n  • Total Sales: ${st.sales.toFixed(3)} KD\n  • Commission (${st.rate}%): ${st.commission.toFixed(3)} KD\n----------------------------------\n`;
+            }
+
+            window.open(`https://wa.me/96569977533?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function renderAdminServices() {
+            const t = translations[currentLang];
+            const tbody = document.getElementById('admin-services-list');
+            tbody.innerHTML = '';
+            services.forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td>${s.price.toFixed(3)}</td>
+                        <td>${s.cat}</td>
+                        <td><button class="btn btn-sm btn-danger" onclick="deleteService(${s.id})">${t.deleteText}</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveService(e) {
+            e.preventDefault();
+            const name = document.getElementById('admin-service-name').value;
+            const price = parseFloat(document.getElementById('admin-service-price').value);
+            const cat = document.getElementById('admin-service-cat').value;
+
+            services.push({ id: Date.now(), name, price, cat });
+            saveDataToFirebase();
+            document.getElementById('service-form').reset();
+        }
+
+        function deleteService(id) {
+            services = services.filter(s => s.id !== id);
+            saveDataToFirebase();
+        }
+
+        function renderAdminStaff() {
+            const t = translations[currentLang];
+            const tbody = document.getElementById('admin-staff-list');
+            tbody.innerHTML = '';
+            staff.forEach(st => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${st.name}</td>
+                        <td>${st.rate}%</td>
+                        <td><button class="btn btn-sm btn-danger" onclick="deleteStaff(${st.id})">${t.deleteText}</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveStaff(e) {
+            e.preventDefault();
+            const nameVal = document.getElementById('admin-staff-name').value;
+            const rate = parseFloat(document.getElementById('admin-staff-rate').value);
+
+            const existing = staff.find(s => s.name === nameVal);
+            if(existing) {
+                existing.rate = rate;
+            } else {
+                staff.push({ id: Date.now(), name: nameVal, rate });
+            }
+
+            saveDataToFirebase();
+            document.getElementById('staff-form').reset();
+        }
+
+        function deleteStaff(id) {
+            staff = staff.filter(s => s.id !== id);
+            saveDataToFirebase();
+        }
+
+        window.onload = function() {
+            applyLanguage();
+            loadDraftInputs();
+            renderCart();
+            const now = new Date();
+            const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const fromEl = document.getElementById('report-from');
+            const toEl = document.getElementById('report-to');
+            if(fromEl) fromEl.value = today;
+            if(toEl) toEl.value = today;
+        };
+    </script>
+</body>
+</html>
