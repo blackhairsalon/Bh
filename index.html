@@ -1341,7 +1341,7 @@
             saveDataToFirebase();
             document.getElementById('staff-form').reset();
         }
-
+db
         function deleteStaff(id) {
             staff = staff.filter(s => s.id !== id);
             saveDataToFirebase();
@@ -1357,8 +1357,9 @@
             const toEl = document.getElementById('report-to');
             if(fromEl) fromEl.value = today;
             if(toEl) toEl.value = today;
-    db.ref('bh_salon').on('value', s => { let d = s.val() || {}; services = d.services || []; staff = d.staff || []; if(typeof renderServices === 'function') renderServices(); });
-
+        db.ref('bh_salon').on('value', s => {
+        let d = s.val() || {}; services = d.services || []; staff = d.staff || []; if(typeof renderServices === 'function') renderServices();
+    });
 
     </script>
 </body>
