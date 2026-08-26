@@ -1,321 +1,3 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl" id="html-root">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BH Salon - نظام إدارة الصالون والتقييم السحابي</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" id="bootstrap-css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- مكتبات Firebase السحابية -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
-    <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .navbar-brand { font-weight: bold; color: #d63384 !important; }
-        .card-header { background-color: #f1f3f5; font-weight: bold; }
-        .btn-salon { background-color: #d63384; color: white; }
-        .btn-salon:hover { background-color: #b8216b; color: white; }
-        .phone-input-group .input-group-text { background-color: #e9ecef; font-weight: bold; direction: ltr; }
-        select[multiple] { height: 80px !important; }
-        #eval-modal-container, #today-invoices-modal-container { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center; padding: 15px; }
-        .eval-box, .today-invoices-box { background: #fff; width: 100%; max-width: 650px; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-        .service-eval-item { border-bottom: 1px solid #eee; padding: 12px 0; }
-        .stars-group { display: flex; gap: 5px; font-size: 28px; cursor: pointer; direction: ltr; justify-content: flex-end; }
-        .star-icon { color: #ccc; transition: color 0.2s; }
-        .star-icon.active { color: #ffc107; }
-    </style>
-</head>
-<body>
-
-    <!-- شريط التنقل -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
-        <div class="container-fluid">
-            <div class="d-flex align-items-center">
-                <a class="navbar-brand fs-3 me-3" href="#"><i class="fa-solid fa-scissors me-2"></i>BH Salon</a>
-                <button class="btn btn-outline-secondary btn-sm" onclick="toggleLanguage()"><i class="fa-solid fa-globe me-1"></i><span id="lang-btn-text">English</span></button>
-            </div>
-            <div class="navbar-nav">
-                <button class="nav-link btn btn-link active" onclick="showTab('invoice-tab')" data-i18n="navInvoice">الفاتورة والخدمات</button>
-                <button class="nav-link btn btn-link" onclick="showTab('subscriptions-tab')" data-i18n="navSubs">سجل الاشتراكات والكارت <i class="fa-solid fa-lock text-muted small ms-1"></i></button>
-                <button class="nav-link btn btn-link" onclick="showTab('reports-tab')" data-i18n="navReports">تقرير الفترة والعمولات <i class="fa-solid fa-lock text-muted small ms-1"></i></button>
-                <button class="nav-link btn btn-link" onclick="showTab('admin-tab')" data-i18n="navAdmin">الإدارة الشاملة <i class="fa-solid fa-lock text-muted small ms-1"></i></button>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container-fluid px-4">
-        
-        <!-- تبويب الفاتورة والخدمات -->
-        <div id="invoice-tab" class="tab-content">
-            <div class="row">
-                <div class="col-md-5">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <span><i class="fa-solid fa-receipt me-2"></i><span data-i18n="invoiceData">بيانات الفاتورة</span></span>
-                            <button class="btn btn-outline-success btn-sm" onclick="sendAllInvoicesToManager()"><i class="fa-brands fa-whatsapp me-1"></i><span data-i18n="sendAllInv">إرسال جميع الفواتير للمديرة</span></button>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label" data-i18n="custName">اسم العميلة</label>
-                                <input type="text" id="cust-name" class="form-control" placeholder="أدخل اسم العميلة" data-i18n-placeholder="custNamePH" oninput="saveDraftInputs()">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label" data-i18n="custPhone">رقم الهاتف (الكويت)</label>
-                                <div class="input-group phone-input-group" dir="ltr">
-                                    <span class="input-group-text">+965</span>
-                                    <input type="tel" id="cust-phone" class="form-control text-end" dir="rtl" placeholder="XXXXXXXX" maxlength="8" oninput="saveDraftInputs()">
-                                </div>
-                            </div>
-                            <hr>
-                            <h5 data-i18n="addedServices">الخدمات المضافة</h5>
-                            <ul id="cart-list" class="list-group mb-3"></ul>
-                            <div class="d-flex justify-content-between fs-5 fw-bold mb-3">
-                                <span data-i18n="totalDue">الإجمالي المطلوب دفعه:</span>
-                                <span id="cart-total">0.000 د.ك</span>
-                            </div>
-                            <button class="btn btn-salon w-100 btn-lg mb-2" onclick="checkout()"><i class="fa-solid fa-check me-2"></i><span data-i18n="saveInvoiceBtn">حفظ الفاتورة وتثبيت الحركات</span></button>
-                            
-                            <!-- زر فواتير اليوم -->
-                            <div class="mb-2">
-                                <button class="btn btn-primary w-100 fw-bold py-2" onclick="openTodayInvoicesModal()"><i class="fa-solid fa-list-check me-1"></i> فواتير اليوم</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- قسم تفعيل باقة اشتراك جديدة -->
-                    <div class="card shadow-sm mb-4 border-warning">
-                        <div class="card-header bg-warning text-dark"><i class="fa-solid fa-id-card me-2"></i><span data-i18n="activateSubHeader">تفعيل باقة اشتراك جديدة (الجلسة الأولى)</span></div>
-                        <div class="card-body">
-                            <p class="small text-muted mb-2" data-i18n="activateSubDesc">اختر الباقة هنا فقط عند بيع الكارت لأول مرة:</p>
-                            <div class="mb-2">
-                                <select id="sub-package-select" class="form-select">
-                                    <option value="Hair Mask" data-i18n="pkg1">باقة ماسك للشعر (15.000 د.ك شاملة 5 جلسات)</option>
-                                    <option value="mask + blowdry" data-i18n="pkg2">باقة ماسك + ستشوار (20.000 د.ك شاملة 5 جلسات)</option>
-                                </select>
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label small mb-1" data-i18n="firstSessionStaff">الموظفة المنفذة للجلسة الأولى</label>
-                                <select id="sub-staff-select" class="form-select staff-select"></select>
-                            </div>
-                            <button class="btn btn-dark w-100" onclick="buyNewSubscription()" data-i18n="activateCardBtn">تفعيل الكارت وإضافة الجلسة الأولى للسلة</button>
-                        </div>
-                    </div>
-
-                    <!-- إضافة خدمة مخصصة -->
-                    <div class="card shadow-sm">
-                        <div class="card-header"><i class="fa-solid fa-plus-circle me-2"></i><span data-i18n="customServiceHeader">إضافة خدمة مخصصة</span></div>
-                        <div class="card-body">
-                            <div class="row g-2">
-                                <div class="col-6"><input type="text" id="custom-name" class="form-control" placeholder="اسم الخدمة" data-i18n-placeholder="customNamePH"></div>
-                                <div class="col-6"><input type="number" id="custom-price" class="form-control" placeholder="السعر (د.ك)" step="0.001" data-i18n-placeholder="customPricePH"></div>
-                                <div class="col-6"><input type="number" id="custom-qty" class="form-control" value="1" min="1" placeholder="العدد" data-i18n-placeholder="customQtyPH"></div>
-                                <div class="col-6">
-                                    <label class="form-label small mb-1" data-i18n="staffMultiLabel">الموظفات (Ctrl للمتعدد)</label>
-                                    <select id="custom-staff" class="form-select staff-select" multiple></select>
-                                </div>
-                                <div class="col-12 mt-2">
-                                    <button class="btn btn-secondary w-100" onclick="addCustomService()" data-i18n="addToCartBtn">إضافة للفاتورة</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-7">
-                    <div class="card shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <span><i class="fa-solid fa-list me-2"></i><span data-i18n="servicesListHeader">قائمة الخدمات وصرف الجلسات المجانية</span></span>
-                            <select id="category-filter" class="form-select w-auto" onchange="renderServices()">
-                                <option value="ALL" data-i18n="catAll">جميع الفئات</option>
-                                <option value="HAIR">HAIR</option>
-                                <option value="NAILS">NAILS</option>
-                                <option value="face">face</option>
-                                <option value="STEAM BATH">STEAM BATH</option>
-                                <option value="SPA">SPA</option>
-                                <option value="BODY">BODY</option>
-                                <option value="ASHTRAK" data-i18n="catAshtrak">ASHTRAK (صرف جلسات الكارت)</option>
-                            </select>
-                        </div>
-                        <div class="card-body">
-                            <div class="row" id="services-grid"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- تبويب الاشتراكات -->
-        <div id="subscriptions-tab" class="tab-content d-none">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="fa-solid fa-id-card me-2"></i><span data-i18n="subsTabHeader">سجل كروت الاشتراكات (5 جلسات) وتواريخها</span></span>
-                    <button class="btn btn-success btn-sm" onclick="sendSubscriptionsWhatsapp()"><i class="fa-brands fa-whatsapp me-2"></i><span data-i18n="sendSubsWhatsapp">إرسال سجل الاشتراكات واتساب (69977533)</span></button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered align-middle text-center">
-                            <thead class="table-light">
-                                <tr>
-                                    <th data-i18n="thCustName">اسم العميلة</th>
-                                    <th data-i18n="thPhone">رقم الهاتف</th>
-                                    <th data-i18n="thPkgType">نوع الباقة</th>
-                                    <th data-i18n="thUsedSessions">الجلسات المستخدمة</th>
-                                    <th data-i18n="thHistory">تواريخ الجلسات وسجل الحركات</th>
-                                    <th data-i18n="thRemaining">الجلسات المتبقية</th>
-                                    <th data-i18n="thStatus">الحالة</th>
-                                    <th data-i18n="thActions">إجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="subscriptions-table-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- تبويب التقارير -->
-        <div id="reports-tab" class="tab-content d-none">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="fa-solid fa-chart-line me-2"></i><span data-i18n="reportsTabHeader">تقرير الفترة والعمولة</span></span>
-                    <button class="btn btn-success" onclick="sendDailyReportWhatsapp()"><i class="fa-brands fa-whatsapp me-2"></i><span data-i18n="sendDailyRepWhatsapp">إرسال التقرير اليومي/الفترة واتساب (69977533)</span></button>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3 align-items-end mb-4">
-                        <div class="col-md-4">
-                            <label class="form-label" data-i18n="fromDate">من تاريخ:</label>
-                            <input type="date" id="report-from" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" data-i18n="toDate">إلى تاريخ:</label>
-                            <input type="date" id="report-to" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-primary w-100" onclick="generateReport()" data-i18n="applyFilterBtn">تطبيق الفلترة</button>
-                        </div>
-                    </div>
-
-                    <div class="row text-center mb-4">
-                        <div class="col-md-6">
-                            <div class="p-3 bg-light rounded border">
-                                <h5 data-i18n="totalSales">إجمالي المبيعات</h5>
-                                <h3 id="report-total-sales" class="text-primary">0.000 د.ك</h3>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="p-3 bg-light rounded border">
-                                <h5 data-i18n="totalCommissions">إجمالي العمولات</h5>
-                                <h3 id="report-total-commissions" class="text-success">0.000 د.ك</h3>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h5 data-i18n="staffRepDetails">تفاصيل المبيعات والعمولات حسب الموظفة</h5>
-                    <div class="table-responsive">
-                        <table class="table table-striped text-center">
-                            <thead>
-                                <tr>
-                                    <th data-i18n="thStaff">الموظفة</th>
-                                    <th data-i18n="thRate">نسبة العمولة (%)</th>
-                                    <th data-i18n="thSalesVal">إجمالي المبيعات</th>
-                                    <th data-i18n="thCommShare">حصة العمولة (د.ك)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="report-staff-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- تبويب الإدارة -->
-        <div id="admin-tab" class="tab-content d-none">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header"><i class="fa-solid fa-concierge-bell me-2"></i><span data-i18n="manageServicesHeader">إدارة الخدمات الأساسية</span></div>
-                        <div class="card-body">
-                            <form id="service-form" onsubmit="saveService(event)" class="row g-2 mb-3">
-                                <input type="hidden" id="service-id">
-                                <div class="col-6"><input type="text" id="admin-service-name" class="form-control" placeholder="اسم الخدمة" data-i18n-placeholder="serviceNamePH" required></div>
-                                <div class="col-6"><input type="number" step="0.001" id="admin-service-price" class="form-control" placeholder="السعر" data-i18n-placeholder="servicePricePH" required></div>
-                                <div class="col-12">
-                                    <select id="admin-service-cat" class="form-select">
-                                        <option value="HAIR">HAIR</option>
-                                        <option value="NAILS">NAILS</option>
-                                        <option value="face">face</option>
-                                        <option value="STEAM BATH">STEAM BATH</option>
-                                        <option value="SPA">SPA</option>
-                                        <option value="BODY">BODY</option>
-                                        <option value="ASHTRAK">ASHTRAK</option>
-                                    </select>
-                                </div>
-                                <div class="col-12"><button class="btn btn-salon w-100" type="submit" data-i18n="saveServiceBtn">حفظ الخدمة</button></div>
-                            </form>
-                            <div class="table-responsive" style="max-height: 300px;">
-                                <table class="table table-sm text-center">
-                                    <thead><tr><th data-i18n="thName">الاسم</th><th data-i18n="thPrice">السعر</th><th data-i18n="thCat">الفئة</th><th data-i18n="thAction">إجراء</th></tr></thead>
-                                    <tbody id="admin-services-list"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header"><i class="fa-solid fa-users me-2"></i><span data-i18n="manageStaffHeader">إدارة العاملات والعمولات</span></div>
-                        <div class="card-body">
-                            <form id="staff-form" onsubmit="saveStaff(event)" class="row g-2 mb-3">
-                                <div class="col-6"><input type="text" id="admin-staff-name" class="form-control" placeholder="اسم الموظفة" data-i18n-placeholder="staffNamePH" required></div>
-                                <div class="col-6"><input type="number" id="admin-staff-rate" class="form-control" placeholder="نسبة العمولة %" data-i18n-placeholder="staffRatePH" required></div>
-                                <div class="col-12"><button class="btn btn-salon w-100" type="submit" data-i18n="saveStaffBtn">إضافة / تحديث الموظفة</button></div>
-                            </form>
-                            <div class="table-responsive">
-                                <table class="table table-sm text-center">
-                                    <thead><tr><th data-i18n="thStaff">الموظفة</th><th data-i18n="thRate">النسبة</th><th data-i18n="thAction">إجراء</th></tr></thead>
-                                    <tbody id="admin-staff-list"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- نافذة فواتير اليوم -->
-    <div id="today-invoices-modal-container">
-        <div class="today-invoices-box">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 style="color: #d63384; margin: 0;"><i class="fa-solid fa-calendar-day me-2"></i>فواتير اليوم المسجلة</h3>
-                <button class="btn-close" onclick="closeTodayInvoicesModal()"></button>
-            </div>
-            <p id="today-invoices-date-label" class="text-muted fw-bold mb-3"></p>
-            <div id="today-invoices-list-content" style="max-height: 60vh; overflow-y: auto;"></div>
-            <hr>
-            <button class="btn btn-secondary w-100 mt-2" onclick="closeTodayInvoicesModal()">إغلاق النافذة</button>
-        </div>
-    </div>
-
-    <!-- نافذة تقييم العميلة -->
-    <div id="eval-modal-container">
-        <div class="eval-box">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h3 style="color: #d63384; margin: 0;">BH Salon - تقييم الخدمات</h3>
-                <button class="btn-close" onclick="closeEvalModal()"></button>
-            </div>
-            <p id="eval-client-info" class="text-center text-muted fw-bold mb-3"></p>
-            <div id="eval-services-list"></div>
-            <textarea id="eval-client-notes" placeholder="أتركي لنا ملاحظتك أو اقتراحك (اختياري)..." class="form-control mb-3" rows="3"></textarea>
-            <button class="btn btn-success w-100 py-2 fs-5 mb-2" onclick="submitClientRatingToManager()">إرسال التقييم للمديرة عبر واتساب</button>
-            <button class="btn btn-outline-secondary w-100" onclick="closeEvalModal()">إغلاق النافذة</button>
-        </div>
-    </div>
-
     <script>
         // إعدادات ربط Firebase الحقيقية
         const firebaseConfig = {
@@ -527,7 +209,7 @@
             if(!document.getElementById('admin-tab').classList.contains('d-none')) { renderAdminServices(); renderAdminStaff(); }
         }
 
-        let services = [
+        let defaultServices = [
             { id: 101, name: "Blow Dry", price: 3.000, cat: "HAIR" },
             { id: 102, name: "Wavy", price: 5.000, cat: "HAIR" },
             { id: 103, name: "Hair Mask", price: 5.000, cat: "HAIR" },
@@ -572,7 +254,7 @@
             { id: 802, name: "mask + blowdry", price: 5.000, cat: "ASHTRAK", isSession: true }
         ];
 
-        let staff = [
+        let defaultStaff = [
             { id: 1, name: "mm", rate: 5 },
             { id: 2, name: "kl", rate: 5 },
             { id: 3, name: "bn", rate: 5 },
@@ -582,6 +264,8 @@
             { id: 7, name: "indr", rate: 5 }
         ];
 
+        let services = [];
+        let staff = [];
         let subscriptions = [];
         let invoices = JSON.parse(localStorage.getItem('bh_invoices_local')) || [];
         let cart = JSON.parse(localStorage.getItem('bh_cart_draft')) || [];
@@ -600,13 +284,23 @@
         }
 
         db.ref('bh_salon/services').on('value', snapshot => {
-            if(snapshot.exists()) services = Object.values(snapshot.val());
+            if(snapshot.exists()) {
+                services = Object.values(snapshot.val());
+            } else {
+                services = defaultServices;
+                db.ref('bh_salon/services').set(defaultServices);
+            }
             renderServices();
             renderAdminServices();
         });
 
         db.ref('bh_salon/staff').on('value', snapshot => {
-            if(snapshot.exists()) staff = Object.values(snapshot.val());
+            if(snapshot.exists()) {
+                staff = Object.values(snapshot.val());
+            } else {
+                staff = defaultStaff;
+                db.ref('bh_salon/staff').set(defaultStaff);
+            }
             updateStaffDropdowns();
             renderAdminStaff();
         });
@@ -963,6 +657,9 @@
                             </div>
                             <p class="small text-muted mb-1"><i class="fa-solid fa-phone me-1"></i>${inv.phone}</p>
                             ${itemsHtml}
+                            <button class="btn btn-info btn-sm text-white fw-bold w-100 mb-2" onclick="editInvoice(${inv.id})">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> تعديل الفاتورة
+                            </button>
                             <button class="btn btn-warning btn-sm text-dark fw-bold w-100 mb-2" onclick="openEvalModalForInvoice(${inv.id})">
                                 <i class="fa-solid fa-star me-1"></i> فتح نافذة تقييم الخدمات للعميلة
                             </button>
@@ -973,6 +670,31 @@
                     </div>
                 `;
             });
+        }
+
+        // دالة جديدة لتعديل الفاتورة وإعادتها إلى السلة
+        function editInvoice(invoiceId) {
+            const invIndex = invoices.findIndex(i => i.id === invoiceId);
+            if (invIndex === -1) return alert('الفاتورة غير موجودة!');
+
+            const inv = invoices[invIndex];
+
+            // تعبئة حقول المدخلات الرئيسية بالبيانات القديمة
+            document.getElementById('cust-name').value = inv.customer;
+            document.getElementById('cust-phone').value = inv.phone;
+
+            // إرجاع العناصر إلى السلة
+            cart = [...inv.items];
+            renderCart();
+
+            // حذف الفاتورة القديمة من السجل مؤقتاً لتجنب تكرارها، ثم حفظ التحديثات
+            invoices.splice(invIndex, 1);
+            saveDataToFirebase();
+
+            // إغلاق نافذة فواتير اليوم لنقل التركيز إلى الشاشة الرئيسية للتعديل
+            closeTodayInvoicesModal();
+
+            alert('تم جلب بيانات الفاتورة إلى السلة بنجاح. يمكنك التعديل ثم الضغط على حفظ الفاتورة.');
         }
 
         function openEvalModalForInvoice(invoiceId) {
@@ -1331,8 +1053,4 @@
             if(fromEl) fromEl.value = today;
             if(toEl) toEl.value = today;
         };
-     const db = firebase.database();       
-</script>
-
-</body>
-</html>
+    </script>
