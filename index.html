@@ -17,7 +17,6 @@
         .card-header { background-color: #f1f3f5; font-weight: bold; }
         .btn-salon { background-color: #d63384; color: white; }
         .btn-salon:hover { background-color: #b8216b; color: white; }
-        /* تخصيص زر الـ Owner باللون الوردي */
         .btn-owner-pink { background-color: #ff69b4; color: white; border: none; }
         .btn-owner-pink:hover { background-color: #ff1493; color: white; }
         .phone-input-group .input-group-text { background-color: #e9ecef; font-weight: bold; direction: ltr; }
@@ -558,7 +557,6 @@
             if(savedPhone) document.getElementById('cust-phone').value = savedPhone;
         }
 
-        // دالة البحث التلقائي عن اسم العميلة ورقمها من الفواتير السابقة أو الاشتراكات
         function checkExistingClient() {
             const rawPhone = document.getElementById('cust-phone').value;
             const cleanP = cleanPhone(rawPhone);
@@ -567,7 +565,6 @@
 
             const nameInput = document.getElementById('cust-name');
             
-            // 1. البحث أولاً في سجل الاشتراكات السابقة
             let foundSub = subscriptions.find(s => cleanPhone(s.phone) === cleanP);
             if (foundSub && foundSub.name) {
                 nameInput.value = foundSub.name;
@@ -575,7 +572,6 @@
                 return;
             }
 
-            // 2. البحث ثانياً في الفواتير السابقة المسجلة
             let foundInvoice = invoices.slice().reverse().find(inv => cleanPhone(inv.phone) === cleanP);
             if (foundInvoice && foundInvoice.customer) {
                 nameInput.value = foundInvoice.customer;
@@ -606,9 +602,11 @@
                 staff = Object.values(snapshot.val());
             } else {
                 staff = [
-                    { id: 1, name: "mm", rate: 8 },
-                    { id: 2, name: "kl", rate: 8 },
-                    { id: 3, name: "bn", rate: 8 }
+                    { id: 1, name: "Mm", rate: 5 },
+                    { id: 2, name: "Bn", rate: 5 },
+                    { id: 3, name: "Kl", rate: 5 },
+                    { id: 4, name: "Nrm", rate: 5 },
+                    { id: 5, name: "Mlk", rate: 5 }
                 ];
             }
             updateStaffDropdowns();
@@ -622,7 +620,12 @@
 
         db.ref('bh_salon/invoices').on('value', snapshot => {
             if(snapshot.exists()) {
-                invoices = Object.values(snapshot.val());
+                const data = snapshot.val();
+                if (Array.isArray(data)) {
+                    invoices = data;
+                } else {
+                    invoices = Object.values(data);
+                }
             } else {
                 invoices = [];
             }
@@ -674,7 +677,6 @@
             });
         }
 
-        // دالة جديدة لمسح واختيار الموظفات تماماً بعد حفظ الفاتورة أو التفعيل
         function clearAllStaffSelections() {
             document.querySelectorAll('.staff-select').forEach(sel => {
                 sel.selectedIndex = -1;
@@ -777,8 +779,6 @@
 
             saveDataToFirebase();
             renderCart();
-            
-            // مسح اختيار الموظفة من قسم الباقات تلقائياً
             staffSel.selectedIndex = -1;
 
             alert(t.subActiveAlert);
@@ -810,14 +810,13 @@
                 }
 
                 itemPrice = 0.000;
-                let nextSessionNum = sub.used + 1;
+                let nextSessionNum = (sub.used || 0) + 1;
                 itemName = `${s.name} - Session ${nextSessionNum}`;
             }
 
             cart.push({ ...s, name: itemName, baseName: s.name, price: itemPrice, originalPrice: s.price, staff: selectedStaff, qty: 1 });
             renderCart();
 
-            // مسح اختيار الموظفات للخدمة المضافة فوراً بعد إضافتها للسلة لعدم تكرارها بالغخطاء
             if(selectEl) selectEl.selectedIndex = -1;
         }
 
@@ -835,7 +834,7 @@
             renderCart();
             document.getElementById('custom-name').value = '';
             document.getElementById('custom-price').value = '';
-            selectEl.selectedIndex = -1; // مسح الاختيار
+            selectEl.selectedIndex = -1;
         }
 
         function renderCart() {
@@ -886,9 +885,9 @@
                 if(item.cat === 'ASHTRAK' && item.price === 0) {
                     let targetSub = subscriptions.find(s => cleanPhone(s.phone) === cleanP && item.name.includes(s.subType));
 
-                    if (targetSub && targetSub.remaining > 0) {
-                        targetSub.used += 1;
-                        targetSub.remaining -= 1;
+                    if (targetSub && (targetSub.remaining || 0) > 0) {
+                        targetSub.used = (targetSub.used || 0) + 1;
+                        targetSub.remaining = (targetSub.remaining || 0) - 1;
                         if(!targetSub.history) targetSub.history = [];
                         const staffStr = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
                         targetSub.history.push(`Session ${targetSub.used}: ${dateTimeStr} by (${staffStr})`);
@@ -915,14 +914,12 @@
             document.getElementById('cust-name').value = '';
             document.getElementById('cust-phone').value = '';
             
-            // مسح جميع اختيارات الموظفات من الشاشة بالكامل بعد حفظ الفاتورة بنجاح
             clearAllStaffSelections();
-
             renderCart();
         }
 
         function editInvoice(invoiceId) {
-            const inv = invoices.find(i => i.id === invoiceId);
+            const inv = invoices.find(i => String(i.id) === String(invoiceId));
             if(!inv) return alert('الفاتورة غير موجودة!');
 
             document.getElementById('cust-name').value = inv.customer;
@@ -932,7 +929,7 @@
             renderCart();
             saveDraftInputs();
 
-            invoices = invoices.filter(i => i.id !== invoiceId);
+            invoices = invoices.filter(i => String(i.id) !== String(invoiceId));
             saveDataToFirebase();
 
             closeTodayInvoicesModal();
@@ -940,8 +937,24 @@
             alert('تم جلب بيانات الفاتورة إلى السلة لتعديلها. يرجى الضغط على "حفظ الفاتورة" عند الانتهاء.');
         }
 
+        // دالة محدثة بالكامل لحذف أي فاتورة نهائياً من الذاكرة وفايبربيس بغض النظر عن نوع المعرف
+        function deleteInvoice(invoiceId) {
+            if (confirm("هل أنت متأكدة من رغبتك في حذف هذه الفاتورة نهائياً؟ سيتم تحديث إجمالي المبيعات اليومية مباشرة.")) {
+                invoices = invoices.filter(i => String(i.id) !== String(invoiceId));
+                
+                // تحديث مباشر في قاعدة البيانات السحابية مع ضمان إعادة هيكلة المصفوفة
+                db.ref('bh_salon/invoices').set(invoices.length > 0 ? invoices : null)
+                .then(() => {
+                    renderTodayInvoicesModalContent();
+                })
+                .catch(error => {
+                    alert("حدث خطأ أثناء الحذف: " + error.message);
+                });
+            }
+        }
+
         function sendInvoiceToCustomerWhatsapp(invoiceId) {
-            const inv = invoices.find(i => i.id === invoiceId);
+            const inv = invoices.find(i => String(i.id) === String(invoiceId));
             if(!inv) return alert('الفاتورة غير موجودة!');
 
             const cleanP = cleanPhone(inv.phone);
@@ -994,7 +1007,7 @@
             let totalTodaySales = 0;
 
             todayInvoices.forEach(inv => {
-                totalTodaySales += inv.total;
+                totalTodaySales += Number(inv.total) || 0;
             });
 
             document.getElementById('today-invoices-total-sales').innerText = `إجمالي المبيعات اليومية: ${totalTodaySales.toFixed(3)} ${currencySymbol}`;
@@ -1006,10 +1019,12 @@
 
             todayInvoices.forEach((inv, index) => {
                 let itemsHtml = '<ul class="list-unstyled small mb-2">';
-                inv.items.forEach(item => {
-                    let staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
-                    itemsHtml += `<li>• ${item.name} (${item.price.toFixed(3)} ${currencySymbol}) - <span class="text-primary">${staffDisplay}</span></li>`;
-                });
+                if (inv.items && Array.isArray(inv.items)) {
+                    inv.items.forEach(item => {
+                        let staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
+                        itemsHtml += `<li>• ${item.name} (${item.price.toFixed(3)} ${currencySymbol}) - <span class="text-primary">${staffDisplay}</span></li>`;
+                    });
+                }
                 itemsHtml += '</ul>';
 
                 container.innerHTML += `
@@ -1017,19 +1032,23 @@
                         <div class="card-body p-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="mb-0 fw-bold">الفاتورة #${index + 1} - العميلة: ${inv.customer}</h6>
-                                <span class="badge bg-primary">${inv.total.toFixed(3)} ${currencySymbol}</span>
+                                <span class="badge bg-primary">${Number(inv.total).toFixed(3)} ${currencySymbol}</span>
                             </div>
                             <p class="small text-muted mb-1"><i class="fa-solid fa-phone me-1"></i>${inv.phone}</p>
                             ${itemsHtml}
                             <div class="d-flex gap-2 mb-2">
-                                <button class="btn btn-secondary btn-sm flex-grow-1 fw-bold" onclick="editInvoice(${inv.id})">
+                                <button class="btn btn-secondary btn-sm flex-grow-1 fw-bold" onclick="editInvoice('${inv.id}')">
                                     <i class="fa-solid fa-pen-to-square me-1"></i> تعديل الفاتورة
                                 </button>
-                                <button class="btn btn-warning btn-sm text-dark fw-bold flex-grow-1" onclick="openEvalModalForInvoice(${inv.id})">
+                                <button class="btn btn-warning btn-sm text-dark fw-bold flex-grow-1" onclick="openEvalModalForInvoice('${inv.id}')">
                                     <i class="fa-solid fa-star me-1"></i> تقييم الخدمات
                                 </button>
+                                <!-- زر حذف الفاتورة الفعال -->
+                                <button class="btn btn-danger btn-sm fw-bold" onclick="deleteInvoice('${inv.id}')">
+                                    <i class="fa-solid fa-trash me-1"></i> حذف
+                                </button>
                             </div>
-                            <button class="btn btn-success btn-sm w-100" onclick="sendInvoiceToCustomerWhatsapp(${inv.id})">
+                            <button class="btn btn-success btn-sm w-100" onclick="sendInvoiceToCustomerWhatsapp('${inv.id}')">
                                 <i class="fa-brands fa-whatsapp me-1"></i> إرسال الفاتورة للعميلة واتساب
                             </button>
                         </div>
@@ -1039,7 +1058,7 @@
         }
 
         function openEvalModalForInvoice(invoiceId) {
-            const inv = invoices.find(i => i.id === invoiceId);
+            const inv = invoices.find(i => String(i.id) === String(invoiceId));
             if(!inv) return alert('الفاتورة غير موجودة!');
 
             activeEvalData = {
@@ -1140,22 +1159,33 @@
                 return alert(`لا توجد فواتير مسجلة لهذا اليوم (${todayStr}) لإرسالها.`);
             }
 
-            let msg = `*Bh salon - إجمالي فواتير اليوم*\n📅 التاريخ: ${todayStr}\n==================================\n`;
+            let msg = `*Bh salon - فواتير اليوم*\n📅 ${todayStr}\n----------------------------------\n`;
             let grandTotal = 0;
 
             todayInvoices.forEach((inv, idx) => {
-                grandTotal += inv.total;
-                msg += `فاتورة (${idx + 1})\n- العميلة: *${inv.customer}*\n- الهاتف: ${inv.phone}\n- الخدمات:\n`;
+                grandTotal += Number(inv.total) || 0;
+                msg += `فاتورة (${idx + 1})\n• العميلة: *${inv.customer}*\n• الهاتف: ${inv.phone}\n• الخدمات:\n`;
+                
                 if(inv.items && Array.isArray(inv.items)) {
                     inv.items.forEach(item => {
                         let staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
-                        msg += `  • ${item.name} | السعر: ${item.price.toFixed(3)} د.ك | الموظفة: (${staffDisplay})\n`;
+                        
+                        let displayName = item.name;
+                        if (item.cat === 'ASHTRAK' || item.name.includes('Session')) {
+                            let subMatch = subscriptions.find(s => cleanPhone(s.phone) === cleanPhone(inv.phone) && item.name.includes(s.subType));
+                            let currentUsed = subMatch ? (subMatch.used || 1) : 1;
+                            displayName = `اشتراك [${currentUsed}/5]`;
+                        } else if (item.cat === 'PACKAGE_PURCHASE') {
+                            displayName = `شراء كارت اشتراك [1/5]`;
+                        }
+
+                        msg += `  - ${displayName} | ${Number(item.price).toFixed(3)} د.ك | (${staffDisplay})\n`;
                     });
                 }
-                msg += `- *الإجمالي: ${inv.total.toFixed(3)} د.ك*\n----------------------------------\n`;
+                msg += `• الإجمالي: *${Number(inv.total).toFixed(3)} د.ك*\n----------------------------------\n`;
             });
 
-            msg += `\n💰 *إجمالي مبيعات الشفت اليومي: ${grandTotal.toFixed(3)} د.ك*`;
+            msg += `\n💰 *إجمالي مبيعات اليوم: ${grandTotal.toFixed(3)} د.ك*`;
 
             const managerPhone = "96569977533";
             window.open(`https://wa.me/${managerPhone}?text=` + encodeURIComponent(msg), '_blank');
@@ -1166,13 +1196,17 @@
             const tbody = document.getElementById('subscriptions-table-body');
             if(!tbody) return;
             tbody.innerHTML = '';
+            
             subscriptions.forEach(s => {
-                const isFinished = s.remaining === 0;
+                const remainingVal = (s.remaining !== undefined && s.remaining !== null) ? s.remaining : 4;
+                const usedVal = (s.used !== undefined && s.used !== null) ? s.used : 1;
+                const isFinished = remainingVal === 0;
                 const rowClass = isFinished ? 'table-danger' : '';
                 const statusHtml = isFinished ? `<span class="text-danger fw-bold">${t.finishedText}</span>` : `<span class="text-success fw-bold">${t.activeText}</span>`;
-                
+                const subTypeDisplay = s.subType ? s.subType : '<span class="text-danger">غير محدد</span>';
+
                 let historyHtml = '<ul class="list-unstyled small text-start m-0 p-0">';
-                if(s.history && s.history.length > 0) {
+                if(s.history && Array.isArray(s.history) && s.history.length > 0) {
                     s.history.forEach(h => { historyHtml += `<li>• ${h}</li>`; });
                 } else {
                     historyHtml += `<li>${t.noHistoryText}</li>`;
@@ -1181,14 +1215,14 @@
 
                 tbody.innerHTML += `
                     <tr class="${rowClass}">
-                        <td>${s.name}</td>
-                        <td dir="ltr" class="text-center">${s.phone}</td>
-                        <td>${s.subType}</td>
-                        <td>${s.used} / 5</td>
+                        <td>${s.name || 'بدون اسم'}</td>
+                        <td dir="ltr" class="text-center">${s.phone || ''}</td>
+                        <td>${subTypeDisplay}</td>
+                        <td>${usedVal} / 5</td>
                         <td>${historyHtml}</td>
-                        <td>${s.remaining}</td>
+                        <td>${remainingVal}</td>
                         <td>${statusHtml}</td>
-                        <td><button class="btn btn-sm btn-outline-danger" onclick="deleteSubscription(${s.id})"><i class="fa-solid fa-trash me-1"></i>${t.deleteText}</button></td>
+                        <td><button class="btn btn-sm btn-outline-danger" onclick="deleteSubscription('${s.id}')"><i class="fa-solid fa-trash me-1"></i>${t.deleteText}</button></td>
                     </tr>
                 `;
             });
@@ -1197,7 +1231,7 @@
         function deleteSubscription(id) {
             const t = translations[currentLang];
             if(confirm(t.deleteSubConfirm)) {
-                subscriptions = subscriptions.filter(s => s.id !== id);
+                subscriptions = subscriptions.filter(s => String(s.id) !== String(id));
                 saveDataToFirebase();
                 renderSubscriptions();
             }
@@ -1206,10 +1240,24 @@
         function sendSubscriptionsWhatsapp() {
             if (subscriptions.length === 0) return alert('No subscriptions found.');
             let msg = `*Bh salon - Subscriptions Log*\n----------------------------------\n`;
+            
             subscriptions.forEach((s, idx) => {
-                let statusText = s.remaining === 0 ? 'Finished (5/5)' : `Active (${s.used}/5)`;
-                msg += `${idx + 1}. ${s.name}\n${s.phone}\n${statusText}\n----------------------------------\n`;
+                const remainingVal = (s.remaining !== undefined && s.remaining !== null) ? s.remaining : 4;
+                const usedVal = (s.used !== undefined && s.used !== null) ? s.used : 1;
+                let statusText = remainingVal === 0 ? 'Finished (5/5)' : `Active (${usedVal}/5)`;
+                
+                let pkgPriceText = "";
+                if (s.subType === 'Hair Mask') {
+                    pkgPriceText = "15.000 د.ك (باقة ماسك للشعر)";
+                } else if (s.subType === 'mask + blowdry') {
+                    pkgPriceText = "20.000 د.ك (باقة ماسك + ستشوار)";
+                } else {
+                    pkgPriceText = s.subType || "غير محدد";
+                }
+
+                msg += `${idx + 1}. العميلة: *${s.name}*\n📞 الهاتف: ${s.phone}\n📦 الباقة: *${pkgPriceText}*\n🔄 الحالة: ${statusText}\n----------------------------------\n`;
             });
+            
             window.open(`https://wa.me/96569977533?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
@@ -1224,27 +1272,42 @@
 
             let totalSales = 0;
             let staffStats = {};
-            staff.forEach(st => staffStats[st.name] = { sales: 0, rate: st.rate, commission: 0, servicesCount: 0 });
+            
+            staff.forEach(st => {
+                staffStats[st.name] = { sales: 0, rate: Number(st.rate) || 0, commission: 0, servicesCount: 0 };
+            });
 
             filteredInvoices.forEach(inv => {
-                totalSales += inv.total;
+                totalSales += Number(inv.total) || 0;
 
-                inv.items.forEach(item => {
-                    const basePrice = item.originalPrice !== undefined ? item.originalPrice : item.price;
-                    const lineValueForCommission = basePrice * item.qty;
-                    const staffList = Array.isArray(item.staff) ? item.staff : [item.staff];
-                    
-                    if (staffList.length > 0) {
-                        const splitSales = lineValueForCommission / staffList.length;
-                        const splitCount = item.qty / staffList.length;
-                        staffList.forEach(stName => { 
-                            if(staffStats[stName]) {
+                if(inv.items && Array.isArray(inv.items)) {
+                    inv.items.forEach(item => {
+                        const basePrice = item.originalPrice !== undefined ? Number(item.originalPrice) : Number(item.price);
+                        const lineValueForCommission = (isNaN(basePrice) ? 0 : basePrice) * (Number(item.qty) || 1);
+                        
+                        let staffList = [];
+                        if (Array.isArray(item.staff)) {
+                            staffList = item.staff;
+                        } else if (typeof item.staff === 'string' && item.staff.trim() !== '') {
+                            staffList = [item.staff];
+                        }
+                        
+                        if (staffList.length > 0) {
+                            const splitSales = lineValueForCommission / staffList.length;
+                            const splitCount = (Number(item.qty) || 1) / staffList.length;
+                            
+                            staffList.forEach(stName => {
+                                if(!staffStats[stName]) {
+                                    let foundRateStaff = staff.find(s => s.name === stName);
+                                    let stRate = foundRateStaff ? (Number(foundRateStaff.rate) || 5) : 5;
+                                    staffStats[stName] = { sales: 0, rate: stRate, commission: 0, servicesCount: 0 };
+                                }
                                 staffStats[stName].sales += splitSales;
                                 staffStats[stName].servicesCount += splitCount;
-                            } 
-                        });
-                    }
-                });
+                            });
+                        }
+                    });
+                }
             });
 
             let totalCommission = 0;
@@ -1291,25 +1354,40 @@
 
             let totalSales = 0;
             let staffStats = {};
-            staff.forEach(st => staffStats[st.name] = { sales: 0, rate: st.rate, commission: 0, servicesCount: 0 });
+            staff.forEach(st => {
+                staffStats[st.name] = { sales: 0, rate: Number(st.rate) || 0, commission: 0, servicesCount: 0 };
+            });
 
             filteredInvoices.forEach(inv => {
-                totalSales += inv.total;
-                inv.items.forEach(item => {
-                    const basePrice = item.originalPrice !== undefined ? item.originalPrice : item.price;
-                    const lineValue = basePrice * item.qty;
-                    const staffList = Array.isArray(item.staff) ? item.staff : [item.staff];
-                    if (staffList.length > 0) {
-                        const splitSales = lineValue / staffList.length;
-                        const splitCount = item.qty / staffList.length;
-                        staffList.forEach(stName => { 
-                            if(staffStats[stName]) {
+                totalSales += Number(inv.total) || 0;
+                if(inv.items && Array.isArray(inv.items)) {
+                    inv.items.forEach(item => {
+                        const basePrice = item.originalPrice !== undefined ? Number(item.originalPrice) : Number(item.price);
+                        const lineValue = (isNaN(basePrice) ? 0 : basePrice) * (Number(item.qty) || 1);
+                        
+                        let staffList = [];
+                        if (Array.isArray(item.staff)) {
+                            staffList = item.staff;
+                        } else if (typeof item.staff === 'string' && item.staff.trim() !== '') {
+                            staffList = [item.staff];
+                        }
+
+                        if (staffList.length > 0) {
+                            const splitSales = lineValue / staffList.length;
+                            const splitCount = (Number(item.qty) || 1) / staffList.length;
+                            
+                            staffList.forEach(stName => {
+                                if(!staffStats[stName]) {
+                                    let foundRateStaff = staff.find(s => s.name === stName);
+                                    let stRate = foundRateStaff ? (Number(foundRateStaff.rate) || 5) : 5;
+                                    staffStats[stName] = { sales: 0, rate: stRate, commission: 0, servicesCount: 0 };
+                                }
                                 staffStats[stName].sales += splitSales;
                                 staffStats[stName].servicesCount += splitCount;
-                            } 
-                        });
-                    }
-                });
+                            });
+                        }
+                    });
+                }
             });
 
             let totalCommission = 0;
@@ -1340,7 +1418,7 @@
                         <td>${s.name}</td>
                         <td>${s.price.toFixed(3)}</td>
                         <td>${s.cat}</td>
-                        <td><button class="btn btn-sm btn-danger" onclick="deleteService(${s.id})">${t.deleteText}</button></td>
+                        <td><button class="btn btn-sm btn-danger" onclick="deleteService('${s.id}')">${t.deleteText}</button></td>
                     </tr>
                 `;
             });
@@ -1358,7 +1436,7 @@
         }
 
         function deleteService(id) {
-            services = services.filter(s => s.id !== id);
+            services = services.filter(s => String(s.id) !== String(id));
             saveDataToFirebase();
         }
 
@@ -1372,7 +1450,7 @@
                     <tr>
                         <td>${st.name}</td>
                         <td>${st.rate}%</td>
-                        <td><button class="btn btn-sm btn-danger" onclick="deleteStaff(${st.id})">${t.deleteText}</button></td>
+                        <td><button class="btn btn-sm btn-danger" onclick="deleteStaff('${st.id}')">${t.deleteText}</button></td>
                     </tr>
                 `;
             });
@@ -1395,7 +1473,7 @@
         }
 
         function deleteStaff(id) {
-            staff = staff.filter(s => s.id !== id);
+            staff = staff.filter(s => String(s.id) !== String(id));
             saveDataToFirebase();
         }
 
