@@ -7,9 +7,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" id="bootstrap-css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- مكتبات Firebase السحابية -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <!-- مكتبة منصة Puter السحابية -->
+    <script src="https://js.puter.com/v2/puter.js"></script>
 
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -27,6 +26,8 @@
         .stars-group { display: flex; gap: 5px; font-size: 28px; cursor: pointer; direction: ltr; justify-content: flex-end; }
         .star-icon { color: #ccc; transition: color 0.2s; }
         .star-icon.active { color: #ffc107; }
+        .auth-status-badge { font-size: 0.85rem; padding: 6px 12px; cursor: pointer; transition: all 0.2s; }
+        .auth-status-badge:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -34,9 +35,10 @@
     <!-- شريط التنقل -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
         <div class="container-fluid">
-            <div class="d-flex align-items-center">
-                <a class="navbar-brand fs-3 me-3" href="#"><i class="fa-solid fa-scissors me-2"></i>Bh salon</a>
+            <div class="d-flex align-items-center gap-2">
+                <a class="navbar-brand fs-3 me-2" href="#"><i class="fa-solid fa-scissors me-2"></i>Bh salon</a>
                 <button class="btn btn-outline-secondary btn-sm" onclick="toggleLanguage()"><i class="fa-solid fa-globe me-1"></i><span id="lang-btn-text">English</span></button>
+                <span id="cloud-status" class="badge bg-secondary auth-status-badge" onclick="manualLoginPuter()"><i class="fa-solid fa-cloud me-1"></i>جاري الاتصال بالسحابة...</span>
             </div>
             <div class="navbar-nav">
                 <button class="nav-link btn btn-link active" onclick="showTab('invoice-tab')" data-i18n="navInvoice">الفاتورة والخدمات</button>
@@ -126,16 +128,18 @@
 
                 <div class="col-md-7">
                     <div class="card shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <span><i class="fa-solid fa-list me-2"></i><span data-i18n="servicesListHeader">قائمة الخدمات وصرف الجلسات المجانية</span></span>
+                        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <span><i class="fa-solid fa-list me-2"></i><span data-i18n="servicesListHeader">قائمة الخدمات وصرف الجلسات</span></span>
                             <select id="category-filter" class="form-select w-auto" onchange="renderServices()">
                                 <option value="ALL" data-i18n="catAll">جميع الفئات</option>
                                 <option value="HAIR">HAIR</option>
                                 <option value="NAILS">NAILS</option>
                                 <option value="face">face</option>
-                                <option value="STEAM BATH">STEAM BATH</option>
+                                <option value="BATH">BATH</option>
                                 <option value="SPA">SPA</option>
+                                <option value="MASSAGE">MASSAGE</option>
                                 <option value="BODY">BODY</option>
+                                <option value="PACKEG">PACKEG</option>
                                 <option value="ASHTRAK" data-i18n="catAshtrak">ASHTRAK (صرف جلسات الكارت)</option>
                             </select>
                         </div>
@@ -233,6 +237,42 @@
 
         <!-- تبويب الإدارة -->
         <div id="admin-tab" class="tab-content d-none">
+            <!-- قسم النسخ الاحتياطي والحماية من الضياع -->
+            <div class="card shadow-sm mb-4 border-primary">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fa-solid fa-shield-halved me-2"></i>حماية البيانات والنسخ الاحتياطي السحابي/المحلي</span>
+                    <span class="badge bg-light text-dark" id="admin-auth-account">غير مسجل</span>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">
+                        يمكنك دائماً تنزيل نسخة احتياطية من جميع الخدمات والبيانات كملف، أو إعادة مزامنة وتثبيت القوائم الأساسية المحدثة.
+                    </p>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100 fw-bold" onclick="exportBackup()">
+                                <i class="fa-solid fa-download me-2"></i>تنزيل نسخة (JSON)
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="btn btn-outline-warning text-dark w-100 fw-bold mb-0">
+                                <i class="fa-solid fa-upload me-2"></i>استرجاع نسخة
+                                <input type="file" id="backup-file-input" accept=".json" style="display: none;" onchange="importBackup(event)">
+                            </label>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info w-100 fw-bold text-dark" onclick="forceSyncWithCloud()">
+                                <i class="fa-solid fa-arrows-rotate me-2"></i>مزامنة مع السحابة
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-danger w-100 fw-bold" onclick="resetToUpdatedServices()">
+                                <i class="fa-solid fa-rotate-left me-2"></i>إعادة ضبط الخدمات الجديدة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
                 <div class="col-md-6">
                     <div class="card shadow-sm mb-4">
@@ -247,9 +287,11 @@
                                         <option value="HAIR">HAIR</option>
                                         <option value="NAILS">NAILS</option>
                                         <option value="face">face</option>
-                                        <option value="STEAM BATH">STEAM BATH</option>
+                                        <option value="BATH">BATH</option>
                                         <option value="SPA">SPA</option>
+                                        <option value="MASSAGE">MASSAGE</option>
                                         <option value="BODY">BODY</option>
+                                        <option value="PACKEG">PACKEG</option>
                                         <option value="ASHTRAK">ASHTRAK</option>
                                     </select>
                                 </div>
@@ -267,7 +309,12 @@
 
                 <div class="col-md-6">
                     <div class="card shadow-sm mb-4">
-                        <div class="card-header"><i class="fa-solid fa-users me-2"></i><span data-i18n="manageStaffHeader">إدارة العاملات والعمولات</span></div>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fa-solid fa-users me-2"></i><span data-i18n="manageStaffHeader">إدارة العاملات والعمولات</span></span>
+                            <button class="btn btn-outline-primary btn-sm fw-bold" onclick="resetToUpdatedStaff()">
+                                <i class="fa-solid fa-sync me-1"></i>تحديث وتثبيت قائمة العاملات
+                            </button>
+                        </div>
                         <div class="card-body">
                             <form id="staff-form" onsubmit="saveStaff(event)" class="row g-2 mb-3">
                                 <div class="col-6"><input type="text" id="admin-staff-name" class="form-control" placeholder="اسم الموظفة" data-i18n-placeholder="staffNamePH" required></div>
@@ -301,7 +348,6 @@
                 <span id="today-invoices-total-sales" class="fw-bold text-primary">إجمالي المبيعات: 0.000 د.ك</span>
             </div>
 
-            <!-- زر Owner باللون الوردي لإرسال إجمالي فواتير اليوم والشفت للمديرة -->
             <div class="mb-3">
                 <button class="btn btn-owner-pink w-100 fw-bold py-2 shadow-sm" onclick="sendAllInvoicesToManager()">
                     <i class="fa-brands fa-whatsapp me-2"></i> Owner
@@ -330,21 +376,6 @@
     </div>
 
     <script>
-        // إعدادات ربط Firebase الحقيقية والمزامنة اللحظية
-        const firebaseConfig = {
-          apiKey: "AIzaSyCj32hE_3we6AOtIYdrArEUOHY03U96uYQ",
-          authDomain: "date-a81ed.firebaseapp.com",
-          databaseURL: "https://date-a81ed-default-rtdb.firebaseio.com",
-          projectId: "date-a81ed",
-          storageBucket: "date-a81ed.firebasestorage.app",
-          messagingSenderId: "1080232485188",
-          appId: "1:1080232485188:web:7eb7dd853cd026fc5cb711",
-          measurementId: "G-FJV29W0YBF"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
         const translations = {
             ar: {
                 navInvoice: "الفاتورة والخدمات",
@@ -370,7 +401,7 @@
                 customQtyPH: "العدد",
                 staffMultiLabel: "الموظفات (Ctrl للمتعدد)",
                 addToCartBtn: "إضافة للفاتورة",
-                servicesListHeader: "قائمة الخدمات وصرف الجلسات المجانية",
+                servicesListHeader: "قائمة الخدمات وصرف الجلسات",
                 catAll: "جميع الفئات",
                 catAshtrak: "ASHTRAK (صرف جلسات الكارت)",
                 addCartGrid: "إضافة للفاتورة",
@@ -538,12 +569,276 @@
             if(!document.getElementById('admin-tab').classList.contains('d-none')) { renderAdminServices(); renderAdminStaff(); }
         }
 
+        function getDefaultServices() {
+            return [
+                { id: 101, name: "Blow Dry (قصير)", price: 3.000, cat: "HAIR" },
+                { id: 102, name: "Blow Dry (وسط)", price: 5.000, cat: "HAIR" },
+                { id: 103, name: "Blow Dry (طويل)", price: 7.000, cat: "HAIR" },
+                { id: 104, name: "Wavy (قصير)", price: 5.000, cat: "HAIR" },
+                { id: 105, name: "Wavy (وسط)", price: 7.000, cat: "HAIR" },
+                { id: 106, name: "Wavy (طويل)", price: 10.000, cat: "HAIR" },
+                { id: 107, name: "Hair Mask", price: 5.000, cat: "HAIR" },
+                { id: 108, name: "color rot", price: 10.000, cat: "HAIR" },
+                { id: 109, name: "color 1", price: 20.000, cat: "HAIR" },
+                { id: 110, name: "color 2", price: 30.000, cat: "HAIR" },
+                { id: 111, name: "tksir (وسط)", price: 7.000, cat: "HAIR" },
+                { id: 112, name: "tksir (طويل)", price: 10.000, cat: "HAIR" },
+                { id: 113, name: "style tsriha (عادي)", price: 10.000, cat: "HAIR" },
+                { id: 114, name: "style tsriha (سهرة)", price: 15.000, cat: "HAIR" },
+                { id: 115, name: "wash tretment", price: 5.000, cat: "HAIR" },
+                { id: 116, name: "tretment", price: 10.000, cat: "HAIR" },
+                { id: 117, name: "scrab", price: 5.000, cat: "HAIR" },
+                { id: 118, name: "cut", price: 5.000, cat: "HAIR" },
+                { id: 119, name: "cut strait", price: 2.000, cat: "HAIR" },
+
+                { id: 201, name: "Pedicure", price: 2.500, cat: "NAILS" },
+                { id: 202, name: "Manicure", price: 2.500, cat: "NAILS" },
+                { id: 203, name: "Pedi / Mani", price: 5.000, cat: "NAILS" },
+                { id: 204, name: "Nail Polish (عادي)", price: 1.000, cat: "NAILS" },
+                { id: 205, name: "Nail Polish (جل)", price: 2.000, cat: "NAILS" },
+                { id: 206, name: "Russian Pedicure/Manicure", price: 10.000, cat: "NAILS" },
+                { id: 207, name: "Removal", price: 10.000, cat: "NAILS" },
+                { id: 208, name: "Russian", price: 5.000, cat: "NAILS" },
+                { id: 209, name: "frinsh", price: 3.000, cat: "NAILS" },
+                { id: 210, name: "art", price: 5.000, cat: "NAILS" },
+                { id: 211, name: "3D", price: 10.000, cat: "NAILS" },
+                { id: 212, name: "trkib normal", price: 5.000, cat: "NAILS" },
+                { id: 213, name: "extention", price: 10.000, cat: "NAILS" },
+
+                { id: 301, name: "haf face", price: 3.000, cat: "face" },
+                { id: 302, name: "tahger hwjb", price: 2.000, cat: "face" },
+                { id: 303, name: "haf shnb / hwjb", price: 1.000, cat: "face" },
+
+                { id: 401, name: "Steam Bath", price: 10.000, cat: "BATH" },
+
+                { id: 501, name: "Head Spa", price: 10.000, cat: "SPA" },
+                { id: 502, name: "add face or tretment", price: 5.000, cat: "SPA" },
+                { id: 503, name: "head face tretment", price: 20.000, cat: "SPA" },
+
+                { id: 601, name: "massage full body", price: 10.000, cat: "MASSAGE" },
+                { id: 602, name: "massage 1/2 body", price: 5.000, cat: "MASSAGE" },
+
+                { id: 701, name: "shira full body", price: 10.000, cat: "BODY" },
+                { id: 702, name: "shira 1/2 body", price: 5.000, cat: "BODY" },
+
+                { id: 801, name: "packeg 15 KD", price: 15.000, cat: "PACKEG" },
+                { id: 802, name: "packeg 20 KD", price: 20.000, cat: "PACKEG" },
+
+                { id: 901, name: "Hair Mask", price: 5.000, cat: "ASHTRAK", isSession: true },
+                { id: 902, name: "mask + blowdry", price: 5.000, cat: "ASHTRAK", isSession: true }
+            ];
+        }
+
+        function getDefaultStaff() {
+            return [
+                { id: 1, name: "Mm", rate: 5 },
+                { id: 2, name: "Bn", rate: 5 },
+                { id: 3, name: "Kl", rate: 5 },
+                { id: 4, name: "Nrm", rate: 5 },
+                { id: 5, name: "Mlk", rate: 5 },
+                { id: 6, name: "sun", rate: 5 },
+                { id: 7, name: "indr", rate: 5 }
+            ];
+        }
+
         let services = [];
         let staff = [];
         let subscriptions = [];
         let invoices = [];
         let cart = JSON.parse(localStorage.getItem('bh_cart_draft')) || [];
         let activeEvalData = null;
+
+        function updateCloudBadge(status, text) {
+            const badge = document.getElementById('cloud-status');
+            const adminAcc = document.getElementById('admin-auth-account');
+            if(!badge) return;
+
+            if (status === 'connected') {
+                badge.className = 'badge bg-success auth-status-badge';
+                badge.title = "متصل بنجاح بالسحابة";
+                badge.innerHTML = `<i class="fa-solid fa-cloud-check me-1"></i>متصل: ${text}`;
+                if(adminAcc) adminAcc.innerText = `الحساب السحابي: ${text}`;
+            } else if (status === 'error') {
+                badge.className = 'badge bg-danger auth-status-badge';
+                badge.title = "اضغط لتسجيل الدخول السحابي";
+                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i>غير متصل (اضغط لتسجيل الدخول)`;
+                if(adminAcc) adminAcc.innerText = `حساب غير متصل`;
+            } else {
+                badge.className = 'badge bg-secondary auth-status-badge';
+                badge.innerHTML = `<i class="fa-solid fa-cloud me-1"></i>${text}`;
+            }
+        }
+
+        async function manualLoginPuter() {
+            await forceSyncWithCloud();
+        }
+
+        async function forceSyncWithCloud() {
+            try {
+                updateCloudBadge('loading', 'جاري طلب تسجيل الدخول...');
+                if (typeof puter !== 'undefined' && puter.auth) {
+                    await puter.auth.signIn();
+                    await loadDataFromPuter();
+                    alert("تم الاتصال بالحساب السحابي بنجاح ومزامنة البيانات!");
+                } else {
+                    alert("مكتبة Puter غير محملة.");
+                }
+            } catch(e) {
+                console.error("Auth error:", e);
+                updateCloudBadge('error', 'تعذر تسجيل الدخول');
+                alert("تأكدي من السماح بالنوافذ المنبثقة في المتصفح.");
+            }
+        }
+
+        async function loadDataFromPuter() {
+            try {
+                if (typeof puter !== 'undefined' && puter.auth && typeof puter.auth.isSignedIn === 'function' && puter.auth.isSignedIn()) {
+                    const user = await puter.auth.getUser();
+                    updateCloudBadge('connected', user.username || 'Puter Account');
+
+                    let loadedServices = await puter.kv.get('bh_services');
+                    let loadedStaff = await puter.kv.get('bh_staff');
+                    let loadedSubs = await puter.kv.get('bh_subscriptions');
+                    let loadedInvoices = await puter.kv.get('bh_invoices');
+
+                    services = loadedServices ? JSON.parse(loadedServices) : getDefaultServices();
+                    staff = loadedStaff ? JSON.parse(loadedStaff) : getDefaultStaff();
+                    
+                    const existingNames = staff.map(s => s.name);
+                    let updated = false;
+                    if (!existingNames.includes("sun")) { staff.push({ id: Date.now() + 1, name: "sun", rate: 5 }); updated = true; }
+                    if (!existingNames.includes("indr")) { staff.push({ id: Date.now() + 2, name: "indr", rate: 5 }); updated = true; }
+                    if (updated && puter.kv) await puter.kv.set('bh_staff', JSON.stringify(staff));
+
+                    subscriptions = loadedSubs ? JSON.parse(loadedSubs) : [];
+                    invoices = loadedInvoices ? JSON.parse(loadedInvoices) : [];
+                } else {
+                    updateCloudBadge('error', 'غير متصل (اضغط للتسجيل)');
+                    restoreFromLocalStorage();
+                }
+            } catch (err) {
+                console.warn("Cloud load warning:", err);
+                updateCloudBadge('error', 'خطأ بالاتصال السحابي');
+                restoreFromLocalStorage();
+            }
+
+            cacheLocally();
+            renderServices();
+            updateStaffDropdowns();
+            renderAdminServices();
+            renderAdminStaff();
+            if(!document.getElementById('subscriptions-tab').classList.contains('d-none')) renderSubscriptions();
+            if(!document.getElementById('reports-tab').classList.contains('d-none')) generateReport();
+        }
+
+        function cacheLocally() {
+            try {
+                localStorage.setItem('cached_bh_services', JSON.stringify(services));
+                localStorage.setItem('cached_bh_staff', JSON.stringify(staff));
+                localStorage.setItem('cached_bh_subscriptions', JSON.stringify(subscriptions));
+                localStorage.setItem('cached_bh_invoices', JSON.stringify(invoices));
+            } catch(e) {
+                console.warn("Storage quota full:", e);
+            }
+        }
+
+        function restoreFromLocalStorage() {
+            const locServices = localStorage.getItem('cached_bh_services');
+            const locStaff = localStorage.getItem('cached_bh_staff');
+            const locSubs = localStorage.getItem('cached_bh_subscriptions');
+            const locInvoices = localStorage.getItem('cached_bh_invoices');
+
+            services = locServices ? JSON.parse(locServices) : getDefaultServices();
+            staff = locStaff ? JSON.parse(locStaff) : getDefaultStaff();
+            subscriptions = locSubs ? JSON.parse(locSubs) : [];
+            invoices = locInvoices ? JSON.parse(locInvoices) : [];
+        }
+
+        async function saveDataToPuter() {
+            cacheLocally();
+            try {
+                if (typeof puter !== 'undefined' && puter.auth && puter.auth.isSignedIn() && puter.kv) {
+                    await puter.kv.set('bh_services', JSON.stringify(services));
+                    await puter.kv.set('bh_staff', JSON.stringify(staff));
+                    await puter.kv.set('bh_subscriptions', JSON.stringify(subscriptions));
+                    await puter.kv.set('bh_invoices', JSON.stringify(invoices));
+                }
+            } catch (err) {
+                console.error("Error saving data to Puter KV:", err);
+            }
+        }
+
+        async function resetToUpdatedServices() {
+            if (confirm("هل تريدين استبدال قائمة الخدمات بالكامل بالقائمة الرسمية المحدثة وحفظها على السحابة؟")) {
+                services = getDefaultServices();
+                await saveDataToPuter();
+                renderServices();
+                renderAdminServices();
+                alert("تم تحديث قائمة الخدمات بنجاح وحفظها سحابياً ومحلياً!");
+            }
+        }
+
+        async function resetToUpdatedStaff() {
+            if (confirm("هل تريدين تحديث قائمة العاملات لتشمل sun و indr وتثبيتها سحابياً؟")) {
+                staff = getDefaultStaff();
+                await saveDataToPuter();
+                renderAdminStaff();
+                updateStaffDropdowns();
+                alert("تم تحديث قائمة العاملات بنجاح وحفظها سحابياً ومحلياً!");
+            }
+        }
+
+        function exportBackup() {
+            const backup = {
+                salon: "Bh salon",
+                timestamp: new Date().toISOString(),
+                services: services,
+                staff: staff,
+                subscriptions: subscriptions,
+                invoices: invoices
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `bh_salon_backup_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.services || !Array.isArray(data.services)) {
+                        throw new Error("ملف النسخ الاحتياطي غير صالح.");
+                    }
+
+                    if (confirm("هل أنتِ متأكدة من استعادة هذه النسخة؟ سيتم دمج وتحديث البيانات ومزامنتها سحابياً.")) {
+                        services = data.services || [];
+                        staff = data.staff || [];
+                        subscriptions = data.subscriptions || [];
+                        invoices = data.invoices || [];
+
+                        await saveDataToPuter();
+                        renderServices();
+                        updateStaffDropdowns();
+                        renderAdminServices();
+                        renderAdminStaff();
+                        alert("تمت استعادة النسخة الاحتياطية بنجاح ومزامنتها سحابياً ومحلياً!");
+                    }
+                } catch (err) {
+                    alert("خطأ أثناء قراءة ملف النسخة الاحتياطية: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
 
         function saveDraftInputs() {
             localStorage.setItem('bh_cust_name', document.getElementById('cust-name').value);
@@ -560,11 +855,9 @@
         function checkExistingClient() {
             const rawPhone = document.getElementById('cust-phone').value;
             const cleanP = cleanPhone(rawPhone);
-            
             if (cleanP.length < 8) return;
 
             const nameInput = document.getElementById('cust-name');
-            
             let foundSub = subscriptions.find(s => cleanPhone(s.phone) === cleanP);
             if (foundSub && foundSub.name) {
                 nameInput.value = foundSub.name;
@@ -578,70 +871,6 @@
                 saveDraftInputs();
                 return;
             }
-        }
-
-        db.ref('bh_salon/services').on('value', snapshot => {
-            if(snapshot.exists()) {
-                services = Object.values(snapshot.val());
-            } else {
-                services = [
-                    { id: 101, name: "Blow Dry", price: 3.000, cat: "HAIR" },
-                    { id: 102, name: "Wavy", price: 5.000, cat: "HAIR" },
-                    { id: 201, name: "Pedicure", price: 2.500, cat: "NAILS" },
-                    { id: 202, name: "Manicure", price: 2.500, cat: "NAILS" },
-                    { id: 801, name: "Hair Mask", price: 5.000, cat: "ASHTRAK", isSession: true },
-                    { id: 802, name: "mask + blowdry", price: 5.000, cat: "ASHTRAK", isSession: true }
-                ];
-            }
-            renderServices();
-            renderAdminServices();
-        });
-
-        db.ref('bh_salon/staff').on('value', snapshot => {
-            if(snapshot.exists()) {
-                staff = Object.values(snapshot.val());
-            } else {
-                staff = [
-                    { id: 1, name: "Mm", rate: 5 },
-                    { id: 2, name: "Bn", rate: 5 },
-                    { id: 3, name: "Kl", rate: 5 },
-                    { id: 4, name: "Nrm", rate: 5 },
-                    { id: 5, name: "Mlk", rate: 5 }
-                ];
-            }
-            updateStaffDropdowns();
-            renderAdminStaff();
-        });
-
-        db.ref('bh_salon/subscriptions').on('value', snapshot => {
-            subscriptions = snapshot.exists() ? Object.values(snapshot.val()) : [];
-            if(!document.getElementById('subscriptions-tab').classList.contains('d-none')) renderSubscriptions();
-        });
-
-        db.ref('bh_salon/invoices').on('value', snapshot => {
-            if(snapshot.exists()) {
-                const data = snapshot.val();
-                if (Array.isArray(data)) {
-                    invoices = data;
-                } else {
-                    invoices = Object.values(data);
-                }
-            } else {
-                invoices = [];
-            }
-            if(!document.getElementById('reports-tab').classList.contains('d-none')) generateReport();
-            if(document.getElementById('today-invoices-modal-container').style.display === 'flex') {
-                renderTodayInvoicesModalContent();
-            }
-        });
-
-        function saveDataToFirebase() {
-            db.ref('bh_salon').set({
-                services: services,
-                staff: staff,
-                subscriptions: subscriptions,
-                invoices: invoices
-            });
         }
 
         function showTab(tabId) {
@@ -669,18 +898,14 @@
                     let opt = document.createElement('option');
                     opt.value = st.name;
                     opt.textContent = st.name;
-                    if(currentVal.includes(st.name)) {
-                        opt.selected = true;
-                    }
+                    if(currentVal.includes(st.name)) opt.selected = true;
                     sel.appendChild(opt);
                 });
             });
         }
 
         function clearAllStaffSelections() {
-            document.querySelectorAll('.staff-select').forEach(sel => {
-                sel.selectedIndex = -1;
-            });
+            document.querySelectorAll('.staff-select').forEach(sel => { sel.selectedIndex = -1; });
         }
 
         function renderServices() {
@@ -713,9 +938,7 @@
         function cleanPhone(phone) {
             if (!phone) return '';
             let cleaned = phone.replace(/\D/g, '');
-            if (cleaned.startsWith('965')) {
-                cleaned = cleaned.substring(3);
-            }
+            if (cleaned.startsWith('965')) cleaned = cleaned.substring(3);
             return cleaned;
         }
 
@@ -746,7 +969,6 @@
             const dateTimeStr = getCurrentDateTime();
 
             cart = cart.filter(item => item.subKey !== subType);
-
             cart.push({
                 id: Date.now(),
                 name: `Package: ${subType} (5 sessions - Session 1)`,
@@ -777,10 +999,9 @@
                 sub.history = [`Session 1 (New Activation): ${dateTimeStr} by (${selectedStaff.join(', ')})`];
             }
 
-            saveDataToFirebase();
+            saveDataToPuter();
             renderCart();
             staffSel.selectedIndex = -1;
-
             alert(t.subActiveAlert);
         }
 
@@ -799,15 +1020,9 @@
 
             if (s.cat === 'ASHTRAK') {
                 if (inputCleanPhone.length < 8) return alert(t.fillDataAlert);
-
                 let sub = subscriptions.find(sub => cleanPhone(sub.phone) === inputCleanPhone && sub.subType === s.name);
-
-                if (!sub) {
-                    return alert(`No active subscription card found for (${s.name}). Please activate a new package first!`);
-                }
-                if (sub.remaining <= 0) {
-                    return alert(`⚠️ All sessions have been exhausted.`);
-                }
+                if (!sub) return alert(`No active subscription card found for (${s.name}).`);
+                if (sub.remaining <= 0) return alert(`⚠️ All sessions have been exhausted.`);
 
                 itemPrice = 0.000;
                 let nextSessionNum = (sub.used || 0) + 1;
@@ -816,7 +1031,6 @@
 
             cart.push({ ...s, name: itemName, baseName: s.name, price: itemPrice, originalPrice: s.price, staff: selectedStaff, qty: 1 });
             renderCart();
-
             if(selectEl) selectEl.selectedIndex = -1;
         }
 
@@ -884,7 +1098,6 @@
             cart.forEach(item => {
                 if(item.cat === 'ASHTRAK' && item.price === 0) {
                     let targetSub = subscriptions.find(s => cleanPhone(s.phone) === cleanP && item.name.includes(s.subType));
-
                     if (targetSub && (targetSub.remaining || 0) > 0) {
                         targetSub.used = (targetSub.used || 0) + 1;
                         targetSub.remaining = (targetSub.remaining || 0) - 1;
@@ -904,7 +1117,7 @@
                 total: cart.reduce((a,b) => a + (b.price * b.qty), 0)
             });
 
-            saveDataToFirebase();
+            saveDataToPuter();
             alert(t.invSavedAlert);
 
             cart = [];
@@ -930,54 +1143,35 @@
             saveDraftInputs();
 
             invoices = invoices.filter(i => String(i.id) !== String(invoiceId));
-            saveDataToFirebase();
-
+            saveDataToPuter();
             closeTodayInvoicesModal();
             showTab('invoice-tab');
-            alert('تم جلب بيانات الفاتورة إلى السلة لتعديلها. يرجى الضغط على "حفظ الفاتورة" عند الانتهاء.');
+            alert('تم جلب الفاتورة للتعديل.');
         }
 
-        // دالة محدثة بالكامل لحذف أي فاتورة نهائياً من الذاكرة وفايبربيس بغض النظر عن نوع المعرف
         function deleteInvoice(invoiceId) {
-            if (confirm("هل أنت متأكدة من رغبتك في حذف هذه الفاتورة نهائياً؟ سيتم تحديث إجمالي المبيعات اليومية مباشرة.")) {
+            if (confirm("هل أنت متأكدة من حذف هذه الفاتورة؟")) {
                 invoices = invoices.filter(i => String(i.id) !== String(invoiceId));
-                
-                // تحديث مباشر في قاعدة البيانات السحابية مع ضمان إعادة هيكلة المصفوفة
-                db.ref('bh_salon/invoices').set(invoices.length > 0 ? invoices : null)
-                .then(() => {
-                    renderTodayInvoicesModalContent();
-                })
-                .catch(error => {
-                    alert("حدث خطأ أثناء الحذف: " + error.message);
-                });
+                saveDataToPuter().then(() => { renderTodayInvoicesModalContent(); });
             }
         }
 
         function sendInvoiceToCustomerWhatsapp(invoiceId) {
             const inv = invoices.find(i => String(i.id) === String(invoiceId));
             if(!inv) return alert('الفاتورة غير موجودة!');
-
             const cleanP = cleanPhone(inv.phone);
             if(cleanP.length < 8) return alert('رقم هاتف العميلة غير صحيح.');
 
             let total = 0;
-            activeEvalData = {
-                id: inv.id,
-                customer: inv.customer,
-                phone: inv.phone,
-                items: [...inv.items]
-            };
+            activeEvalData = { id: inv.id, customer: inv.customer, phone: inv.phone, items: [...inv.items] };
 
             let msg = `*Bh salon Invoice*\n----------------------------------\nClient: *${inv.customer}*\nDate: ${inv.date}\n----------------------------------\n`;
-            
             inv.items.forEach((item, idx) => {
                 total += item.price * item.qty;
                 let staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
                 msg += `${idx + 1}. *${item.name}*\n   - Price: ${item.price.toFixed(3)} KD (Qty: ${item.qty})\n   - Staff: ${staffDisplay}\n----------------------------------\n`;
             });
-
-            msg += `*Total Due: ${total.toFixed(3)} KD*\n\n⭐ شكراً لزيارتكم Bh salon، نسعد دائماً بخدمتكم.\nThank you for visiting Bh salon ❤️`;
-            
+            msg += `*Total Due: ${total.toFixed(3)} KD*\n\n⭐ شكراً لزيارتكم Bh salon ❤️`;
             window.open(`https://wa.me/965${cleanP}?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
@@ -998,22 +1192,15 @@
             const container = document.getElementById('today-invoices-list-content');
             container.innerHTML = '';
 
-            const todayInvoices = invoices.filter(inv => {
-                if(!inv.date) return false;
-                return inv.date === todayStr || inv.date.startsWith(todayStr);
-            });
-
+            const todayInvoices = invoices.filter(inv => inv.date === todayStr || (inv.date && inv.date.startsWith(todayStr)));
             let currencySymbol = currentLang === 'en' ? 'KD' : 'د.ك';
             let totalTodaySales = 0;
-
-            todayInvoices.forEach(inv => {
-                totalTodaySales += Number(inv.total) || 0;
-            });
+            todayInvoices.forEach(inv => { totalTodaySales += Number(inv.total) || 0; });
 
             document.getElementById('today-invoices-total-sales').innerText = `إجمالي المبيعات اليومية: ${totalTodaySales.toFixed(3)} ${currencySymbol}`;
 
             if(todayInvoices.length === 0) {
-                container.innerHTML = `<p class="text-center text-muted py-4">لا توجد فواتير مسجلة لهذا اليوم (${todayStr}) حتى الآن.</p>`;
+                container.innerHTML = `<p class="text-center text-muted py-4">لا توجد فواتير مسجلة لهذا اليوم (${todayStr}).</p>`;
                 return;
             }
 
@@ -1037,20 +1224,11 @@
                             <p class="small text-muted mb-1"><i class="fa-solid fa-phone me-1"></i>${inv.phone}</p>
                             ${itemsHtml}
                             <div class="d-flex gap-2 mb-2">
-                                <button class="btn btn-secondary btn-sm flex-grow-1 fw-bold" onclick="editInvoice('${inv.id}')">
-                                    <i class="fa-solid fa-pen-to-square me-1"></i> تعديل الفاتورة
-                                </button>
-                                <button class="btn btn-warning btn-sm text-dark fw-bold flex-grow-1" onclick="openEvalModalForInvoice('${inv.id}')">
-                                    <i class="fa-solid fa-star me-1"></i> تقييم الخدمات
-                                </button>
-                                <!-- زر حذف الفاتورة الفعال -->
-                                <button class="btn btn-danger btn-sm fw-bold" onclick="deleteInvoice('${inv.id}')">
-                                    <i class="fa-solid fa-trash me-1"></i> حذف
-                                </button>
+                                <button class="btn btn-secondary btn-sm flex-grow-1 fw-bold" onclick="editInvoice('${inv.id}')"><i class="fa-solid fa-pen-to-square me-1"></i> تعديل</button>
+                                <button class="btn btn-warning btn-sm text-dark fw-bold flex-grow-1" onclick="openEvalModalForInvoice('${inv.id}')"><i class="fa-solid fa-star me-1"></i> تقييم</button>
+                                <button class="btn btn-danger btn-sm fw-bold" onclick="deleteInvoice('${inv.id}')"><i class="fa-solid fa-trash me-1"></i> حذف</button>
                             </div>
-                            <button class="btn btn-success btn-sm w-100" onclick="sendInvoiceToCustomerWhatsapp('${inv.id}')">
-                                <i class="fa-brands fa-whatsapp me-1"></i> إرسال الفاتورة للعميلة واتساب
-                            </button>
+                            <button class="btn btn-success btn-sm w-100" onclick="sendInvoiceToCustomerWhatsapp('${inv.id}')"><i class="fa-brands fa-whatsapp me-1"></i> إرسال الفاتورة واتساب</button>
                         </div>
                     </div>
                 `;
@@ -1059,15 +1237,8 @@
 
         function openEvalModalForInvoice(invoiceId) {
             const inv = invoices.find(i => String(i.id) === String(invoiceId));
-            if(!inv) return alert('الفاتورة غير موجودة!');
-
-            activeEvalData = {
-                id: inv.id,
-                customer: inv.customer,
-                phone: inv.phone,
-                items: inv.items
-            };
-
+            if(!inv) return;
+            activeEvalData = { id: inv.id, customer: inv.customer, phone: inv.phone, items: inv.items };
             closeTodayInvoicesModal();
             openEvalModal(activeEvalData);
         }
@@ -1092,14 +1263,11 @@
                     </div>
                 `;
             });
-
             initModalStarsEvents();
             document.getElementById('eval-modal-container').style.display = 'flex';
         }
 
-        function closeEvalModal() {
-            document.getElementById('eval-modal-container').style.display = 'none';
-        }
+        function closeEvalModal() { document.getElementById('eval-modal-container').style.display = 'none'; }
 
         function initModalStarsEvents() {
             document.querySelectorAll('.stars-group').forEach(container => {
@@ -1109,11 +1277,8 @@
                         const value = star.getAttribute('data-value');
                         container.setAttribute('data-rating', value);
                         stars.forEach(s => {
-                            if (s.getAttribute('data-value') <= value) {
-                                s.classList.add('active');
-                            } else {
-                                s.classList.remove('active');
-                            }
+                            if (s.getAttribute('data-value') <= value) s.classList.add('active');
+                            else s.classList.remove('active');
                         });
                     });
                 });
@@ -1130,34 +1295,21 @@
                 const item = activeEvalData.items[idx];
                 const staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
                 const rating = box.querySelector('.stars-group').getAttribute('data-rating');
-                
                 let starsStr = rating > 0 ? '⭐'.repeat(rating) : 'لم يتم التقييم';
                 ratingText += `▫️ *${item.name}* (الموظفة: ${staffDisplay})\n  التقييم: ${starsStr} (${rating}/5)\n\n`;
             });
 
-            if(notes.trim() !== "") {
-                ratingText += `💬 *ملاحظة العميلة:* "${notes}"`;
-            }
-
-            const managerPhone = "96569977533";
-            let whatsappURL = `https://wa.me/${managerPhone}?text=` + encodeURIComponent(ratingText);
-            
+            if(notes.trim() !== "") ratingText += `💬 *ملاحظة العميلة:* "${notes}"`;
+            window.open(`https://wa.me/96569977533?text=` + encodeURIComponent(ratingText), '_blank');
             closeEvalModal();
-            window.open(whatsappURL, '_blank');
         }
 
         function sendAllInvoicesToManager() {
             const now = new Date();
             const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-            
-            const todayInvoices = invoices.filter(inv => {
-                if(!inv.date) return false;
-                return inv.date === todayStr || inv.date.startsWith(todayStr);
-            });
+            const todayInvoices = invoices.filter(inv => inv.date === todayStr || (inv.date && inv.date.startsWith(todayStr)));
 
-            if (todayInvoices.length === 0) {
-                return alert(`لا توجد فواتير مسجلة لهذا اليوم (${todayStr}) لإرسالها.`);
-            }
+            if (todayInvoices.length === 0) return alert(`لا توجد فواتير مسجلة لهذا اليوم (${todayStr}).`);
 
             let msg = `*Bh salon - فواتير اليوم*\n📅 ${todayStr}\n----------------------------------\n`;
             let grandTotal = 0;
@@ -1165,11 +1317,9 @@
             todayInvoices.forEach((inv, idx) => {
                 grandTotal += Number(inv.total) || 0;
                 msg += `فاتورة (${idx + 1})\n• العميلة: *${inv.customer}*\n• الهاتف: ${inv.phone}\n• الخدمات:\n`;
-                
                 if(inv.items && Array.isArray(inv.items)) {
                     inv.items.forEach(item => {
                         let staffDisplay = Array.isArray(item.staff) ? item.staff.join(', ') : item.staff;
-                        
                         let displayName = item.name;
                         if (item.cat === 'ASHTRAK' || item.name.includes('Session')) {
                             let subMatch = subscriptions.find(s => cleanPhone(s.phone) === cleanPhone(inv.phone) && item.name.includes(s.subType));
@@ -1178,17 +1328,13 @@
                         } else if (item.cat === 'PACKAGE_PURCHASE') {
                             displayName = `شراء كارت اشتراك [1/5]`;
                         }
-
                         msg += `  - ${displayName} | ${Number(item.price).toFixed(3)} د.ك | (${staffDisplay})\n`;
                     });
                 }
                 msg += `• الإجمالي: *${Number(inv.total).toFixed(3)} د.ك*\n----------------------------------\n`;
             });
-
             msg += `\n💰 *إجمالي مبيعات اليوم: ${grandTotal.toFixed(3)} د.ك*`;
-
-            const managerPhone = "96569977533";
-            window.open(`https://wa.me/${managerPhone}?text=` + encodeURIComponent(msg), '_blank');
+            window.open(`https://wa.me/96569977533?text=` + encodeURIComponent(msg), '_blank');
         }
 
         function renderSubscriptions() {
@@ -1232,7 +1378,7 @@
             const t = translations[currentLang];
             if(confirm(t.deleteSubConfirm)) {
                 subscriptions = subscriptions.filter(s => String(s.id) !== String(id));
-                saveDataToFirebase();
+                saveDataToPuter();
                 renderSubscriptions();
             }
         }
@@ -1240,67 +1386,41 @@
         function sendSubscriptionsWhatsapp() {
             if (subscriptions.length === 0) return alert('No subscriptions found.');
             let msg = `*Bh salon - Subscriptions Log*\n----------------------------------\n`;
-            
             subscriptions.forEach((s, idx) => {
                 const remainingVal = (s.remaining !== undefined && s.remaining !== null) ? s.remaining : 4;
                 const usedVal = (s.used !== undefined && s.used !== null) ? s.used : 1;
                 let statusText = remainingVal === 0 ? 'Finished (5/5)' : `Active (${usedVal}/5)`;
-                
-                let pkgPriceText = "";
-                if (s.subType === 'Hair Mask') {
-                    pkgPriceText = "15.000 د.ك (باقة ماسك للشعر)";
-                } else if (s.subType === 'mask + blowdry') {
-                    pkgPriceText = "20.000 د.ك (باقة ماسك + ستشوار)";
-                } else {
-                    pkgPriceText = s.subType || "غير محدد";
-                }
-
+                let pkgPriceText = s.subType === 'Hair Mask' ? "15.000 د.ك" : (s.subType === 'mask + blowdry' ? "20.000 د.ك" : (s.subType || "غير محدد"));
                 msg += `${idx + 1}. العميلة: *${s.name}*\n📞 الهاتف: ${s.phone}\n📦 الباقة: *${pkgPriceText}*\n🔄 الحالة: ${statusText}\n----------------------------------\n`;
             });
-            
             window.open(`https://wa.me/96569977533?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         function generateReport() {
             const from = document.getElementById('report-from').value;
             const to = document.getElementById('report-to').value;
-
             let filteredInvoices = invoices;
-            if(from && to) {
-                filteredInvoices = invoices.filter(inv => inv.date >= from && inv.date <= to);
-            }
+            if(from && to) filteredInvoices = invoices.filter(inv => inv.date >= from && inv.date <= to);
 
             let totalSales = 0;
             let staffStats = {};
-            
-            staff.forEach(st => {
-                staffStats[st.name] = { sales: 0, rate: Number(st.rate) || 0, commission: 0, servicesCount: 0 };
-            });
+            staff.forEach(st => { staffStats[st.name] = { sales: 0, rate: Number(st.rate) || 0, commission: 0, servicesCount: 0 }; });
 
             filteredInvoices.forEach(inv => {
                 totalSales += Number(inv.total) || 0;
-
                 if(inv.items && Array.isArray(inv.items)) {
                     inv.items.forEach(item => {
                         const basePrice = item.originalPrice !== undefined ? Number(item.originalPrice) : Number(item.price);
                         const lineValueForCommission = (isNaN(basePrice) ? 0 : basePrice) * (Number(item.qty) || 1);
-                        
-                        let staffList = [];
-                        if (Array.isArray(item.staff)) {
-                            staffList = item.staff;
-                        } else if (typeof item.staff === 'string' && item.staff.trim() !== '') {
-                            staffList = [item.staff];
-                        }
+                        let staffList = Array.isArray(item.staff) ? item.staff : (typeof item.staff === 'string' ? [item.staff] : []);
                         
                         if (staffList.length > 0) {
                             const splitSales = lineValueForCommission / staffList.length;
                             const splitCount = (Number(item.qty) || 1) / staffList.length;
-                            
                             staffList.forEach(stName => {
                                 if(!staffStats[stName]) {
                                     let foundRateStaff = staff.find(s => s.name === stName);
-                                    let stRate = foundRateStaff ? (Number(foundRateStaff.rate) || 5) : 5;
-                                    staffStats[stName] = { sales: 0, rate: stRate, commission: 0, servicesCount: 0 };
+                                    staffStats[stName] = { sales: 0, rate: foundRateStaff ? Number(foundRateStaff.rate) : 5, commission: 0, servicesCount: 0 };
                                 }
                                 staffStats[stName].sales += splitSales;
                                 staffStats[stName].servicesCount += splitCount;
@@ -1320,7 +1440,6 @@
                 const st = staffStats[stName];
                 st.commission = (st.sales * st.rate) / 100;
                 totalCommission += st.commission;
-
                 tbody.innerHTML += `
                     <tr>
                         <td>${stName}</td>
@@ -1338,7 +1457,6 @@
         function sendDailyReportWhatsapp() {
             const from = document.getElementById('report-from').value;
             const to = document.getElementById('report-to').value;
-            
             let filteredInvoices = invoices;
             let periodText = "All Period";
             
@@ -1354,9 +1472,7 @@
 
             let totalSales = 0;
             let staffStats = {};
-            staff.forEach(st => {
-                staffStats[st.name] = { sales: 0, rate: Number(st.rate) || 0, commission: 0, servicesCount: 0 };
-            });
+            staff.forEach(st => { staffStats[st.name] = { sales: 0, rate: Number(st.rate) || 0, commission: 0, servicesCount: 0 }; });
 
             filteredInvoices.forEach(inv => {
                 totalSales += Number(inv.total) || 0;
@@ -1364,23 +1480,15 @@
                     inv.items.forEach(item => {
                         const basePrice = item.originalPrice !== undefined ? Number(item.originalPrice) : Number(item.price);
                         const lineValue = (isNaN(basePrice) ? 0 : basePrice) * (Number(item.qty) || 1);
+                        let staffList = Array.isArray(item.staff) ? item.staff : (typeof item.staff === 'string' ? [item.staff] : []);
                         
-                        let staffList = [];
-                        if (Array.isArray(item.staff)) {
-                            staffList = item.staff;
-                        } else if (typeof item.staff === 'string' && item.staff.trim() !== '') {
-                            staffList = [item.staff];
-                        }
-
                         if (staffList.length > 0) {
                             const splitSales = lineValue / staffList.length;
                             const splitCount = (Number(item.qty) || 1) / staffList.length;
-                            
                             staffList.forEach(stName => {
                                 if(!staffStats[stName]) {
                                     let foundRateStaff = staff.find(s => s.name === stName);
-                                    let stRate = foundRateStaff ? (Number(foundRateStaff.rate) || 5) : 5;
-                                    staffStats[stName] = { sales: 0, rate: stRate, commission: 0, servicesCount: 0 };
+                                    staffStats[stName] = { sales: 0, rate: foundRateStaff ? Number(foundRateStaff.rate) : 5, commission: 0, servicesCount: 0 };
                                 }
                                 staffStats[stName].sales += splitSales;
                                 staffStats[stName].servicesCount += splitCount;
@@ -1396,15 +1504,9 @@
                 totalCommission += staffStats[stName].commission;
             }
 
-            let msg = `*Bh salon - Period & Staff Report*\nPeriod: ${periodText}\n----------------------------------\n`;
-            msg += `*Total Sales:* ${totalSales.toFixed(3)} KD\n*Total Commissions:* ${totalCommission.toFixed(3)} KD\n----------------------------------\n*Staff Performance:*\n`;
-            
-            for (let stName in staffStats) {
-                const st = staffStats[stName];
-                msg += `- *${stName}*:\n  • Services Count: ${st.servicesCount}\n  • Total Sales: ${st.sales.toFixed(3)} KD\n  • Commission (${st.rate}%): ${st.commission.toFixed(3)} KD\n----------------------------------\n`;
-            }
-
-            window.open(`https://wa.me/96569977533?text=${encodeURIComponent(msg)}`, '_blank');
+            let msg = `*Bh salon - Period Report*\nPeriod: ${periodText}\n----------------------------------\n`;
+            msg += `*Total Sales:* ${totalSales.toFixed(3)} KD\n*Total Commissions:* ${totalCommission.toFixed(3)} KD\n----------------------------------\n`;
+            window.open(`https://wa.me/96569977533?text=` + encodeURIComponent(msg), '_blank');
         }
 
         function renderAdminServices() {
@@ -1429,15 +1531,18 @@
             const name = document.getElementById('admin-service-name').value;
             const price = parseFloat(document.getElementById('admin-service-price').value);
             const cat = document.getElementById('admin-service-cat').value;
-
             services.push({ id: Date.now(), name, price, cat });
-            saveDataToFirebase();
+            saveDataToPuter();
+            renderAdminServices();
+            renderServices();
             document.getElementById('service-form').reset();
         }
 
         function deleteService(id) {
             services = services.filter(s => String(s.id) !== String(id));
-            saveDataToFirebase();
+            saveDataToPuter();
+            renderAdminServices();
+            renderServices();
         }
 
         function renderAdminStaff() {
@@ -1460,27 +1565,30 @@
             e.preventDefault();
             const nameVal = document.getElementById('admin-staff-name').value;
             const rate = parseFloat(document.getElementById('admin-staff-rate').value);
-
             const existing = staff.find(s => s.name === nameVal);
-            if(existing) {
-                existing.rate = rate;
-            } else {
-                staff.push({ id: Date.now(), name: nameVal, rate });
-            }
+            if(existing) existing.rate = rate;
+            else staff.push({ id: Date.now(), name: nameVal, rate });
 
-            saveDataToFirebase();
-            document.getElementById('staff-form').reset();
+            saveDataToPuter();
+            renderAdminStaff();
+            updateStaffDropdowns();
+            document.getElementById('admin-staff-name').value = '';
+            document.getElementById('admin-staff-rate').value = '';
         }
 
         function deleteStaff(id) {
             staff = staff.filter(s => String(s.id) !== String(id));
-            saveDataToFirebase();
+            saveDataToPuter();
+            renderAdminStaff();
+            updateStaffDropdowns();
         }
 
         window.onload = function() {
             applyLanguage();
             loadDraftInputs();
             renderCart();
+            loadDataFromPuter();
+            
             const now = new Date();
             const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             const fromEl = document.getElementById('report-from');
